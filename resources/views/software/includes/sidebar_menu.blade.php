@@ -721,31 +721,7 @@
         @enddirectCanAny
 
 
-        @if(method_exists($loginUser, 'hasRole') && ($loginUser->hasRole('super-admin') || $loginUser->hasRole('developer')))
-            <li class="menu-item {{ $sidebar_active == 'device-shield' ? 'active open' : '' }}">
-                <a href="javascript:void(0);" class="menu-link menu-toggle">
-                    <i class="menu-icon tf-icons bx bx-shield-quarter me-2"></i>
-                    <div data-i18n="Device Shield">Device Shield</div>
-                </a>
-                <ul class="menu-sub">
-                    <li class="menu-item {{ Route::is('device-shield.dashboard') ? 'active' : '' }}">
-                        <a href="{{ route('device-shield.dashboard') }}" class="menu-link">
-                            <div data-i18n="Dashboard">Dashboard</div>
-                        </a>
-                    </li>
-                    <li class="menu-item {{ Route::is('device-shield.index') ? 'active' : '' }}">
-                        <a href="{{ route('device-shield.index') }}" class="menu-link">
-                            <div data-i18n="Devices & Enforcement">Devices & Enforcement</div>
-                        </a>
-                    </li>
-                    <li class="menu-item {{ Route::is('device-shield.logs') ? 'active' : '' }}">
-                        <a href="{{ route('device-shield.logs') }}" class="menu-link">
-                            <div data-i18n="Security Logs">Security Logs</div>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-        @endif
+
 
 
         @directCanAny(['biomax-list'])

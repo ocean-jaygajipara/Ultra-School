@@ -107,41 +107,6 @@ class LoginController extends Controller
                 return Redirect::back()->withErrors(["Contact admin. Your account is inactive."]);
             }
 
-            if (config('device_security.enabled', true) && $user->check_device && !$user->is_admin && !(method_exists($user, 'hasRole') && $user->hasRole('super-admin'))) {
-                $deviceData = [
-                    'user_id'            => $user->id,  // stored for audit log only
-                    'hardware_id'        => $request->input('hardware_id'),
-                    'motherboard_serial' => $request->input('motherboard_serial'),
-                    'bios_serial'        => $request->input('bios_serial'),
-                    'cpu_id'             => $request->input('cpu_id'),
-                    'timestamp'          => $request->input('timestamp'),
-                    'nonce'              => $request->input('nonce'),
-                    'signature'          => $request->input('signature'),
-                    'pc_name'            => $request->input('pc_name', 'Web Browser'),
-                    'latitude'           => $request->input('latitude'),
-                    'longitude'          => $request->input('longitude'),
-                ];
-
-                $verificationService = app(\App\Services\DeviceVerificationService::class);
-                $verification = $verificationService->verifyDevice($deviceData, [
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                ]);
-
-                if (!$verification['success']) {
-                    Auth::logout();
-                    // If this is a new device (pending), show specific message
-                    $errorMsg = $verification['message'];
-                    if (isset($verification['binding']) && $verification['binding']->status === 'pending') {
-                        $errorMsg = 'This device is not yet authorized. An admin approval request has been submitted. Please contact your administrator.';
-                    }
-                    return Redirect::back()->withInput($request->only('email', 'remember'))->withErrors(['device' => $errorMsg]);
-                }
-
-                // Device is approved for this hardware — allow any user
-                session(['authorized_device_id' => $deviceData['hardware_id']]);
-            }
-
             return Redirect::route('software.dashboard')->with('success', 'Login successful!');
 
             try {

@@ -512,18 +512,6 @@ Route::match(['get', 'post'], 'system-user-status', [SystemUserController::class
 
 // Route::post('/push-test', [PushController::class, 'sendStatic']);
 
-// Device Shield Management
-Route::get('/device-shield', [App\Http\Controllers\DeviceBindingController::class, 'dashboard'])->name('device-shield.dashboard');
-Route::get('/device-shield/devices', [App\Http\Controllers\DeviceBindingController::class, 'index'])->name('device-shield.index');
-Route::post('/device-shield/devices/{id}/approve', [App\Http\Controllers\DeviceBindingController::class, 'approve'])->name('device-shield.approve');
-Route::post('/device-shield/devices/{id}/reject', [App\Http\Controllers\DeviceBindingController::class, 'reject'])->name('device-shield.reject');
-Route::post('/device-shield/devices/{id}/suspend', [App\Http\Controllers\DeviceBindingController::class, 'suspend'])->name('device-shield.suspend');
-Route::post('/device-shield/devices/{id}/reactivate', [App\Http\Controllers\DeviceBindingController::class, 'reactivate'])->name('device-shield.reactivate');
-Route::post('/device-shield/devices/{id}/force-rebind', [App\Http\Controllers\DeviceBindingController::class, 'forceRebind'])->name('device-shield.force-rebind');
-Route::post('/device-shield/devices/{id}/update-name', [App\Http\Controllers\DeviceBindingController::class, 'updateDeviceName'])->name('device-shield.update-name');
-Route::get('/device-shield/logs', [App\Http\Controllers\DeviceBindingController::class, 'logs'])->name('device-shield.logs');
-Route::post('/device-shield/users/{id}/toggle-check', [App\Http\Controllers\DeviceBindingController::class, 'toggleDeviceCheck'])->name('device-shield.users.toggle-check');
-
 /** Student Report Routes */
 Route::get('student_report', [StudentReportController::class, 'index'])->name('student_report.index');
 Route::get('student_report/data', [StudentReportController::class, 'getReportData'])->name('student_report.data');

@@ -20,8 +20,7 @@ Route::get('optimize', function () {
 Route::get('/software/login', [LoginController::class, 'showLoginForm'])->name('software.login');
 
 /** Software Routes */
-Route::group(['prefix' => 'software', 'middleware' => [SoftwareAuthMiddleware::class, 'device.authorized']], function () {
-    Route::get('/download-agent', [\App\Http\Controllers\DeviceBindingController::class, 'downloadAgent'])->name('download.agent');
+Route::group(['prefix' => 'software', 'middleware' => [SoftwareAuthMiddleware::class]], function () {
     include base_path("routes/software.php");
 });
 // Route::get('/gd-test', function(){
