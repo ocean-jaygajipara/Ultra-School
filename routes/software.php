@@ -146,12 +146,11 @@ Route::post('admission/check-mobile-duplicate', [AdmissionController::class, 'ch
 Route::post('admission/update-course-status', [AdmissionController::class, 'updateCourseStatus'])->name('admission.update-course-status');
 Route::get('admission/view/{register_id}/{course_id}', [AdmissionController::class, 'view'])->name('admission.view');
 Route::post('admission-education-detail-delete', [AdmissionController::class, 'education_detail_delete'])->name('admission.education-detail-delete');
-Route::post('admission-create-google-drive-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-google-drive-folder');
-Route::post('admission-google-drive-rename-folder', [AdmissionController::class, 'renameFolder'])->name('admission.google-drive-rename-folder');
+// Route::post('admission-create-google-drive-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-google-drive-folder');
+// Route::post('admission-google-drive-rename-folder', [AdmissionController::class, 'renameFolder'])->name('admission.google-drive-rename-folder');
 // routes/web.php
 
-Route::post('admission/create-folder', [AdmissionController::class, 'createFolder'])
-    ->name('admission.create-folder');
+// Route::post('admission/create-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-folder');
 Route::get('admission/import', [AdmissionController::class, 'import'])->name('admission.import');
 Route::post('admission/import-store', [AdmissionController::class, 'importStore'])->name('admission.import-store');
 
@@ -511,7 +510,7 @@ Route::resource('system-user', SystemUserController::class);
 Route::match(['get', 'post'], 'system-user-status', [SystemUserController::class, 'redemptionItemStatuUpdate'])->name('system-user-status');
 
 
-Route::post('/push-test', [PushController::class, 'sendStatic']);
+// Route::post('/push-test', [PushController::class, 'sendStatic']);
 
 // Device Shield Management
 Route::get('/device-shield', [App\Http\Controllers\DeviceBindingController::class, 'dashboard'])->name('device-shield.dashboard');

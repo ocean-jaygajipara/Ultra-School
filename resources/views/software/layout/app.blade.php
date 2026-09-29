@@ -165,12 +165,13 @@
 
         });
     </script>
+    {{--
     <!-- Firebase App (required) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js"></script>
 
     <script>
-        const firebaseConfig = @json($firebaseConfig);
+        const firebaseConfig = @json($firebaseConfig ?? []);
         if (firebaseConfig && firebaseConfig.projectId) {
             firebase.initializeApp(firebaseConfig);
             const messaging = firebase.messaging();
@@ -185,6 +186,7 @@
             }
         }
     </script>
+    --}}
 
 
 

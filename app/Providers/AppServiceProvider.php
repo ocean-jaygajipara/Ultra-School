@@ -45,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
         // Passport::refreshTokensExpireIn(now()->addDays(30));
         // Passport::personalAccessTokensExpireIn(now()->addMonths(6));
 
-        View::share('firebaseConfig', config('constants.firebase'));
+        // View::share('firebaseConfig', config('constants.firebase'));
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });

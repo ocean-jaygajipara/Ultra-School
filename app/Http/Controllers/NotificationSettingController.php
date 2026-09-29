@@ -214,11 +214,13 @@ class NotificationSettingController extends Controller
                                     'pdf'        => $pdfUrl ?? '',
                                 ]);
 
+                            /*
                             try {
                                 app('firebase.messaging')->send($message);
                             } catch (\Exception $e) {
                                 \Log::error("Failed to send push notification to device token: {$token}. Error: " . $e->getMessage());
                             }
+                            */
                         }
                     }
                 }

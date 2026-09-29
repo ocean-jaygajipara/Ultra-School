@@ -283,8 +283,9 @@ class Helper
             return $e->getMessage();
         }
     }
-   public static function sendPushNotification($studentId, $title, $body)
+    public static function sendPushNotification($studentId, $title, $body)
     {
+        /*
         $factory = (new Factory)->withServiceAccount(config('services.firebase.credentials'));
         $messaging = $factory->createMessaging();
 
@@ -298,6 +299,7 @@ class Helper
                 $messaging->send($message);
             }
         }
+        */
     }
 
     // <message>otp for application login is ' . $otp . '. Vrundavan Computers - Keshod for info visit - vckguj.com. mo. 9375221111 -HGE</message>

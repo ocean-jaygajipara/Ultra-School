@@ -29,11 +29,11 @@ Route::group(['prefix' => 'software', 'middleware' => [SoftwareAuthMiddleware::c
 //     return $res;
 // });
 
-Route::get('/gd-test', function () {
-    $parentFolderId = '1pG7EV04G2A0fR7M9AF0ZppiY_gBhjsxI';
-    $res = \App\Helpers\GoogleDriveHelper::createFolder('student_' . time(), $parentFolderId);
-    return response()->json($res);
-});
+// Route::get('/gd-test', function () {
+//     $parentFolderId = '1pG7EV04G2A0fR7M9AF0ZppiY_gBhjsxI';
+//     $res = \App\Helpers\GoogleDriveHelper::createFolder('student_' . time(), $parentFolderId);
+//     return response()->json($res);
+// });
 
 
 Route::get('/nimit', function () {

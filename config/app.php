@@ -185,7 +185,7 @@ return [
         App\Providers\RepositoryServiceProvider::class,
 
         Spatie\Permission\PermissionServiceProvider::class,
-        App\Providers\FirebaseServiceProvider::class,
+        // App\Providers\FirebaseServiceProvider::class,
     ],
 
 
