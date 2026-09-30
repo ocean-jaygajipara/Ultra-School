@@ -76,7 +76,7 @@ class IssueCertificateController extends Controller
         
         $faculties = \App\Models\User::where('status', 'active')
             ->whereHas('roles', function ($q) {
-                $q->where('name', 'Facility');
+                $q->where('name', 'Faculty');
             })
             ->orderBy('name', 'asc')
             ->get();
@@ -190,7 +190,7 @@ class IssueCertificateController extends Controller
         if ($type === self::TYPE_LETTER_RECOMMENDATION) {
             $faculties = \App\Models\User::where('status', 'active')
                 ->whereHas('roles', function ($q) {
-                    $q->where('name', 'Facility');
+                    $q->where('name', 'Faculty');
                 })
                 ->orderBy('name', 'asc')
                 ->get();

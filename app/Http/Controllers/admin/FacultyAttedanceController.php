@@ -58,7 +58,7 @@ class FacultyAttedanceController extends Controller
 
             if ($request->ajax()) {
                 $user = Auth::user();
-                $isFaculty = Helper::getLoginUserRole() === 'Facility';
+                $isFaculty = Helper::getLoginUserRole() === 'Faculty';
 
                 $data = Attedance::select([
                         'attedance.biometric_id',
@@ -76,7 +76,7 @@ class FacultyAttedanceController extends Controller
                     $data = $data->where('attedance.biometric_id', $biometricId);
                 } else {
                     $facultyBiometrics = User::whereHas('roles', function ($query) {
-                        $query->where('name', 'Facility');
+                        $query->where('name', 'Faculty');
                     })->pluck('biometric_id')->filter()->toArray();
 
                     $data = $data->whereIn('attedance.biometric_id', $facultyBiometrics);
@@ -160,7 +160,7 @@ class FacultyAttedanceController extends Controller
         }
 
         $user = Auth::user();
-        $isFaculty = Helper::getLoginUserRole() === 'Facility';
+        $isFaculty = Helper::getLoginUserRole() === 'Faculty';
         if ($isFaculty && ($user->biometric_id != $biometricId)) {
             return response()->json(['error' => 'Unauthorized access.'], 403);
         }

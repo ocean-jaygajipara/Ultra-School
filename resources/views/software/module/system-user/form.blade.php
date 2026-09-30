@@ -114,58 +114,6 @@ $i = 0;
                         @enderror
                     </div>
                 </div>
-                <!-- <div class="col-md-6 col-sm-12 mb-2">
-                    <div class="form-group">
-                        <label class="form-label">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control @error('password') is-invalid @enderror"
-                            name="password" value="{{ old('password') }}"
-                            {{ isset($edit->password) ? '' : 'required' }} placeholder="Enter password">
-
-                        @error('password')
-                        <span class="invalid-feedback">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                        @enderror
-                    </div>
-                </div> -->
-                <!-- <div class="col-md-6 col-sm-12 mb-2">
-                    <div class="form-group">
-                        <label class="form-label">UPI <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('upi') is-invalid @enderror"
-                            name="upi" value="{{ isset($edit->upi) ? $edit->upi : old('upi') }}"
-                            {{ isset($edit->upi) ? '' : 'required' }} placeholder="Enter UPI">
-
-                        @error('password')
-                        <span class="invalid-feedback">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                        @enderror
-                    </div>
-                </div> -->
-                <!-- <div class="col-md-6 col-sm-12 mb-2">
-                    <div class="form-group">
-                        <label class="form-label">Role <span class="text-danger">*</span></label>
-                        <select class="form-control select2 w-100 @error('role') is-invalid @enderror selectRole"
-                            name="role" required>
-                            <option disabled selected>Select role</option>
-                            @foreach ($roles as $role)
-                            @if (isset($edit) && count($edit->roles) > 0)
-                            @foreach ($edit->roles as $user_role)
-                            <option value="{{ $role->name }}"
-                                @if (isset($user_role)) @if ($user_role->id == $role->id) {{ 'selected' }} @endif
-                                @else @if (old('role') == $role->id) {{ 'selected' }} @endif
-                                @endif> {{ ucfirst($role->name) }}</option>
-                            @endforeach
-                            @else
-                            <option value="{{ $role->name }}"
-                                @if (isset($user_role)) @if ($user_role->id == $role->id) {{ 'selected' }} @endif
-                                @else @if (old('role') == $role->id) {{ 'selected' }} @endif
-                                @endif> {{ ucfirst($role->name) }}</option>
-                            @endif
-                            @endforeach
-                        </select>
-                    </div>
-                </div> -->
                 <div class="col-md-4 col-sm-12 mb-2">
                     <div class="form-group">
                         <label class="form-label">Role <span class="text-danger">*</span></label>
@@ -200,7 +148,7 @@ $i = 0;
                     </div>
                 </div>
 
-                <div id="facilityFieldsContainer" class="col-12 p-0">
+                <div id="facultyFieldsContainer" class="col-12 p-0">
                     <div class="row px-3">
                         <div class="col-md-6 col-sm-12 mb-2">
                             <div class="form-group">
@@ -249,16 +197,16 @@ $i = 0;
 <script>
     let isEditID = "{{ isset($edit) && $edit?->id ? $edit?->id : '' }}";
     
-    function toggleFacilityFields() {
+    function toggleFacultyFields() {
         // Always display
-        $("#facilityFieldsContainer").show();
+        $("#facultyFieldsContainer").show();
     }
 
     // Call on load
-    toggleFacilityFields();
+    toggleFacultyFields();
 
     $(".selectRole").on("change", function() {
-        toggleFacilityFields();
+        toggleFacultyFields();
         console.log("L-149", $(this).val());
         let _url = "{{ route('search-permission') }}";
         $.ajax({

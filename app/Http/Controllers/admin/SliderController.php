@@ -62,7 +62,10 @@ class SliderController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->editColumn('image', function ($row) {
-                    return '<img src="' . asset($row->image) . '" alt="' . e($row->title) . '" width="80">';
+                    if (!empty($row->image) && file_exists(public_path($row->image))) {
+                        return '<a href="' . asset($row->image) . '" target="_blank"><img src="' . asset($row->image) . '" alt="' . e($row->title) . '" class="rounded border" width="70" height="40" style="object-fit: cover;"></a>';
+                    }
+                    return '<span class="badge bg-label-secondary">No Image</span>';
                 })
                 ->editColumn('link', function ($row) {
                     return $row->link ? '<a href="' . e($row->link) . '" target="_blank">' . e($row->link) . '</a>' : '';
@@ -85,19 +88,25 @@ class SliderController extends Controller
                     $btn = '';
                     if (!$row->deleted_at) {
                         if ($modules['permission_edit']) {
-                            $btn .= '<a href="' . route($modules["route"] . ".edit", [$row->id]) . '" class="btn btn-light btn-icon mx-1"><i class="fa-solid fa-pen-to-square"></i></a>';
+                            $btn .= '<a href="' . route($modules["route"] . ".edit", [$row->id]) . '" class="btn btn-light btn-icon mx-1" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>';
                         }
                         if ($modules['permission_delete']) {
-                            $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".destroy", [$row->id]) . '" class="btn btn-danger btn-icon deletebutton mx-1"><i class="fa-solid fa-trash"></i></a>';
+                            $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".destroy", [$row->id]) . '" class="btn btn-danger btn-icon deletebutton mx-1" title="Delete"><i class="fa-solid fa-trash"></i></a>';
                         }
                         $btn .= '<a href="javascript:void(0)"
-                data-did="' . route($modules["route"] . ".permanent-delete", [$row->id]) . '"
-                class="btn btn-danger btn-icon permanentDeleteButton mx-1"
-                title="Permanent Delete">
-                <i class="fa-solid fa-ban"></i>
-            </a>';
+                                    data-did="' . route($modules["route"] . ".permanent-delete", [$row->id]) . '"
+                                    class="btn btn-danger btn-icon permanentDeleteButton mx-1"
+                                    title="Permanent Delete">
+                                    <i class="fa-solid fa-ban"></i>
+                                </a>';
                     } else {
                         $btn .= '<a href="javascript:void(0)" data-restore="' . route($modules["route"] . ".restore", ['id' => $row->id]) . '" class="btn btn-light mx-1 record-restore" title="Restore Data"><i class="ti ti-history"></i> Restore</a>';
+                        $btn .= '<a href="javascript:void(0)"
+                                    data-did="' . route($modules["route"] . ".permanent-delete", [$row->id]) . '"
+                                    class="btn btn-danger btn-icon permanentDeleteButton mx-1"
+                                    title="Permanent Delete">
+                                    <i class="fa-solid fa-ban"></i>
+                                </a>';
                     }
                     return $btn ?: '-';
                 })
@@ -176,7 +185,7 @@ class SliderController extends Controller
             if ($request->hasFile('image')) {
                 // delete old file if exists
                 if ($slider->image && file_exists(public_path($slider->image))) {
-                    unlink(public_path($slider->image));
+                    @unlink(public_path($slider->image));
                 }
 
                 $image = $request->file('image');
@@ -253,11 +262,25 @@ class SliderController extends Controller
             $slider->save();
             $slider->delete();
 
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $modules['title'] . ' deleted successfully.'
+                ]);
+            }
+
             return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' deleted successfully.');
         } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
             return Redirect::route('dashboard')->withErrors($e->getMessage());
         }
     }
+
     public function restore($id)
     {
         $modules = $this->modules;
@@ -265,32 +288,23 @@ class SliderController extends Controller
         try {
             // Fetch soft deleted record
             $slider = Slider::withTrashed()->findOrFail($id);
-
-            // 🔍 Check if Slider is used anywhere
-            // (If not used anywhere, keep it false)
-            $isUsed = false;
-
-            if ($isUsed) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'This slider cannot be restored because it is used in other data.'
-                ], 400);
-            }
-
-            // Restore slider
+            $slider->deleted_by = null;
             $slider->restore();
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Slider restored successfully!'
+                'status' => true,
+                'success' => true,
+                'message' => $modules['title'] . ' restored successfully!'
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
+                'status' => false,
+                'success' => false,
                 'message' => $e->getMessage()
             ], 500);
         }
     }
+
     public function permanentDelete($id)
     {
         try {
@@ -301,7 +315,7 @@ class SliderController extends Controller
 
             // Delete image file if exists
             if ($slider->image && file_exists(public_path($slider->image))) {
-                unlink(public_path($slider->image));
+                @unlink(public_path($slider->image));
             }
 
             // Hard delete
@@ -312,7 +326,6 @@ class SliderController extends Controller
                 'message' => $modules['title'] . ' permanently deleted successfully.'
             ]);
         } catch (\Exception $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()

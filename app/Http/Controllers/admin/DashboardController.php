@@ -33,7 +33,7 @@ class DashboardController extends Controller
         $modules = $this->modules;
         View::share('modules', $modules);
 
-        $isFaculty = \App\Helpers\Helper::getLoginUserRole() === 'Facility';
+        $isFaculty = \App\Helpers\Helper::getLoginUserRole() === 'Faculty';
         $tasks = [];
         if ($isFaculty) {
             $tasks = \App\Models\Task::where('assigned_to', Auth::id())
@@ -62,17 +62,17 @@ class DashboardController extends Controller
             ->get();
         $studentBirthdaysCount = $studentBirthdays->count();
 
-        $facilityBirthdays = \App\Models\User::whereHas('roles', function($q) {
-                $q->where('name', 'Facility');
+        $facultyBirthdays = \App\Models\User::whereHas('roles', function($q) {
+                $q->where('name', 'Faculty');
             })
             ->whereMonth('date_of_birth', \Carbon\Carbon::today()->month)
             ->whereDay('date_of_birth', \Carbon\Carbon::today()->day)
             ->select('id', 'name')
             ->get();
-        $facilityBirthdaysCount = $facilityBirthdays->count();
+        $facultyBirthdaysCount = $facultyBirthdays->count();
 
         return view($modules['folder_path'] . '.dashboard', compact(
-            'totalStudents', 'totalCourses', 'studentRequestsCount', 'todayTestsCount', 'timetablesCount', 'timetables', 'isFaculty', 'tasks', 'todayTests', 'studentBirthdays', 'studentBirthdaysCount', 'facilityBirthdays', 'facilityBirthdaysCount'
+            'totalStudents', 'totalCourses', 'studentRequestsCount', 'todayTestsCount', 'timetablesCount', 'timetables', 'isFaculty', 'tasks', 'todayTests', 'studentBirthdays', 'studentBirthdaysCount', 'facultyBirthdays', 'facultyBirthdaysCount'
         ));
     }
 }

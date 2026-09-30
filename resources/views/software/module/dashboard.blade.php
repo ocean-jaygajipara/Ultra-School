@@ -44,10 +44,10 @@
                             🏫
                         </div>
                         <div>
-                            @if($facilityBirthdaysCount > 0)
-                                <h5 class="mb-1 fw-bold text-info">Today's Faculty Birthdays ({{ $facilityBirthdaysCount }})</h5>
+                            @if($facultyBirthdaysCount > 0)
+                                <h5 class="mb-1 fw-bold text-info">Today's Faculty Birthdays ({{ $facultyBirthdaysCount }})</h5>
                                 <p class="mb-0 text-muted">
-                                    @foreach($facilityBirthdays as $birthday)
+                                    @foreach($facultyBirthdays as $birthday)
                                         <span class="fw-bold text-dark">{{ $birthday->name }}</span>{{ !$loop->last ? ', ' : '' }}
                                     @endforeach
                                 </p>
@@ -57,7 +57,7 @@
                             @endif
                         </div>
                     </div>
-                    @if($facilityBirthdaysCount > 0)
+                    @if($facultyBirthdaysCount > 0)
                         <div>
                             <span class="badge bg-info py-2 px-3 fw-bold text-white">Happy Birthday! 🎂</span>
                         </div>

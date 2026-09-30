@@ -45,7 +45,7 @@ class TaskController extends Controller
         View::share('modules', $modules);
 
         try {
-            $isFaculty = Helper::getLoginUserRole() === 'Facility';
+            $isFaculty = Helper::getLoginUserRole() === 'Faculty';
             if ($isFaculty) {
                 $columns = [
                     (object)['data' => 'DT_RowIndex', 'name' => 'id', 'td_label' => 'No', 'orderable' => false, 'searchable' => false],
@@ -195,7 +195,7 @@ class TaskController extends Controller
         View::share('modules', $modules);
 
         $faculties = User::whereHas('roles', function ($query) {
-            $query->where('name', 'Facility');
+            $query->where('name', 'Faculty');
         })->get();
 
         return view($modules['folder_path'] . '.form', compact('faculties'));
@@ -237,7 +237,7 @@ class TaskController extends Controller
 
         $task = Task::findOrFail($id);
         $faculties = User::whereHas('roles', function ($query) {
-            $query->where('name', 'Facility');
+            $query->where('name', 'Faculty');
         })->get();
 
         return view($modules['folder_path'] . '.form', compact('task', 'faculties'));
@@ -307,7 +307,7 @@ class TaskController extends Controller
             if ($request->has('response')) {
                 $task->response = $request->response;
             }
-            if (Helper::getLoginUserRole() === 'Facility') {
+            if (Helper::getLoginUserRole() === 'Faculty') {
                 $task->status = 3; // Done
             }
             $task->updated_by = Auth::id();

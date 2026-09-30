@@ -77,7 +77,7 @@
                             <table class="table table-bordered align-middle text-center mb-0" style="width: 100%;">
                                 <thead class="table-light text-uppercase small">
                                     <tr>
-                                        @if(\App\Helpers\Helper::getLoginUserRole() !== 'Facility')
+                                        @if(\App\Helpers\Helper::getLoginUserRole() !== 'Faculty')
                                         <th style="width: 18%;">Task Details</th>
                                         <th style="width: 12%;">Assign Date</th>
                                         <th style="width: 12%;">Deadline</th>
@@ -101,7 +101,7 @@
                                         </td>
                                         <td id="modal-date" class="text-nowrap small"></td>
                                         <td id="modal-deadline" class="text-nowrap small"></td>
-                                        @if(\App\Helpers\Helper::getLoginUserRole() !== 'Facility')
+                                        @if(\App\Helpers\Helper::getLoginUserRole() !== 'Faculty')
                                         <td>
                                             <select id="modal-status-select" name="status" class="form-select form-select-sm" required>
                                                 <option value="0">Pending</option>
@@ -124,7 +124,7 @@
                                         </td>
                                         @endif
                                         <td class="text-nowrap">
-                                            @if(\App\Helpers\Helper::getLoginUserRole() !== 'Facility')
+                                            @if(\App\Helpers\Helper::getLoginUserRole() !== 'Faculty')
                                             <button type="button" class="btn btn-sm btn-secondary me-1 btn-modal-repass">Repass</button>
                                             <button type="submit" class="btn btn-sm btn-info text-white me-1">Done</button>
                                             <button type="button" class="btn btn-sm btn-warning text-white" data-bs-dismiss="modal">Cancel</button>
