@@ -64,8 +64,13 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [DashboardController::class, 'dashboard'])->name('software.dashboard');
-Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+Route::get('/', function () {
+    return redirect()->route('software.dashboard');
+});
+Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('software.dashboard');
+Route::get('/home-dashboard', function () {
+    return redirect()->route('software.dashboard');
+})->name('dashboard');
 
 Route::get('/removeimage/{id}', [DashboardController::class, 'remove_image'])->name('remove_image');
 

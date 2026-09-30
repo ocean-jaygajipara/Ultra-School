@@ -40,5 +40,5 @@ Route::get('/nimit', function () {
 });
 
 Route::get('/', function () {
-    return redirect('software/', 301);
+    return redirect()->route('software.dashboard');
 });

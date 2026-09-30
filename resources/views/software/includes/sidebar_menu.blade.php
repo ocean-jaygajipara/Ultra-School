@@ -1,9 +1,11 @@
 <!-- Menu -->
 @php
-    $sidebar_active = Route::current()->getName();
-    // dd($sidebar_active);
-    $expand = explode('.', $sidebar_active);
+    $current_route = Route::current() ? Route::current()->getName() : '';
+    $expand = explode('.', $current_route);
     $sidebar_active = count($expand) > 0 ? $expand[0] : '';
+    if (in_array($current_route, ['software.dashboard', 'dashboard']) || $sidebar_active === 'software') {
+        $sidebar_active = 'dashboard';
+    }
     $loginUser = Auth::user();
 @endphp
 

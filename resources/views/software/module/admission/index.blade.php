@@ -726,6 +726,7 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
+        {{--
         $(document).on("click", ".create_google_drive_folder", function() {
             let studentId = $(this).data("id");
 
@@ -752,6 +753,7 @@
                 }
             });
         });
+        --}}
         var dtable = null;
         $(document).ready(function() {
             dtable = $('#yajra-datatables').DataTable({
@@ -809,47 +811,49 @@
             dtable.draw();
         });
 
+        {{--
         // Handle Google Drive folder open/create button click
-        // $(document).on('click', '.open_google_drive_folder', function() {
-        //     var id = $(this).data('id');
-        //     var folderName = $(this).data('foldername');
-        //     var folderUrl = $(this).data('folderurl');
-        //     var button = $(this);
+        $(document).on('click', '.open_google_drive_folder', function() {
+            var id = $(this).data('id');
+            var folderName = $(this).data('foldername');
+            var folderUrl = $(this).data('folderurl');
+            var button = $(this);
 
-        //     if (folderUrl) {
-        //         window.open(folderUrl, '_blank');
-        //     } else {
-        //         $('#yajra-datatables_processing').css('font-weight', 'bold').show();
+            if (folderUrl) {
+                window.open(folderUrl, '_blank');
+            } else {
+                $('#yajra-datatables_processing').css('font-weight', 'bold').show();
 
-        //         $.ajax({
-        //             url: "{{ route($route . '.create-google-drive-folder') }}",
-        //             type: 'POST',
-        //             data: {
-        //                 _token: '{{ csrf_token() }}',
-        //                 id: id,
-        //                 foldername: folderName,
-        //             },
-        //             success: function(response) {
-        //                 console.log("response 459 | success", response);
-        //                 if (response.folder_url) {
-        //                     button.attr('data-folderurl', response.folder_url);
-        //                     toastr.success('Google Drive folder created successfully.');
-        //                     window.open(response.folder_url, '_blank');
-        //                 } else {
-        //                     toastr.success('Google Drive folder created successfully.');
-        //                 }
-        //                 $('#yajra-datatables').DataTable().ajax.reload(null, false);
-        //             },
-        //             error: function(error) {
-        //                 console.error("response 470 | Error", error);
-        //                 toastr.error('Error creating Google Drive folder.');
-        //             },
-        //             complete: function() {
-        //                 $('#yajra-datatables_processing').hide();
-        //             }
-        //         });
-        //     }
-        // });
+                $.ajax({
+                    url: "{{ route($route . '.create-google-drive-folder') }}",
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id: id,
+                        foldername: folderName,
+                    },
+                    success: function(response) {
+                        console.log("response 459 | success", response);
+                        if (response.folder_url) {
+                            button.attr('data-folderurl', response.folder_url);
+                            toastr.success('Google Drive folder created successfully.');
+                            window.open(response.folder_url, '_blank');
+                        } else {
+                            toastr.success('Google Drive folder created successfully.');
+                        }
+                        $('#yajra-datatables').DataTable().ajax.reload(null, false);
+                    },
+                    error: function(error) {
+                        console.error("response 470 | Error", error);
+                        toastr.error('Error creating Google Drive folder.');
+                    },
+                    complete: function() {
+                        $('#yajra-datatables_processing').hide();
+                    }
+                });
+            }
+        });
+        --}}
         // Create folder button click
 
 

@@ -292,6 +292,7 @@
                                 </div>
                             </div>
 
+                            {{--
                             @if (isset($edit) && $edit?->gdrivefolderurl)
                                 <div class="col-md-6 col-sm-12 mb-3" id="google_drive_rename_folder_col">
                                     <div class="form-group">
@@ -320,6 +321,7 @@
                                     </div>
                                 </div>
                             @endif
+                            --}}
                         </div>
                     </div>
                     <hr>
@@ -1080,6 +1082,7 @@
         }
     </script>
 
+    {{--
     @if (isset($edit))
         <script>
             // $('#google_drive_rename_folder_url_col').hide();
@@ -1156,4 +1159,5 @@
             });
         </script>
     @endif
+    --}}
 @endsection

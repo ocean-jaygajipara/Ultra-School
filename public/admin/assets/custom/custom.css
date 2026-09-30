@@ -1,20 +1,40 @@
 @import url('root.css');
 
-.layout-menu img {
-    width: 100% !important;
-    padding: 1rem;
+.layout-menu .app-brand {
+    height: auto !important;
+    min-height: 70px;
+    padding: 10px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: relative;
+    z-index: 10;
+}
+
+.layout-menu .app-brand .app-brand-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: calc(100% - 30px);
 }
 
 .layout-menu .main-logo {
-    width: 100% !important;
-    padding-right: 0.5rem !important;
-    padding-left: 0.5rem !important;
+    max-height: 52px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    object-fit: contain !important;
+    display: block;
+    margin: 0 auto;
 }
+
 .layout-menu .small-logo {
     display: none;
-    width: 25%;
-    padding-right: 0.5rem !important;
-    padding-left: 0.5rem !important;
+    max-height: 38px !important;
+    width: auto !important;
+    padding: 0 !important;
+    object-fit: contain !important;
+    margin: 0 auto;
 }
 
 .hide-important {
@@ -22,18 +42,19 @@
 }
 
 .layout-menu-collapsed .main-logo {
-    display: none;
+    display: none !important;
 }
 
 .layout-menu-collapsed .small-logo {
-    display: block;
+    display: block !important;
 }
 
 .layout-menu-collapsed.layout-menu-hover .main-logo {
-    display: block;
+    display: block !important;
 }
+
 .layout-menu-collapsed.layout-menu-hover .small-logo {
-    display: none;
+    display: none !important;
 }
 
 .bg-menu-theme.menu-vertical .menu-item.active > .menu-link:not(.menu-toggle) {

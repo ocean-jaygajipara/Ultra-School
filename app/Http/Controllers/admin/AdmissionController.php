@@ -166,7 +166,7 @@ class AdmissionController extends Controller
                 (object) ['data' => "attendance_button", 'name' => 'attendance_button', 'td_label' => 'Att.', 'className' => 'w-5 text-center'],
                 (object) ['data' => "test_button", 'name' => 'test_button', 'td_label' => 'Test', 'className' => 'w-5 text-center'],
 
-                (object) ['data' => "gdrivefolderurl", 'name' => 'gdrivefolderurl', 'td_label' => '<i class="fab fa-google-drive" style="font-size:18px;color:#4285F4;"></i>', 'className' => 'w-5 text-center'],
+                // (object) ['data' => "gdrivefolderurl", 'name' => 'gdrivefolderurl', 'td_label' => '<i class="fab fa-google-drive" style="font-size:18px;color:#4285F4;"></i>', 'className' => 'w-5 text-center'],
                 // (object) ['data' => "status", 'name' => 'status', 'td_label' => 'Status', 'className' => 'w-5 text-center', 'width' => '10%'],
                 (object) ['data' => "book_button", 'name' => 'book_button', 'td_label' => 'Book'],
                 // (object) ['data' => "bonafide_button", 'name' => 'bonafide_button', 'td_label' => '<i class="ti ti-certificate" title="Bonafide Certificate"></i>', 'className' => 'w-5 text-center'],
