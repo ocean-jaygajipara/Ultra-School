@@ -33,8 +33,6 @@ class User extends Authenticatable
         'status',
         'referral_code',
         'is_email_verified',
-        'is_admin',
-        'check_device',
     ];
 
     /**
@@ -57,8 +55,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_admin' => 'boolean',
-            'check_device' => 'boolean',
         ];
     }
 
@@ -94,15 +90,5 @@ class User extends Authenticatable
             return UserDetail::select('user_id', 'applied_referral_code', 'gender', 'date_of_birth', 'country_id', 'state_id', 'city_id', 'pincode')->where("user_id", $this->id)->first();
         }
         return null;
-    }
-
-    public function deviceBindings()
-    {
-        return $this->hasMany(DeviceBinding::class);
-    }
-
-    public function deviceLogs()
-    {
-        return $this->hasMany(DeviceLog::class);
     }
 }
