@@ -390,11 +390,10 @@ class AdmissionController extends Controller
             $admission = Admission::create($validated);
 
             $admission_id = $admission->id;
-            /*
             try {
                 $folderName = $admission->id . '- ' . $admission->last_name . ' ' . $admission->first_name . ' ' . $admission->father_name;
 
-                $parentFolderId = '1pG7EV04G2A0fR7M9AF0ZppiY_gBhjsxI'; // Main Student Folder ID
+                $parentFolderId = env('GOOGLE_DRIVE_FOLDER_ID', '1cogAtOqCv8C8yfwPum2WzDTUekOi3J1U'); // Main Student Folder ID
 
                 $folderData = \App\Helpers\GoogleDriveHelper::createFolder($folderName, $parentFolderId);
 
@@ -406,7 +405,6 @@ class AdmissionController extends Controller
             } catch (\Exception $e) {
                 \Log::error("Google Drive folder creation failed: " . $e->getMessage());
             }
-            */
             $education = $request->education;
             if ($education != "") {
                 foreach ($education as $key => $value) {
@@ -901,8 +899,6 @@ class AdmissionController extends Controller
         }
     }
 
-    /*
-    //  =================== Main Folder Ni ander Multipal Folder create krva  no code niche no che vrundavan computer line -462 thi start thay che ==============================
     public function createFolder(Request $request)
     {
         $admission = Admission::findOrFail($request->id);
@@ -910,7 +906,7 @@ class AdmissionController extends Controller
         try {
             $folderName = $admission->id . '- ' . $admission->last_name . ' ' . $admission->first_name . ' ' . $admission->father_name;
 
-            $parentFolderId = '1pG7EV04G2A0fR7M9AF0ZppiY_gBhjsxI'; // Main Student Folder ID
+            $parentFolderId = env('GOOGLE_DRIVE_FOLDER_ID', '1cogAtOqCv8C8yfwPum2WzDTUekOi3J1U'); // Main Student Folder ID
 
             $folderData = \App\Helpers\GoogleDriveHelper::createFolder($folderName, $parentFolderId);
 
@@ -1006,7 +1002,7 @@ class AdmissionController extends Controller
             return Redirect::route($modules['route'] . '.index')->withErrors($e->getMessage());
         }
     }
-    */
+
     public function getAdmissionDetails($id)
     {
         $admission = Admission::find($id);

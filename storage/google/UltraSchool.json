@@ -1,0 +1,13 @@
+{
+    "type": "service_account",
+    "project_id": "ultra-school-510304",
+    "private_key_id": "e1624bcba5f538ae9723c24cfebc8b4de61e0d26",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC9edfPHNpZTs+B\nrNuhPQ/rp9dUtWl1zZHsABO6Zu6NwXpMhGXgQ59mIpRzE9rcJe8wyZeaOSO9+WSr\njKEJy+Lg1rplKiY/VrjETPo6oYGNUjvyIe7c/BsLQ+AUn64JI3QNfvZlOsjgE6G1\ncQ6Zq0JeytCgPIyq1EKaNISZ2I7P3u9PN8PSUhp1+j7tLN2VufVAmAlMqRimyBV7\n7trYQ3yVu040u+sWhSGnE1SbucEVbAlWi9Y5smO47LjqgXjmeBXS1O7Kj5samSC+\nS8YftlbDD15pfT6eVobOu+SvwWxp6VC5+i+fxHYZSYKSYGfNFMCuhpVQLhvgH/4A\niyVVMe9XAgMBAAECggEABy75ZEbJwx0JIkzKvuAxHFQZW9giOW8jxc4dnAbkVceC\nECiXhtsezfZ9qPyVuEb6kd+dZHbKHh0Nw1s/jRQyc9JwRVRFwvJSFaR9etTos9JB\np4/Ac0GznMe5VSQrVaQHIFkx6kCXoQyIKE2IVNcjWwisGYcc0NU0o+KzLEoDkBST\nnyZaJ4vL4w5TZAlBwgK9yQEhVKMNJR5E0Ao/BJRs5UT/bSHscGsuj35HLlwo0dx/\n3DGgifUUdby6pF1E6NIag7TPphH7aqI7FYNFFla3JEgyxW/9oU/KbaGE7lo9dvKx\nQdKpAwkJhwrey0nk8Ok3yLUvZ+BRhhVufF6cdQB5sQKBgQDjyN2W6BpKUfbrgooB\nNIInvfJ0zyz5GT2gF7tXHeYE0ZgbNs+a5TeUtGjEeCvmF8ISYSC9n0yMLC45Uqya\nBc0Vteuo65yty7Or3Zwq5MwzyOJVpS7IykG2twXIk25oiZ+bXLsJhujsHHIs17vv\nUZlzZ/lL//PYsXq2Nyy3MqATvQKBgQDU8jHtY5g9nDHrP5IfSeGe1Cddoes20hVI\ntmFbmQpFp8fFw74hYX4DFx8xw7vS0JsoIvFOOPgJIIG9Oxyn2WuIVzpkI+GIesFs\nqVsO8OOqMJN6Eh6/4JLQOIyzpkQyh7ukAHUwXOwaf7gq2fZBGwcCnpQkuxDWM6FO\neEXSzYG2owKBgQDXOTx+UNI+dNGs1wvUdauhJ22GhxaESyAaOzIs7zgeR3fEBvcD\n8R6iKBBxyuYXo00hFprb8D9gloIacY5afa64m8qOMgk5gaZDdsIPGV4EdAO/TrM0\nzz5mCOqzCPKiXZ7sKiMjrlA4f+w1iKWvS1eFXrGD6NSbY56BuwJKGtB7tQKBgG5Y\nMlb4zOLgFV35yxY7ipZrCRsT1HbL1guftkNowlHl5zcrf1J82ndve9KlwqYzQrNB\nqBkInD7egVw1TVwM5hP4X2GU1kGKmsBb4buUR+Tg1wriaNy02l7bbs2I0r38Z9dM\nBW3SOOZiWGScHWcPQkqxMcL2zHqytlubJ1Nc+mJRAoGAeUazPQMARsNGpDgZfzHX\n6PsB4Gw8fSqR6aJX9db5kxLLy0WwodLxd4kGxCnoZVxpDGZBk8NUuUjXcG5LVNzB\n5YWHVWBt9Dn7jlERKrflmLazvXJ7wuu6/GDlGQ+7qzmSygLz+vTVoVqBRL9a7pED\nta2vEyzHAlMYQ+KERR7NQnA=\n-----END PRIVATE KEY-----\n",
+    "client_email": "ultra-school@ultra-school-510304.iam.gserviceaccount.com",
+    "client_id": "103506719803882294796",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/ultra-school%40ultra-school-510304.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+}
