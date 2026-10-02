@@ -182,7 +182,7 @@ class CourceRegistrationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create($admission_id)
+    public function create($admission_id = null)
     {
         $modules = $this->modules;
         $modules['login_user_role'] = Helper::getLoginUserRole();
@@ -195,18 +195,15 @@ class CourceRegistrationController extends Controller
         }
         View::share('modules', $modules);
 
-
+        if (Session::get('admission_id')) {
+            $admission_id = Session::get('admission_id');
+        }
         View::share('admission_id', $admission_id);
 
         $admissions = Admission::whereIn('status', ['created', 'completed'])->get();
-        if (Session::get('admission_id')) {
-            View::share('admission_id', Session::get('admission_id'));
-            // Session::remove('admission_id');
-        }
+        $student = $admission_id ? Admission::find($admission_id) : null;
 
-
-        // dd($modules, request()->all(), Session::get('admission_id'), $admissions,$admission_id);
-        return view($modules['folder_path'] . '.form', compact('modules', 'admissions'));
+        return view($modules['folder_path'] . '.form', compact('modules', 'admissions', 'student'));
     }
 
 
@@ -300,14 +297,12 @@ class CourceRegistrationController extends Controller
 
         try {
             $admissions = Admission::all();
-            $edit = CourceRegistration::findOrFail($id);
-
-
-
+            $edit = CourceRegistration::with('admission')->findOrFail($id);
+            $student = $edit->admission;
 
             return view(
                 $modules['folder_path'] . '.form',
-                compact('modules', 'edit', 'admissions')
+                compact('modules', 'edit', 'admissions', 'student')
             );
         } catch (\Exception $e) {
             return Redirect::route('software.dashboard')->withErrors($e->getMessage());

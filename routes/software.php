@@ -153,9 +153,7 @@ Route::get('admission/view/{register_id}/{course_id}', [AdmissionController::cla
 Route::post('admission-education-detail-delete', [AdmissionController::class, 'education_detail_delete'])->name('admission.education-detail-delete');
 // Route::post('admission-create-google-drive-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-google-drive-folder');
 // Route::post('admission-google-drive-rename-folder', [AdmissionController::class, 'renameFolder'])->name('admission.google-drive-rename-folder');
-// routes/web.php
-
-// Route::post('admission/create-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-folder');
+Route::post('admission/create-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-folder');
 Route::get('admission/import', [AdmissionController::class, 'import'])->name('admission.import');
 Route::post('admission/import-store', [AdmissionController::class, 'importStore'])->name('admission.import-store');
 

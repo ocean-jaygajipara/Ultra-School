@@ -165,9 +165,7 @@ class AdmissionController extends Controller
                 (object) ['data' => "view_button", 'name' => 'view_button', 'td_label' => 'Stu <i class="bx bx-info-circle"></i>'],
                 (object) ['data' => "attendance_button", 'name' => 'attendance_button', 'td_label' => 'Att.', 'className' => 'w-5 text-center'],
                 (object) ['data' => "test_button", 'name' => 'test_button', 'td_label' => 'Test', 'className' => 'w-5 text-center'],
-
-                // (object) ['data' => "gdrivefolderurl", 'name' => 'gdrivefolderurl', 'td_label' => '<i class="fab fa-google-drive" style="font-size:18px;color:#4285F4;"></i>', 'className' => 'w-5 text-center'],
-                // (object) ['data' => "status", 'name' => 'status', 'td_label' => 'Status', 'className' => 'w-5 text-center', 'width' => '10%'],
+                (object) ['data' => "gdrivefolderurl", 'name' => 'gdrivefolderurl', 'td_label' => '<i class="fab fa-google-drive" style="font-size:18px;color:#4285F4;"></i>', 'className' => 'w-5 text-center'],
                 (object) ['data' => "book_button", 'name' => 'book_button', 'td_label' => 'Book'],
                 // (object) ['data' => "bonafide_button", 'name' => 'bonafide_button', 'td_label' => '<i class="ti ti-certificate" title="Bonafide Certificate"></i>', 'className' => 'w-5 text-center'],
                 // (object) ['data' => "transfer_button", 'name' => 'transfer_button', 'td_label' => '<i class="ti ti-transfer-out" title="Transfer Certificate"></i>', 'className' => 'w-5 text-center'],
@@ -238,7 +236,7 @@ class AdmissionController extends Controller
 
                     ->editColumn('gdrivefolderurl', function ($row) {
                         if (!empty($row->gdrivefolderurl) && !empty($row->gdrivefolderid) && !empty($row->gdrivefoldername)) {
-                            $folderName = $row->id . '-' . $row->first_name . '-' . $row->father_name . '-' . $row->last_name;
+                            $folderName = $row->id . '- ' . trim($row->first_name . ' ' . $row->last_name . ' ' . $row->father_name);
                             return '<a href="' . $row->gdrivefolderurl . '" target="_blank" data-id="' . $row->id . '" data-foldername="' . $folderName . '" data-folderurl="' . $row->gdrivefolderurl . '" class="btn btn-sm open_google_drive_folder" title="Open Google Drive Folder"> <i class="fab fa-google-drive" style="font-size:18px;"></i> </a>';
                         } else {
                             return '<a href="javascript:void(0)" data-id="' . $row->id . '" class="btn btn-primary btn-sm create_google_drive_folder" title="Create Google Drive Folder"> <i class="fa fa-folder-plus"></i> </a>';
@@ -391,7 +389,7 @@ class AdmissionController extends Controller
 
             $admission_id = $admission->id;
             try {
-                $folderName = $admission->id . '- ' . $admission->last_name . ' ' . $admission->first_name . ' ' . $admission->father_name;
+                $folderName = $admission->id . '- ' . trim($admission->first_name . ' ' . $admission->last_name . ' ' . $admission->father_name);
 
                 $parentFolderId = env('GOOGLE_DRIVE_FOLDER_ID', '1cogAtOqCv8C8yfwPum2WzDTUekOi3J1U'); // Main Student Folder ID
 
@@ -904,7 +902,7 @@ class AdmissionController extends Controller
         $admission = Admission::findOrFail($request->id);
 
         try {
-            $folderName = $admission->id . '- ' . $admission->last_name . ' ' . $admission->first_name . ' ' . $admission->father_name;
+            $folderName = $admission->id . '- ' . trim($admission->first_name . ' ' . $admission->last_name . ' ' . $admission->father_name);
 
             $parentFolderId = env('GOOGLE_DRIVE_FOLDER_ID', '1cogAtOqCv8C8yfwPum2WzDTUekOi3J1U'); // Main Student Folder ID
 

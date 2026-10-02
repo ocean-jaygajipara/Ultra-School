@@ -96,31 +96,21 @@
                             </div>
 
 
-                            {{-- Register No --}}
+                            {{-- Register No / GR No --}}
                             <div class="col-md-12 mb-3">
                                 <div class="form-group">
-                                    <label for="register_no">GR No<span class="text-danger">*</span></label>
+                                    <label for="gr_no_display">GR No<span class="text-danger">*</span></label>
 
-                                    <input list="registers_id" id="register_id" name="register_id"
-                                        class="form-control bg-light readonly @error('register_id') is-invalid @enderror"
-                                        value="{{ old('register_id', '' . ($edit->register_id ?? ($student->id ?? ($admission_id ?? '')))) }}"
-                                        placeholder="Register No. ">
+                                    <input type="hidden" id="register_id" name="register_id"
+                                        value="{{ old('register_id', '' . ($edit->register_id ?? ($student->id ?? ($admission_id ?? '')))) }}">
 
+                                    <input type="text" id="gr_no_display"
+                                        class="form-control bg-light @error('register_id') is-invalid @enderror"
+                                        value="{{ old('gr_no_display', $student->gr_no ?? ($edit->admission->gr_no ?? '')) }}"
+                                        placeholder="GR No." readonly>
 
-
-
-                                    <datalist id="registers_id">
-                                        @foreach ($admissions as $admission)
-                                            <option value="{{ $admission->id }}"
-                                                {{ (int) old('register_id', $edit->register_id ?? '') === $admission->id ? 'selected' : '' }}>
-                                                {{ $admission->first_name . ' ' . $admission->father_name . ' ' . $admission->last_name }}
-                                            </option>
-                                        @endforeach
-                                    </datalist>
-
-
-                                    @error('register_no')
-                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @error('register_id')
+                                        <span class="invalid-feedback d-block">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -348,13 +338,13 @@
                                     <label for="from_time">From Time</label>
                                     <input type="text" name="from_time" id="shift_from_time"
                                         class="form-control flatpickr-time-24" placeholder="HH:MM" required
-                                        autocomplete="off">
+                                        autocomplete="off" maxlength="5">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="to_time">To Time</label>
                                     <input type="text" name="to_time" id="shift_to_time"
                                         class="form-control flatpickr-time-24" placeholder="HH:MM" required
-                                        autocomplete="off">
+                                        autocomplete="off" maxlength="5">
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -455,6 +445,68 @@
                 });
             }
 
+            // Auto format time typing (e.g. 1230 -> 12:30, 0700 -> 07:00)
+            $(document).on('input', '.flatpickr-time-24, #shift_from_time, #shift_to_time', function(e) {
+                let input = this;
+                let raw = input.value;
+
+                if (e.originalEvent && e.originalEvent.inputType === 'deleteContentBackward') {
+                    if (raw.endsWith(':')) {
+                        input.value = raw.slice(0, -1);
+                        return;
+                    }
+                }
+
+                let numbers = raw.replace(/[^0-9]/g, '');
+                if (numbers.length > 4) {
+                    numbers = numbers.substring(0, 4);
+                }
+
+                if (numbers.length === 0) {
+                    input.value = '';
+                    return;
+                }
+
+                let formatted = '';
+                if (numbers.length === 1) {
+                    formatted = numbers;
+                } else if (numbers.length === 2) {
+                    let h = parseInt(numbers, 10);
+                    if (h > 23) numbers = '23';
+                    if (!e.originalEvent || e.originalEvent.inputType !== 'deleteContentBackward') {
+                        formatted = numbers + ':';
+                    } else {
+                        formatted = numbers;
+                    }
+                } else {
+                    let h = numbers.substring(0, 2);
+                    let m = numbers.substring(2, 4);
+                    if (parseInt(h, 10) > 23) h = '23';
+                    if (m.length === 2 && parseInt(m, 10) > 59) m = '59';
+                    formatted = h + ':' + m;
+                }
+
+                input.value = formatted;
+            });
+
+            $(document).on('blur', '.flatpickr-time-24, #shift_from_time, #shift_to_time', function() {
+                let val = $(this).val().trim();
+                if (!val) return;
+                let parts = val.split(':');
+                let h = parts[0] ? parts[0].replace(/[^0-9]/g, '') : '';
+                let m = parts[1] ? parts[1].replace(/[^0-9]/g, '') : '';
+
+                if (h.length === 1) h = '0' + h;
+                if (h.length === 0) h = '00';
+                if (parseInt(h, 10) > 23) h = '23';
+
+                if (m.length === 1) m = m + '0';
+                if (m.length === 0) m = '00';
+                if (parseInt(m, 10) > 59) m = '59';
+
+                $(this).val(h + ':' + m);
+            });
+
             setTimeout(function() {
                 const dateInput = document.getElementById('flatpickr-date');
                 if (dateInput && !dateInput.value) {
@@ -529,10 +581,13 @@
                         }
 
                         $('#RegisterCourceTable tbody').html(rows);
-                      var studentname = response.admission.first_name + ' ' +
-                  response.admission.last_name + ' ' +
-                  response.admission.father_name;
+                        var studentname = response.admission.first_name + ' ' +
+                            response.admission.last_name + ' ' +
+                            response.admission.father_name;
                         $('#StudentName').text(studentname);
+                        if (response.admission && response.admission.gr_no) {
+                            $('#gr_no_display').val(response.admission.gr_no);
+                        }
                     }
                 });
             }
@@ -746,9 +801,12 @@
 
                             $('#RegisterCourceTable tbody').html(rows);
                             var studentname = response.admission.first_name + ' ' +
-                  response.admission.last_name + ' ' +
-                  response.admission.father_name;
+                                response.admission.last_name + ' ' +
+                                response.admission.father_name;
                             $('#StudentName').text(studentname);
+                            if (response.admission && response.admission.gr_no) {
+                                $('#gr_no_display').val(response.admission.gr_no);
+                            }
                         }
                     });
                 }

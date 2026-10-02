@@ -726,9 +726,11 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
-        {{--
-        $(document).on("click", ".create_google_drive_folder", function() {
-            let studentId = $(this).data("id");
+        $(document).on("click", ".create_google_drive_folder", function(e) {
+            e.preventDefault();
+            let btn = $(this);
+            let studentId = btn.data("id");
+            btn.addClass('disabled').html('<i class="fa fa-spinner fa-spin"></i>');
 
             $.ajax({
                 url: "{{ route('admission.create-folder') }}",
@@ -736,24 +738,37 @@
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-
                 data: {
                     id: studentId
-                }, // only data, CSRF auto headers ma gayo che
+                },
                 success: function(response) {
                     if (response.success) {
-                        alert("Folder created successfully!");
-                        $('#datatable').DataTable().ajax.reload();
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(response.message || "Folder created successfully!");
+                        } else {
+                            alert("Folder created successfully!");
+                        }
+                        $('#yajra-datatables').DataTable().ajax.reload(null, false);
                     } else {
-                        alert("Failed: " + response.message);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error("Failed: " + response.message);
+                        } else {
+                            alert("Failed: " + response.message);
+                        }
+                        btn.removeClass('disabled').html('<i class="fa fa-folder-plus"></i>');
                     }
                 },
                 error: function(xhr) {
-                    alert("Something went wrong: " + xhr.responseJSON.message);
+                    let msg = xhr.responseJSON?.message || 'Something went wrong';
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error("Error: " + msg);
+                    } else {
+                        alert("Error: " + msg);
+                    }
+                    btn.removeClass('disabled').html('<i class="fa fa-folder-plus"></i>');
                 }
             });
         });
-        --}}
         var dtable = null;
         $(document).ready(function() {
             dtable = $('#yajra-datatables').DataTable({
