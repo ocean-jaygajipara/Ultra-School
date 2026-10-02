@@ -455,24 +455,30 @@
 
 
 
+        @directCanAny(['result-list', 'result-create', 'result-edit', 'result-delete', 'result-report'])
         <li class="menu-item {{ in_array(Route::current()->getName(), ['result.index', 'result.create', 'result.edit', 'result.entry.index', 'result.entry.direct', 'result.report.index']) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons bx bx-bar-chart-alt-2 me-2"></i>
                 <div>Result</div>
             </a>
             <ul class="menu-sub">
+                @directCanAny(['result-list', 'result-create', 'result-edit', 'result-delete'])
                 <li class="menu-item {{ in_array(Route::current()->getName(), ['result.index', 'result.create', 'result.edit', 'result.entry.index', 'result.entry.direct']) ? 'active' : '' }}">
                     <a href="{{ route('result.index') }}" class="menu-link">
                         <div>Result</div>
                     </a>
                 </li>
+                @enddirectCanAny
+                @directCan('result-report')
                 <li class="menu-item {{ Route::current()->getName() == 'result.report.index' ? 'active' : '' }}">
                     <a href="{{ route('result.report.index') }}" class="menu-link">
                         <div>Student Results</div>
                     </a>
                 </li>
+                @enddirectCan
             </ul>
         </li>
+        @enddirectCanAny
 
 
 

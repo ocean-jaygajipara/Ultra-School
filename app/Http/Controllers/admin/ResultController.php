@@ -44,7 +44,15 @@ class ResultController extends Controller
         $modules = $this->modules;
         $modules['title'] = 'Result Master';
         $modules['route'] = 'result';
-        
+        $modules['permission_list'] = Helper::directCan($modules['permission_prefix'] . '-list');
+        $modules['permission_add'] = Helper::directCan($modules['permission_prefix'] . '-create');
+        $modules['permission_edit'] = Helper::directCan($modules['permission_prefix'] . '-edit');
+        $modules['permission_delete'] = Helper::directCan($modules['permission_prefix'] . '-delete');
+
+        if (!$modules['permission_list']) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         View::share('modules', $modules);
 
         if ($request->ajax()) {
@@ -61,11 +69,17 @@ class ResultController extends Controller
                 ->addColumn('class_name', function ($row) {
                     return $row->class->class ?? '-';
                 })
-                ->addColumn('action', function ($row) {
+                ->addColumn('action', function ($row) use ($modules) {
                     $btn = '<div class="d-flex gap-2 justify-content-center">';
-                    $btn .= '<a href="' . route('result.entry.direct', ['course_id' => $row->course_id, 'batch_id' => $row->batch_id, 'class_id' => $row->class_id, 'semester' => $row->semester]) . '" class="btn btn-warning btn-icon" title="Enter Marks"><i class="bx bx-list-check"></i></a>';
-                    $btn .= '<a href="' . route('result.edit', [$row->id]) . '" class="btn btn-info btn-icon"><i class="bx bx-edit-alt"></i></a>';
-                    $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route('result.destroy', [$row->id]) . '" class="btn btn-danger btn-icon deletebutton"><i class="bx bx-trash"></i></a>';
+                    if ($modules['permission_add'] || $modules['permission_edit']) {
+                        $btn .= '<a href="' . route('result.entry.direct', ['course_id' => $row->course_id, 'batch_id' => $row->batch_id, 'class_id' => $row->class_id, 'semester' => $row->semester]) . '" class="btn btn-warning btn-icon" title="Enter Marks"><i class="bx bx-list-check"></i></a>';
+                    }
+                    if ($modules['permission_edit']) {
+                        $btn .= '<a href="' . route('result.edit', [$row->id]) . '" class="btn btn-info btn-icon"><i class="bx bx-edit-alt"></i></a>';
+                    }
+                    if ($modules['permission_delete']) {
+                        $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route('result.destroy', [$row->id]) . '" class="btn btn-danger btn-icon deletebutton"><i class="bx bx-trash"></i></a>';
+                    }
                     $btn .= '</div>';
                     return $btn;
                 })
@@ -79,6 +93,11 @@ class ResultController extends Controller
     public function create()
     {
         $modules = $this->modules;
+        $modules['permission_add'] = Helper::directCan($modules['permission_prefix'] . '-create');
+        if (!$modules['permission_add']) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $modules['title'] = 'Create Result Master';
         $modules['route'] = 'result';
         View::share('modules', $modules);
@@ -92,6 +111,10 @@ class ResultController extends Controller
 
     public function store(Request $request)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-create')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $request->validate([
             'course_id' => 'required|exists:master_course,id',
             'batch_id' => 'required|exists:master_batch,id',
@@ -137,6 +160,11 @@ class ResultController extends Controller
     public function edit($id)
     {
         $modules = $this->modules;
+        $modules['permission_edit'] = Helper::directCan($modules['permission_prefix'] . '-edit');
+        if (!$modules['permission_edit']) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $modules['title'] = 'Edit Result Master';
         $modules['route'] = 'result';
         View::share('modules', $modules);
@@ -151,6 +179,10 @@ class ResultController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-edit')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $request->validate([
             'course_id' => 'required|exists:master_course,id',
             'batch_id' => 'required|exists:master_batch,id',
@@ -200,6 +232,10 @@ class ResultController extends Controller
 
     public function destroy($id)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-delete')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $master = ResultMaster::findOrFail($id);
         
         // Delete all student results associated with this result master
@@ -218,6 +254,10 @@ class ResultController extends Controller
 
     public function entryIndex(Request $request, $courseId = null, $batchId = null, $classId = null, $semester = null)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-create') && !Helper::directCan($this->modules['permission_prefix'] . '-edit')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $modules = $this->modules;
         $modules['title'] = 'Result Entry';
         $modules['route'] = 'result.entry';
@@ -232,6 +272,9 @@ class ResultController extends Controller
 
     public function entryGetStudents(Request $request)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-create') && !Helper::directCan($this->modules['permission_prefix'] . '-edit')) {
+            abort(403, 'User does not have the right permissions.');
+        }
         $courseId = $request->course_id;
         $batchId = $request->batch_id;
         $classId = $request->class_id;
@@ -318,6 +361,10 @@ class ResultController extends Controller
 
     public function entryStore(Request $request)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-create') && !Helper::directCan($this->modules['permission_prefix'] . '-edit')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $request->validate([
             'semester' => 'required|integer',
             'results' => 'required|array',
@@ -385,6 +432,10 @@ class ResultController extends Controller
 
     public function reportIndex(Request $request)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-report')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $modules = $this->modules;
         $modules['title'] = 'Student Results Report';
         $modules['route'] = 'result.report';
@@ -399,6 +450,10 @@ class ResultController extends Controller
 
     public function reportGet(Request $request)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-report')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $courseId = $request->course_id;
         $batchId = $request->batch_id;
         $classId = $request->class_id;
@@ -473,6 +528,10 @@ class ResultController extends Controller
 
     public function exportExcel(Request $request)
     {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-report')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         try {
             $courseId = $request->course_id;
             $batchId = $request->batch_id;
