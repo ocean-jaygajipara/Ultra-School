@@ -263,7 +263,7 @@
                                         <div class="form-check form-check-inline mt-1">
                                             <input type="radio" name="category" class="form-check-input"
                                                 value="{{ $cat }}" id="category_{{ $cat }}"
-                                                {{ isset($edit) && $edit->category === $cat ? 'checked' : '' }}>
+                                                {{ old('category', $edit->category ?? '') === $cat ? 'checked' : '' }}>
                                             <label class="form-check-label"
                                                 for="category_{{ $cat }}">{{ $cat }}</label>
                                         </div>
