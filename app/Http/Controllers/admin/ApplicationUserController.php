@@ -246,9 +246,9 @@ class ApplicationUserController extends Controller
                 $user->biometric_id = $request?->biometric_id;
                 $user->date_of_birth = $request?->date_of_birth;
 
-                if ($request->password && !empty($request->password)) {
+                if ($request->filled('password')) {
                     $user->password = Hash::make($request->password);
-                    $user->sp = Str::random(4) . $request?->password;
+                    $user->sp = Str::random(4) . $request->password;
                 }
                 $user->upi = $request?->upi;
                 $user->status = $request?->status;
