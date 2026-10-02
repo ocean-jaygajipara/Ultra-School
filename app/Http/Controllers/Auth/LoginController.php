@@ -156,6 +156,6 @@ class LoginController extends Controller
 
         $request->session()->invalidate(); // Invalidates the session
         $request->session()->regenerateToken(); // Regenerates the CSRF token
-        return redirect()->route("software.login");
+        return redirect()->route("login");
     }
 }

@@ -17,8 +17,7 @@ class SoftwareAuthMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
-            return redirect()->route('software.login');
-            return redirect('/software/login'); // Redirect unauthorized users
+            return redirect()->route('login');
         }
         // dd("SoftwareAuthMiddleware 24", Auth::user());
         return $next($request);

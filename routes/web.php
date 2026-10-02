@@ -10,17 +10,20 @@ use Illuminate\Support\Facades\Route;
 Auth::routes();
 
 // Public pages
-Route::view('/software/privacy-policy', 'software.privacy-policy')->name('software.privacy-policy');
+Route::view('/privacy-policy', 'software.privacy-policy')->name('software.privacy-policy');
 
 Route::get('optimize', function () {
     Artisan::call('optimize:clear');
     return Redirect::back()->with('success', 'Optimize the site, cleare all cache');
 })->name('optimize');
 
-Route::get('/software/login', [LoginController::class, 'showLoginForm'])->name('software.login');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::get('/software/login', function () {
+    return redirect()->route('login');
+})->name('software.login');
 
 /** Software Routes */
-Route::group(['prefix' => 'software', 'middleware' => [SoftwareAuthMiddleware::class]], function () {
+Route::group(['middleware' => [SoftwareAuthMiddleware::class]], function () {
     include base_path("routes/software.php");
 });
 

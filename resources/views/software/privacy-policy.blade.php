@@ -10,21 +10,21 @@
                 <div class="card-body">
 
                     <h1 class="h3 mb-3">Privacy Policy</h1>
-                    <p><strong>Last updated on Sep 8th 2024</strong></p>
+                    <p><strong>Last updated on October 2nd, 2026</strong></p>
 
                     <p>
-                        This privacy policy sets out how <strong>Vrundavan Computers</strong> uses and protects any information
-                        that you give Vrundavan Computers when you visit their website and/or agree to purchase from them.
+                        This privacy policy sets out how <strong>{{ config('app.name', 'Ultra School') }}</strong> uses and protects any information
+                        that you give {{ config('app.name', 'Ultra School') }} when you visit their website and/or agree to purchase from them.
                     </p>
 
                     <p>
-                        Vrundavan Computers is committed to ensuring that your privacy is protected. Should we ask you to provide
+                        <strong>{{ config('app.name', 'Ultra School') }}</strong> is committed to ensuring that your privacy is protected. Should we ask you to provide
                         certain information by which you can be identified when using this website, then you can be assured that
                         it will only be used in accordance with this privacy statement.
                     </p>
 
                     <p>
-                        Vrundavan Computers may change this policy from time to time by updating this page. You should check
+                        <strong>{{ config('app.name', 'Ultra School') }}</strong> may change this policy from time to time by updating this page. You should check
                         this page from time to time to ensure that you adhere to these changes.
                     </p>
 
@@ -121,6 +121,7 @@
                         please write to:
                     </p>
 
+                    {{--
                     <p>
                         <strong>
                         134, TIRUPATI PLAZA, FIRST FLOOR,<br>
@@ -128,6 +129,7 @@
                         VAPI, GUJARAT 396191
                         </strong>
                     </p>
+                    --}}
 
                     <p>
                         We will promptly correct any information found to be incorrect.
@@ -135,13 +137,13 @@
 
                     <h2 class="h5 mt-4">Disclaimer</h2>
                     <p>
-                        The above content is created at Vrundavan Computers's sole discretion. Razorpay shall not be
+                        The above content is created for {{ config('app.name', 'Ultra School') }}. Razorpay shall not be
                         liable for any content provided here and shall not be responsible for any claims and liability
                         that may arise due to merchant’s non-adherence to it.
                     </p>
 
                     <div class="text-end mt-4">
-                        <a href="{{ route('software.login') }}" class="btn btn-secondary">
+                        <a href="{{ route('login') }}" class="btn btn-secondary">
                             Back to Login
                         </a>
                     </div>

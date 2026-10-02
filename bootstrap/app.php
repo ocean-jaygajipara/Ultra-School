@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     return redirect()->back()->withInput()->with('warning', 'Session expired. Please try submitting again.');
                 }
 
-                return redirect()->route('software.login')->with('warning', 'Session expired. Please login again.');
+                return redirect()->route('login')->with('warning', 'Session expired. Please login again.');
             }
             return $response;
         });
