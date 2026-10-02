@@ -31,3 +31,5 @@ Homestead.json
 auth.json
 composer.lock
 .scribe/*
+/storage/google/*.json
+storage/google/UltraSchool.json
