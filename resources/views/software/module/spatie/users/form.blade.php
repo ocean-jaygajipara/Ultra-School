@@ -90,14 +90,20 @@
                         </div>
                     </div>
                     <div class="col-md-4 col-sm-12 mb-2">
-                        <div class="form-group">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                name="password" value="{{ old('password') }}"
-                                {{ isset($edit->password) ? '' : 'required' }} placeholder="Enter password">
+                        <div class="form-group form-password-toggle">
+                            <label class="form-label" for="password">Password</label>
+                            <div class="input-group input-group-merge">
+                                <input type="password" id="password" class="form-control @error('password') is-invalid @enderror"
+                                    name="password" value="{{ old('password') }}"
+                                    {{ isset($edit->password) ? '' : 'required' }} placeholder="Enter password"
+                                    aria-describedby="password">
+                                <span class="input-group-text cursor-pointer">
+                                    <i class="ti ti-eye-off"></i>
+                                </span>
+                            </div>
 
                             @error('password')
-                                <span class="invalid-feedback">
+                                <span class="invalid-feedback d-block">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
