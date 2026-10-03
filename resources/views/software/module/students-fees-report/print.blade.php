@@ -207,9 +207,9 @@
                                     alt="College Logo">
                             </td>
                             <td style="text-align: center;">
-                                Shree Patel Vidhyarthi Ashram Sanchalit<br>
+                                {{-- Shree Patel Vidhyarthi Ashram Sanchalit<br>
                                 <strong>Shree Patel Vidhya Mandir Science College</strong><br>
-                                Veraval Road, Keshod - 362 220. Mo. 96874 51774<br>
+                                Veraval Road, Keshod - 362 220. Mo. 96874 51774<br> --}}
 
                             </td>
                         </tr>
@@ -306,7 +306,7 @@
                     </div>
                     <div class="signature-right" style="text-align:right;">
                         <div style="border-top:1px solid #000; width:150px; margin-left:auto; margin-top:44px;"></div>
-                        <br> PVM BCA COLLEGE
+                        {{-- <br> PVM BCA COLLEGE --}}
                     </div>
                     <div class="clear"></div>
                 </div>

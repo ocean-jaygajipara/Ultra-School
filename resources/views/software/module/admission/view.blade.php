@@ -248,10 +248,10 @@
                 <img src="{{ asset('uploads/logo/logo.png') }}" alt="College Logo" style="width: 85px; height: auto;">
             </div>
             <div class="college-info-box" style="text-align: center; flex-grow: 1; padding: 0 10px; line-height: 1.3;">
-                <span style="font-size: 11px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Shree Patel Vidhyarthi Ashram Sanchalit</span><br>
+                {{-- <span style="font-size: 11px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Shree Patel Vidhyarthi Ashram Sanchalit</span><br>
                 <h2 style="font-size: 20px; font-weight: 800; color: #004aad; margin: 2px 0; text-transform: uppercase;">Shree Patel Vidhya Mandir Science College</h2>
                 <span style="font-size: 11px; color: #666; font-weight: 500;">Behind Maruti Service Center, Veraval Road, Keshod – 362220</span><br>
-                <span style="font-size: 11px; color: #666; font-weight: 500;">Mo. 96874 51774 | Email: pvmsciencecollegekeshod@gmail.com</span><br>
+                <span style="font-size: 11px; color: #666; font-weight: 500;">Mo. 96874 51774 | Email: pvmsciencecollegekeshod@gmail.com</span><br> --}}
                 <h4 style="font-size: 16px; font-weight: 700; color: #f57c00; font-style: italic; margin-top: 5px; margin-bottom: 0; text-transform: uppercase;">Admission Form</h4>
             </div>
             <div class="photo-box" style="margin-left: 10px; flex-shrink: 0; line-height: 150px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
@@ -381,9 +381,9 @@
             <div>Principal</div>
         </div>
 
-        <div class="footer-college-info">
+        {{-- <div class="footer-college-info">
             Shree Patel Vidhya Mandir Science College - Keshod | Mo. 96874 51774
-        </div>
+        </div> --}}
     </div>
 </body>
 

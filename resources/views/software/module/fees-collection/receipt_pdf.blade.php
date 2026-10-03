@@ -106,7 +106,6 @@
     </style>
 </head>
 <body>
-
     <div class="receipt">
         <div class="content-wrap">
             <!-- Header -->
@@ -119,9 +118,9 @@
                             @endif
                         </td>
                         <td class="college-header">
-                            Shree Patel Vidhyarthi Ashram Sanchalit<br>
+                            {{-- Shree Patel Vidhyarthi Ashram Sanchalit<br>
                             <strong style="font-size: 14px;">Shree Patel Vidhya Mandir Science College</strong><br>
-                            <strong>Veraval Road, Keshod - 362 220. Mo. 96874 51774</strong>
+                            <strong>Veraval Road, Keshod - 362 220. Mo. 96874 51774</strong> --}}
                         </td>
                     </tr>
                 </table>
@@ -219,7 +218,7 @@
                             Received By: ___________________
                         </td>
                         <td style="width: 50%; text-align: right;">
-                            <strong>PVM BCA COLLEGE</strong>
+                            {{-- <strong>PVM BCA COLLEGE</strong> --}}
                         </td>
                     </tr>
                 </table>

@@ -139,9 +139,9 @@
                                 style="width:100px; height:auto;">
                         </td>
                         <td style="text-align: center;">
-                            Shree Patel Vidhyarthi Ashram Sanchalit<br>
+                            {{-- Shree Patel Vidhyarthi Ashram Sanchalit<br>
                             <strong>Shree Patel Vidhya Mandir Science College</strong><br>
-                            Veraval Road, Keshod - 362 220. Mo. 96874 51774<br>
+                            Veraval Road, Keshod - 362 220. Mo. 96874 51774<br> --}}
 
                         </td>
                     </tr>
@@ -238,7 +238,7 @@
                 
                 <div style="float: left;">Received By: <strong>{{ $feesData->createdByUser->name ?? '__________' }}</strong>
                 </div>
-                <div style="float: right;"><strong>PVM BCA COLLEGE</strong></div>
+                {{-- <div style="float: right;"><strong>PVM BCA COLLEGE</strong></div> --}}
                 <div style="clear: both;"></div>
             </div>
 

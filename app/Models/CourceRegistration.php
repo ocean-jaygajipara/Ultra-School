@@ -36,10 +36,6 @@ class CourceRegistration extends Model
         'deleted_by',
     ];
 
-    public static $universities = [
-        'Vrundavan Computers',
-        'BKNMU',
-    ];
     public function admission()
     {
         return $this->belongsTo(Admission::class, 'register_id', 'id');

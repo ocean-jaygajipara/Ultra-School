@@ -169,7 +169,6 @@
                 return mb_strtolower(trim((string)$v));
             }, $allowedDepartmentsRaw);
 
-            // Preload allowed universities from CourceRegistration::$universities (if provided)
             // Preload allowed universities from master_universities table
             $allowedUniversitiesRaw = \App\Models\Master\MasterUniversity::pluck('name')->toArray();
 

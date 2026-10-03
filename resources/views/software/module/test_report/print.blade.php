@@ -157,9 +157,9 @@
                     <img src="{{ asset('uploads/logo/logo.png') }}" alt="College Logo" style="width: 80px; height: auto;">
                 </td>
                 <td style="text-align: center; vertical-align: middle; line-height: 1.5;">
-                    <span class="trust-name">Shree Patel Vidhyarthi Ashram Sanchalit</span><br>
+                    {{-- <span class="trust-name">Shree Patel Vidhyarthi Ashram Sanchalit</span><br>
                     <strong class="college-name">Shree Patel Vidhya Mandir Science College</strong><br>
-                    <span class="college-info">Veraval Road, Keshod - 362 220. Mo. 96874 51774</span>
+                    <span class="college-info">Veraval Road, Keshod - 362 220. Mo. 96874 51774</span> --}}
                 </td>
                 <td style="width: 90px;"></td> <!-- balancer -->
             </tr>

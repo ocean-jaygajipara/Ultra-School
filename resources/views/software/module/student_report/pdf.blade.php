@@ -156,9 +156,9 @@
                     @endif
                 </td>
                 <td style="text-align: center; line-height: 1.4;">
-                    <span class="trust-name">Shree Patel Vidhyarthi Ashram Sanchalit</span><br>
+                    {{-- <span class="trust-name">Shree Patel Vidhyarthi Ashram Sanchalit</span><br>
                     <strong class="college-name">Shree Patel Vidhya Mandir Science College</strong><br>
-                    <span class="college-info">Veraval Road, Keshod - 362 220. Mo. 96874 51774</span>
+                    <span class="college-info">Veraval Road, Keshod - 362 220. Mo. 96874 51774</span> --}}
                 </td>
                 <td style="width: 75px;"></td>
             </tr>
