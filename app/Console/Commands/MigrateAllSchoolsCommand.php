@@ -18,6 +18,7 @@ class MigrateAllSchoolsCommand extends Command
      */
     protected $signature = 'schools:migrate 
                             {--school= : Run migration for a specific school (e.g. ues, ups, uv, us)}
+                            {--status : Show migration status (ran/pending) for school databases}
                             {--fresh : Drop all tables and re-run all migrations}
                             {--seed : Seed the databases}
                             {--sync-from= : Sync schema and seed/data from an existing database}';
@@ -50,22 +51,28 @@ class MigrateAllSchoolsCommand extends Command
 
         $fresh = $this->option('fresh');
         $seed = $this->option('seed');
+        $status = $this->option('status');
         $sourceDb = $this->option('sync-from');
 
         $this->info('====================================================');
-        $this->info(' Multi-School Databases Migration & Setup ');
+        $this->info($status ? ' Multi-School Migration Status Check ' : ' Multi-School Databases Migration & Setup ');
         $this->info('====================================================');
 
-        // Migrate each school database using its specific credentials
+        // Process each school database using its specific credentials
         foreach ($schools as $code => $school) {
             $dbName = $school['database'];
             $this->newLine();
             $this->info("----------------------------------------------------");
-            $this->info("Migrating [{$school['name']}] (DB: {$dbName})...");
+            $this->info(($status ? "Migration Status for " : "Migrating ") . "[{$school['name']}] (DB: {$dbName})...");
             $this->info("----------------------------------------------------");
 
             try {
                 SchoolDatabaseManager::switchDatabase($code);
+
+                if ($status) {
+                    Artisan::call('migrate:status', ['--database' => 'mysql'], $this->output);
+                    continue;
+                }
 
                 $migrateCommand = $fresh ? 'migrate:fresh' : 'migrate';
                 $params = [
@@ -85,7 +92,7 @@ class MigrateAllSchoolsCommand extends Command
                     $this->info("✓ Successfully migrated [{$school['name']}].");
                 }
             } catch (\Exception $e) {
-                $this->error("Failed to migrate [{$school['name']}]: " . $e->getMessage());
+                $this->error("Failed for [{$school['name']}]: " . $e->getMessage());
             }
         }
 
