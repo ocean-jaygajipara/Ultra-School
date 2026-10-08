@@ -58,23 +58,6 @@
                             <label id="StudentName" style="font-weight: 400; text-transform: uppercase;"></label>
                         </h2>
                         <div class="row">
-                            {{-- University --}}
-
-                            <div class="col-md-12 mb-3">
-                                <div class="form-group">
-                                    <label for="university">University <span class="text-danger">*</span></label>
-                                    <select name="university" id="university"
-                                        class="form-control search_by_university select2 @error('university') is-invalid @enderror"
-                                        data-selected-university-id="{{ old('university', $edit->university ?? '') }}"
-                                        required>
-                                        <option value="">Select University</option>
-                                    </select>
-
-                                    @error('university')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
 
 
                             {{-- Department --}}
@@ -417,7 +400,6 @@
 @section('page_leavel_script')
     @include('software.utils.getCourse')
     @include('software.utils.getDepartment')
-    @include('software.utils.getUniversity')
     @include('software.utils.getBatchByCourseid')
     @include('software.utils.getClass')
     @include('software.utils.getShiftByBatchByCourseidByClass')

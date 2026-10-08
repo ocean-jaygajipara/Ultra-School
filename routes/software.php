@@ -16,7 +16,6 @@ use App\Http\Controllers\admin\master\MasterCityController;
 use App\Http\Controllers\admin\master\MasterCountryController;
 use App\Http\Controllers\admin\master\MasterPincodeController;
 use App\Http\Controllers\admin\master\MasterStateController;
-use App\Http\Controllers\admin\master\MasterUniversityController;
 use App\Http\Controllers\admin\spatie\PermissionController;
 use App\Http\Controllers\admin\spatie\RoleController;
 use App\Http\Controllers\admin\spatie\UserController;
@@ -37,8 +36,13 @@ use App\Http\Controllers\admin\FacultyComplaintReportController;
 use App\Http\Controllers\admin\SupplierController;
 use App\Http\Controllers\admin\GoogleDriveController;
 use App\Http\Controllers\admin\master\IssuedBookController;
+use App\Http\Controllers\admin\master\MasterBusRouteVillageController;
+use App\Http\Controllers\admin\master\MasterCategoryController;
 use App\Http\Controllers\admin\master\MasterClassController;
 use App\Http\Controllers\admin\master\MasterDepartmentController;
+use App\Http\Controllers\admin\master\MasterDivisionController;
+use App\Http\Controllers\admin\master\MasterHouseController;
+use App\Http\Controllers\admin\master\MasterReligionController;
 use App\Http\Controllers\admin\master\MasterSemesterController;
 use App\Http\Controllers\admin\master\MasterShiftController;
 use App\Http\Controllers\admin\StudentsFeesReportController;
@@ -71,6 +75,8 @@ Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('softw
 Route::get('/home-dashboard', function () {
     return redirect()->route('software.dashboard');
 })->name('dashboard');
+
+Route::get('/school/switch/{code}', [\App\Http\Controllers\SchoolController::class, 'switchSchool'])->name('school.switch');
 
 Route::get('/removeimage/{id}', [DashboardController::class, 'remove_image'])->name('remove_image');
 
@@ -227,11 +233,47 @@ Route::match(['get', 'post'], 'department-update-status', [MasterDepartmentContr
 Route::delete('/department/permanent-delete/{id}', [MasterDepartmentController::class, 'permanentDelete'])->name('department.permanent-delete');
 
 
-/** Master Department Modules */
-Route::resource('/university', MasterUniversityController::class);
-Route::match(['get', 'post'], 'university/restore/{id}', [MasterUniversityController::class, 'restore'])->name('university.restore');
-Route::match(['get', 'post'], 'university-update-status', [MasterUniversityController::class, 'status_update'])->name('university.status-update');
-Route::delete('/university/permanent-delete/{id}', [MasterUniversityController::class, 'permanentDelete'])->name('university.permanent-delete');
+
+/** Master Division Modules */
+Route::get('division/export-excel', [MasterDivisionController::class, 'exportExcel'])->name('division.export-excel');
+Route::get('division/print', [MasterDivisionController::class, 'printView'])->name('division.print');
+Route::resource('/division', MasterDivisionController::class);
+Route::match(['get', 'post'], 'division/restore/{id}', [MasterDivisionController::class, 'restore'])->name('division.restore');
+Route::match(['get', 'post'], 'division-update-status', [MasterDivisionController::class, 'status_update'])->name('division.status-update');
+Route::delete('/division/permanent-delete/{id}', [MasterDivisionController::class, 'permanentDelete'])->name('division.permanent-delete');
+
+/** Master Category Modules */
+Route::get('category/export-excel', [MasterCategoryController::class, 'exportExcel'])->name('category.export-excel');
+Route::get('category/print', [MasterCategoryController::class, 'printView'])->name('category.print');
+Route::resource('/category', MasterCategoryController::class);
+Route::match(['get', 'post'], 'category/restore/{id}', [MasterCategoryController::class, 'restore'])->name('category.restore');
+Route::match(['get', 'post'], 'category-update-status', [MasterCategoryController::class, 'status_update'])->name('category.status-update');
+Route::delete('/category/permanent-delete/{id}', [MasterCategoryController::class, 'permanentDelete'])->name('category.permanent-delete');
+
+
+/** Master House Modules */
+Route::get('house/export-excel', [MasterHouseController::class, 'exportExcel'])->name('house.export-excel');
+Route::get('house/print', [MasterHouseController::class, 'printView'])->name('house.print');
+Route::resource('/house', MasterHouseController::class);
+Route::match(['get', 'post'], 'house/restore/{id}', [MasterHouseController::class, 'restore'])->name('house.restore');
+Route::match(['get', 'post'], 'house-update-status', [MasterHouseController::class, 'status_update'])->name('house.status-update');
+Route::delete('/house/permanent-delete/{id}', [MasterHouseController::class, 'permanentDelete'])->name('house.permanent-delete');
+
+/** Master Religion Modules */
+Route::get('religion/export-excel', [MasterReligionController::class, 'exportExcel'])->name('religion.export-excel');
+Route::get('religion/print', [MasterReligionController::class, 'printView'])->name('religion.print');
+Route::resource('/religion', MasterReligionController::class);
+Route::match(['get', 'post'], 'religion/restore/{id}', [MasterReligionController::class, 'restore'])->name('religion.restore');
+Route::match(['get', 'post'], 'religion-update-status', [MasterReligionController::class, 'status_update'])->name('religion.status-update');
+Route::delete('/religion/permanent-delete/{id}', [MasterReligionController::class, 'permanentDelete'])->name('religion.permanent-delete');
+
+/** Master Bus Route Village Modules */
+Route::get('bus-route-village/export-excel', [MasterBusRouteVillageController::class, 'exportExcel'])->name('bus-route-village.export-excel');
+Route::get('bus-route-village/print', [MasterBusRouteVillageController::class, 'printView'])->name('bus-route-village.print');
+Route::resource('/bus-route-village', MasterBusRouteVillageController::class);
+Route::match(['get', 'post'], 'bus-route-village/restore/{id}', [MasterBusRouteVillageController::class, 'restore'])->name('bus-route-village.restore');
+Route::match(['get', 'post'], 'bus-route-village-update-status', [MasterBusRouteVillageController::class, 'status_update'])->name('bus-route-village.status-update');
+Route::delete('/bus-route-village/permanent-delete/{id}', [MasterBusRouteVillageController::class, 'permanentDelete'])->name('bus-route-village.permanent-delete');
 
 
 /** Library Book Master Modules */
@@ -457,7 +499,7 @@ Route::match(['get', 'post'], 'test_report-update-status', [TestreportController
 Route::post('/marks/store', [TestreportController::class, 'store'])->name('marks.store');
 
 
-// Route::match(['get', 'post'], 'biomax/status', [BioMaxController::class, 'biomax_status'])->name('biomax.status');
+Route::match(['get', 'post'], 'biomax/status', [BioMaxController::class, 'biomax_status'])->name('biomax.status');
 // Notification Setting
 Route::resource('/notification_setting', NotificationSettingController::class);
 Route::get('get-students-by-course/{course_id}', [NotificationSettingController::class, 'getStudentsByCourse'])

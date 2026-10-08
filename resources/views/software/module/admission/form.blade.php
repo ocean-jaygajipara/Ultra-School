@@ -10,6 +10,7 @@
 @section('title', $page_title)
 
 @section('page_style_file')
+    <link rel="stylesheet" href="{{ asset('admin/assets/vendor/libs/flatpickr/flatpickr.css') }}" />
     <style>
         .swal2-popup.swal-wide {
             width: 550px !important;
@@ -59,23 +60,154 @@
 
                     <div class="collapse show" id="aadharSection">
                         <div class="row">
-                            <div class="col-md-6 col-sm-12 mb-3">
+                            {{-- GR No. --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <label class="form-label"> Aadhaar Card No. <span class="text-danger">*</span> </label>
-                                    <input id="aadhar_card_no" type="text"
-                                        class="form-control @error('aadhar_card_no') is-invalid @enderror num_only"
-                                        minlength="14" maxlength="14" name="aadhar_card_no"
-                                        value="{{ isset($edit?->aadhar_card_no) ? $edit?->aadhar_card_no : old('aadhar_card_no') }}"
-                                        autocomplete="aadhar_card_no" autofocus
-                                        placeholder="Enter Aadhaar Card No. (xxxx xxxx xxxx)" autocapitalize="off">
-
-                                    @error('aadhar_card_no')
+                                    <label class="form-label">GR No.</label>
+                                    <input id="gr_no" type="text"
+                                        class="form-control @error('gr_no') is-invalid @enderror"
+                                        name="gr_no"
+                                        value="{{ isset($edit?->gr_no) ? $edit?->gr_no : old('gr_no') }}"
+                                        placeholder="Enter GR No." autocomplete="off">
+                                    @error('gr_no')
                                         <span class="invalid-feedback">
                                             <strong>{{ $message }}</strong>
                                         </span>
                                     @enderror
                                 </div>
                             </div>
+
+                            {{-- Bus Route Village (Dropdown / Type New Entry) --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Bus Route Village</label>
+                                    @php
+                                        $villageList = isset($villages)
+                                            ? $villages
+                                            : \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
+                                        $selectedVillage = old('bus_route_village', $edit->bus_route_village ?? '');
+                                        $villageNames = $villageList->pluck('name')->toArray();
+                                    @endphp
+                                    <select name="bus_route_village" id="bus_route_village" class="form-control select2-tags">
+                                        <option value="">Select or Type Bus Route Village</option>
+                                        @foreach ($villageList as $villageItem)
+                                            @php $vName = is_object($villageItem) ? $villageItem->name : $villageItem; @endphp
+                                            <option value="{{ $vName }}"
+                                                {{ ($selectedVillage == $vName) ? 'selected' : '' }}>
+                                                {{ $vName }}
+                                            </option>
+                                        @endforeach
+                                        @if(!empty($selectedVillage) && !in_array($selectedVillage, $villageNames))
+                                            <option value="{{ $selectedVillage }}" selected>{{ $selectedVillage }}</option>
+                                        @endif
+                                    </select>
+                                    <small class="text-muted d-block mt-1">Select from list or type a new village to auto-add to master.</small>
+                                    @error('bus_route_village')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Admission Date --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Admission Date</label>
+                                    @php
+                                        $admDateVal = old('admission_date', $edit->admission_date ?? '');
+                                        $admDateFormatted = '';
+                                        if (!empty($admDateVal)) {
+                                            try {
+                                                $admDateFormatted = \Carbon\Carbon::parse($admDateVal)->format('d-m-Y');
+                                            } catch (\Exception $e) {
+                                                $admDateFormatted = $admDateVal;
+                                            }
+                                        } else {
+                                            $admDateFormatted = date('d-m-Y');
+                                        }
+                                    @endphp
+                                    <div class="input-group">
+                                        <input id="admission_date" type="text"
+                                            class="form-control flatpickr-adm-date @error('admission_date') is-invalid @enderror"
+                                            name="admission_date" placeholder="DD-MM-YYYY" autocomplete="off"
+                                            value="{{ $admDateFormatted }}">
+                                        <span class="input-group-text cursor-pointer" id="adm_date_picker_btn" title="Choose Date">
+                                            <i class="fa-solid fa-calendar-days"></i>
+                                        </span>
+                                    </div>
+                                    @error('admission_date')
+                                        <span class="invalid-feedback d-block">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            @php
+                                $classList = isset($classes) && $classes->count() > 0 
+                                    ? $classes->pluck('class')->toArray() 
+                                    : ['Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th-Science', '11th-Commerce', '11th-Arts', '12th-Science', '12th-Commerce', '12th-Arts'];
+                                $selectedAdmStd = old('admission_std', $edit->admission_std ?? '');
+                                $selectedCurrentStd = old('current_std', $edit->current_std ?? '');
+                            @endphp
+
+                            {{-- Admission Std --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Admission Std</label>
+                                    <select name="admission_std" id="admission_std" class="form-control select2">
+                                        <option value="">Select Admission Std</option>
+                                        @foreach($classList as $cls)
+                                            <option value="{{ $cls }}" {{ ($selectedAdmStd == $cls) ? 'selected' : '' }}>{{ $cls }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('admission_std')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Current Std --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Current Std</label>
+                                    <select name="current_std" id="current_std" class="form-control select2">
+                                        <option value="">Select Current Std</option>
+                                        @foreach($classList as $cls)
+                                            <option value="{{ $cls }}" {{ ($selectedCurrentStd == $cls) ? 'selected' : '' }}>{{ $cls }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('current_std')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Division --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Division</label>
+                                    @php
+                                        $divisionList = isset($divisions)
+                                            ? $divisions
+                                             : \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
+                                    @endphp
+                                    <select name="division" id="division" class="form-control select2">
+                                        <option value="">Select Division</option>
+                                        @foreach ($divisionList as $dItem)
+                                            @php $dName = is_object($dItem) ? $dItem->name : $dItem; @endphp
+                                            <option value="{{ $dName }}"
+                                                {{ (old('division', $edit->division ?? '') == $dName) ? 'selected' : '' }}>
+                                                {{ $dName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('division')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Profile Picture --}}
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <label class="form-label">Profile Picture <span class="text-danger">*</span></label>
@@ -97,22 +229,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-sm-12 mb-3">
-                                <div class="form-group">
-                                    <label class="form-label">GR No.</label>
-                                    <input id="gr_no" type="text"
-                                        class="form-control @error('gr_no') is-invalid @enderror"
-                                        name="gr_no"
-                                        value="{{ isset($edit?->gr_no) ? $edit?->gr_no : old('gr_no') }}"
-                                        placeholder="Enter GR No." autocomplete="off">
-                                    @error('gr_no')
-                                        <span class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
+                            {{-- Biometric ID --}}
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <label class="form-label">Biometric ID</label>
@@ -147,12 +264,13 @@
                     <div class="collapse show mt-2" id="personalDetails">
                         <div class="row">
                             {{-- First Name --}}
+                            {{-- First Name --}}
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <label class="form-label"> Surname <span class="text-danger">*</span> </label>
                                     <input id="first_name" type="text"
                                         class="form-control text-uppercase @error('first_name') is-invalid @enderror"
-                                        name="first_name" autocapitalize="off"
+                                        name="first_name" autocapitalize="off" oninput="updateFullNames()"
                                         value="{{ isset($edit?->first_name) ? $edit?->first_name : old('first_name') }}"
                                         placeholder="Enter Surname">
                                     @error('first_name')
@@ -177,55 +295,180 @@
                             </div>
 
                             {{-- Father Name --}}
-                            <div class="col-md-6 col-sm-12 mb-3">
+                            <div class="col-md-4 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <label class="form-label"> Father's Name <span class="text-danger">*</span> </label>
+                                    <label class="form-label"> Father Name <span class="text-danger">*</span> </label>
                                     <input id="father_name" type="text"
                                         class="form-control text-uppercase @error('father_name') is-invalid @enderror "
-                                        name="father_name" autocapitalize="off"
+                                        name="father_name" autocapitalize="off" oninput="updateFullNames()"
                                         value="{{ isset($edit?->father_name) ? $edit?->father_name : old('father_name') }}"
-                                        placeholder="Enter Father's Name">
+                                        placeholder="Enter Father Name">
                                     @error('father_name')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
 
-                            {{-- Mother Name --}}
-                            <div class="col-md-6 col-sm-12 mb-3">
+                            {{-- Surname with Father Name --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <label class="form-label">Mother's Name<span class="text-danger">*</span> </label>
+                                    <label class="form-label"> Surname with Father Name </label>
+                                    <input id="father_full_name" type="text"
+                                        class="form-control text-uppercase bg-white" readonly style="background-color: #fff !important;"
+                                        value="{{ isset($edit) ? $edit?->father_full_name : trim(((old('first_name') ?? '') . ' ' . (old('father_name') ?? ''))) }}"
+                                       >
+                                </div>
+                            </div>
+
+                             {{-- Father Occupation --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Father Occupation</label>
+                                    <input id="occupation" type="text"
+                                        class="form-control text-uppercase @error('occupation') is-invalid @enderror"
+                                        name="occupation" autocapitalize="off"
+                                        value="{{ isset($edit?->occupation) ? $edit?->occupation : old('occupation') }}"
+                                        placeholder="Enter Father Occupation">
+                                    @error('occupation')
+                                        <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+                            {{-- Mother Name --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Mother Name <span class="text-danger">*</span> </label>
                                     <input id="mother_name" type="text"
                                         class="form-control text-uppercase @error('mother_name') is-invalid @enderror "
-                                        name="mother_name" autocapitalize="off"
+                                        name="mother_name" autocapitalize="off" oninput="updateFullNames()"
                                         value="{{ isset($edit?->mother_name) ? $edit?->mother_name : old('mother_name') }}"
-                                        placeholder="Enter Mother's Name">
+                                        placeholder="Enter Mother Name">
                                     @error('mother_name')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
 
-                            {{-- DOB --}}
-                            <div class="col-md-6 col-sm-12 mb-3">
+                            {{-- Surname with Mother Name --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <label class="form-label"> Date of Birth <span class="text-danger">*</span> </label>
-                                    <input id="date_of_birth" type="date"
-                                        class="form-control @error('date_of_birth') is-invalid @enderror "
-                                        name="date_of_birth" max="{{ date('Y-m-d') }}"
-                                        value="{{ isset($edit->date_of_birth) ? $edit->date_of_birth : (old('date_of_birth') ? old('date_of_birth') : date('Y-m-d')) }}">
-                                    @error('date_of_birth')
+                                    <label class="form-label"> Surname with Mother Name </label>
+                                    <input id="mother_full_name" type="text"
+                                        class="form-control text-uppercase bg-white" readonly style="background-color: #fff !important;"
+                                        value="{{ isset($edit) ? $edit?->mother_full_name : trim(((old('first_name') ?? '') . ' ' . (old('mother_name') ?? ''))) }}"
+                                        >
+                                </div>
+                            </div>
+
+                         
+
+                            {{-- Mother Occupation --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Mother Occupation</label>
+                                    <input id="mother_occupation" type="text"
+                                        class="form-control text-uppercase @error('mother_occupation') is-invalid @enderror"
+                                        name="mother_occupation" autocapitalize="off"
+                                        value="{{ isset($edit?->mother_occupation) ? $edit?->mother_occupation : old('mother_occupation') }}"
+                                        placeholder="Enter Mother Occupation">
+                                    @error('mother_occupation')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
 
+                            {{-- Religion (Dropdown from Religion Master) --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Religion</label>
+                                    @php
+                                        $religionList = isset($religions)
+                                            ? $religions
+                                             : \App\Models\Master\MasterReligion::where('status', 'active')->orderBy('id')->get();
+                                        $selectedReligion = old('religion', $edit->religion ?? '');
+                                    @endphp
+                                    <select name="religion" id="religion" class="form-control select2 @error('religion') is-invalid @enderror">
+                                        <option value="">Select Religion</option>
+                                        @foreach ($religionList as $rItem)
+                                            @php $rName = is_object($rItem) ? $rItem->name : $rItem; @endphp
+                                            <option value="{{ $rName }}" {{ ($selectedReligion == $rName) ? 'selected' : '' }}>
+                                                {{ $rName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('religion')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Birth Place --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Birth Place</label>
+                                    <input id="birth_place" type="text"
+                                        class="form-control text-uppercase @error('birth_place') is-invalid @enderror"
+                                        name="birth_place"
+                                        value="{{ isset($edit?->birth_place) ? $edit?->birth_place : old('birth_place') }}"
+                                        placeholder="Enter Birth Place" autocomplete="off">
+                                    @error('birth_place')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Category (Dropdown from Category Master) --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Category <span class="text-danger">*</span></label>
+                                    @php
+                                        $categoryList = isset($categories)
+                                            ? $categories
+                                            : \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->get();
+                                        $selectedCategory = old('category', $edit->category ?? '');
+                                    @endphp
+                                    <select name="category" id="category" class="form-control select2 @error('category') is-invalid @enderror">
+                                        <option value="">Select Category</option>
+                                        @foreach ($categoryList as $catItem)
+                                            @php $catName = is_object($catItem) ? $catItem->name : $catItem; @endphp
+                                            <option value="{{ $catName }}" {{ ($selectedCategory == $catName) ? 'selected' : '' }}>
+                                                {{ $catName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('category')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Cast (Radio Buttons) --}}
+                            <div class="col-md-8 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <small class="fw-medium d-block @error('cast') is-invalid @enderror">Cast</small>
+                                    <div class="d-flex flex-wrap gap-3 mt-1">
+                                        @foreach (['Baxipanch', 'SC', 'ST', 'Handicaped', 'Vichar Vimukti Jati', 'Ex-Serviceman', 'General', 'Low-Profession', 'Minority'] as $castItem)
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" name="cast" class="form-check-input"
+                                                    value="{{ $castItem }}" id="cast_{{ \Illuminate\Support\Str::slug($castItem) }}"
+                                                    {{ strtolower(trim((string)old('cast', $edit->cast ?? ''))) === strtolower(trim($castItem)) ? 'checked' : '' }}>
+                                                <label class="form-check-label"
+                                                    for="cast_{{ \Illuminate\Support\Str::slug($castItem) }}">{{ $castItem }}</label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    @error('cast')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
                             {{-- Gender --}}
-                            <div class="col-md-6 col-sm-12 mb-3">
+                            <div class="col-md-4 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <small class="fw-medium d-block">Gender <span class="text-danger">*</span></small>
                                     @foreach (['Male', 'Female', 'Other'] as $gender)
-                                        <div class="form-check form-check-inline mt-1">
+                                        <div class="form-check form-check-inline mt-2">
                                             <input type="radio" name="gender" class="form-check-input"
                                                 value="{{ $gender }}" id="gender_{{ $gender }}"
                                                 {{ old('gender', $edit->gender ?? '') === $gender ? 'checked' : '' }}>
@@ -234,63 +477,98 @@
                                         </div>
                                     @endforeach
                                     @error('gender')
-                                        <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
 
-                            {{-- Cast --}}
+                            {{-- House (Dropdown from House Master) --}}
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <label class="form-label"> Cast </label>
-                                    <input id="cast" type="text"
-                                        class="form-control @error('cast') is-invalid @enderror " name="cast"
-                                        autocapitalize="off"
-                                        value="{{ isset($edit?->cast) ? $edit?->cast : old('cast') }}"
-                                        placeholder="Enter Cast">
-                                    @error('cast')
-                                        <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                    <label class="form-label">House</label>
+                                    @php
+                                        $houseList = isset($houses)
+                                            ? $houses
+                                            : \App\Models\Master\MasterHouse::where('status', 'active')->orderBy('id')->get();
+                                        $selectedHouse = old('house', $edit->house ?? '');
+                                    @endphp
+                                    <select name="house" id="house" class="form-control select2 @error('house') is-invalid @enderror">
+                                        <option value="">Select House</option>
+                                        @foreach ($houseList as $hItem)
+                                            @php $hName = is_object($hItem) ? $hItem->name : $hItem; @endphp
+                                            <option value="{{ $hName }}" {{ ($selectedHouse == $hName) ? 'selected' : '' }}>
+                                                {{ $hName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('house')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
 
-                            {{-- Category --}}
+                            {{-- Stream --}}
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <small class="fw-medium d-block @error('category') is-invalid @enderror">Category <span
-                                            class="text-danger">*</span></small>
-                                    @foreach (['SC', 'ST', 'OBC', 'EWS', 'General'] as $cat)
-                                        <div class="form-check form-check-inline mt-1">
-                                            <input type="radio" name="category" class="form-check-input"
-                                                value="{{ $cat }}" id="category_{{ $cat }}"
-                                                {{ old('category', $edit->category ?? '') === $cat ? 'checked' : '' }}>
-                                            <label class="form-check-label"
-                                                for="category_{{ $cat }}">{{ $cat }}</label>
-                                        </div>
-                                    @endforeach
-                                    @error('category')
-                                        <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                    <label class="form-label">Stream</label>
+                                    @php
+                                        $streamList = ['General', 'RTE Students'];
+                                        $selectedStream = old('stream', $edit->stream ?? '');
+                                    @endphp
+                                    <select name="stream" id="stream" class="form-control select2 @error('stream') is-invalid @enderror">
+                                        <option value="">Select Stream</option>
+                                        @foreach ($streamList as $streamItem)
+                                            <option value="{{ $streamItem }}"
+                                                {{ ($selectedStream == $streamItem) ? 'selected' : '' }}>
+                                                {{ $streamItem }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('stream')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
-                            <div class="collapse show" id="FatherOccupation">
-                                <div class="col-md-12 col-sm-12  mb-3">
-                                    <div class="form-group">
-                                        <label class="form-label"> Father Occupation </label>
-                                        <input id="occupation" type="text"
-                                            class="form-control @error('occupation') is-invalid @enderror "
-                                            name="occupation" autocapitalize="off"
-                                            value="{{ isset($edit?->occupation) ? $edit?->occupation : old('occupation') }}"
-                                            placeholder="Enter Father Occupation">
 
-                                        @error('occupation')
-                                            <span class="invalid-feedback">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
+                            {{-- DOB --}}
+                            <div class="col-md-6 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label"> Date of Birth <span class="text-danger">*</span> </label>
+                                    @php
+                                        $dobVal = old('date_of_birth', $edit->date_of_birth ?? '');
+                                        $dobFormatted = '';
+                                        if (!empty($dobVal)) {
+                                            try {
+                                                $dobFormatted = \Carbon\Carbon::parse($dobVal)->format('d-m-Y');
+                                            } catch (\Exception $e) {
+                                                $dobFormatted = $dobVal;
+                                            }
+                                        }
+                                    @endphp
+                                    <div class="input-group">
+                                        <input id="date_of_birth" type="text"
+                                            class="form-control flatpickr-dob @error('date_of_birth') is-invalid @enderror"
+                                            name="date_of_birth" placeholder="DD-MM-YYYY" autocomplete="off"
+                                            value="{{ $dobFormatted }}">
+                                        <span class="input-group-text cursor-pointer" id="dob_picker_btn" title="Choose Date">
+                                            <i class="fa-solid fa-calendar-days"></i>
+                                        </span>
                                     </div>
+                                    @error('date_of_birth')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
                                 </div>
                             </div>
+
+                            {{-- DOB In Words --}}
+                            <div class="col-md-6 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label"> Date of Birth (In Words) </label>
+                                    <input type="text" id="date_of_birth_words" class="form-control bg-white text-capitalize"
+                                        placeholder="Date of Birth in Words" readonly style="background-color: #fff !important;">
+                                </div>
+                            </div>
+
 
                             {{--
                             @if (isset($edit) && $edit?->gdrivefolderurl)
@@ -438,22 +716,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-12 col-sm-12  mb-3">
-                                <div class="form-group">
-                                    <label class="form-label"> Email Address <span class="text-danger">*</span> </label>
-                                    <input id="email_address" type="email"
-                                        class="form-control @error('email_address') is-invalid @enderror "
-                                        name="email_address" autocapitalize="off"
-                                        value="{{ isset($edit?->email_address) ? $edit?->email_address : old('email_address') }}"
-                                        placeholder="Enter Email Address">
 
-                                    @error('email_address')
-                                        <span class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <hr>
@@ -467,14 +730,14 @@
 
                     <div class="collapse show mt-2" id="Academy">
                         <div class="row">
-                            <div class="col-md-6 col-sm-12  mb-3">
+                            <div class="col-md-4 col-sm-12  mb-3">
                                 <div class="form-group">
-                                    <label class="form-label"> APAAR ID/ABC ID </label>
+                                    <label class="form-label"> APAAR ID </label>
                                     <input id="apaar_id_abc_id" type="text"
                                         class="form-control @error('apaar_id_abc_id') is-invalid @enderror "
                                         autocapitalize="off" name="apaar_id_abc_id"
                                         value="{{ isset($edit?->apaar_id_abc_id) ? $edit?->apaar_id_abc_id : old('apaar_id_abc_id') }}"
-                                        placeholder="Enter APAAR ID/ABC ID">
+                                        placeholder="Enter APAAR ID">
 
                                     @error('apaar_id_abc_id')
                                         <span class="invalid-feedback">
@@ -483,7 +746,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6 col-sm-12  mb-3">
+                            <div class="col-md-4 col-sm-12  mb-3">
                                 <div class="form-group">
                                     <label class="form-label">UDISE</label>
                                     <input id="udise" type="text"
@@ -499,24 +762,9 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-sm-12  mb-3">
-                                <div class="form-group">
-                                    <label class="form-label"> Enrollment No.</label>
-                                    <input id="enrolment_no" type="text"
-                                        class="form-control @error('enrolment_no') is-invalid @enderror "
-                                        name="enrolment_no" autocapitalize="off"
-                                        value="{{ isset($edit?->enrolment_no) ? $edit?->enrolment_no : old('enrolment_no') }}"
-                                        placeholder="Enter Enrollment No.">
 
-                                    @error('enrolment_no')
-                                        <span class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
 
-                            <div class="col-md-6 col-sm-12  mb-3">
+                            <div class="col-md-4 col-sm-12  mb-3">
                                 <div class="form-group">
                                     <label class="form-label"> SPID </label>
                                     <input id="spid" type="text"
@@ -533,6 +781,43 @@
                                 </div>
                             </div>
 
+                            {{-- Aadhaar Card No. --}}
+                            <div class="col-md-6 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label"> Aadhaar Card No. <span class="text-danger">*</span> </label>
+                                    <input id="aadhar_card_no" type="text"
+                                        class="form-control @error('aadhar_card_no') is-invalid @enderror num_only"
+                                        minlength="14" maxlength="14" name="aadhar_card_no"
+                                        value="{{ isset($edit?->aadhar_card_no) ? $edit?->aadhar_card_no : old('aadhar_card_no') }}"
+                                        autocomplete="aadhar_card_no"
+                                        placeholder="Enter Aadhaar Card No. (xxxx xxxx xxxx)" autocapitalize="off">
+
+                                    @error('aadhar_card_no')
+                                        <span class="invalid-feedback">
+                                             <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- PEN No. --}}
+                            <div class="col-md-6 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label"> PEN No. </label>
+                                    <input id="pen_no" type="text"
+                                        class="form-control text-uppercase @error('pen_no') is-invalid @enderror"
+                                        maxlength="20" name="pen_no"
+                                        value="{{ isset($edit?->pen_no) ? $edit?->pen_no : old('pen_no') }}"
+                                        placeholder="Enter PEN No." autocapitalize="characters">
+
+                                    @error('pen_no')
+                                        <span class="invalid-feedback">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                            </div>
+
 
 
 
@@ -540,158 +825,174 @@
                     </div>
                     <hr>
 
-                    <div class="col-sm-12" id="education_details">
-                        <div class="content-header mt-1 mb-4 mb-3">
-                            <h6 class="mb-0">Educational Details</h6>
-                            <!-- <small>Enter Your Company Information.</small> -->
+                    <div class="text-left">
+                        <h6 class="text-decoration-none menu-link menu-toggle d-flex align-items-center justify-content-between"
+                            data-bs-toggle="collapse" href="#bankDetails" role="button" aria-expanded="true"
+                            aria-controls="bankDetails">
+                            <span class="ms-3"> Bank Details </span>
+                        </h6>
+                    </div>
+
+                    <div class="collapse show mt-2" id="bankDetails">
+                        <div class="row">
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <label class="form-label">Education </label>
-                                    <select name="education_details" id="education" class="form-control select2"
-                                        autofocus>
-                                        <option value="" disabled selected> Select Education </option>
-                                        <option value="10"> 10<sup>th</sup> </option>
-                                        <option value="12"> 12<sup>th</sup> </option>
-                                        <option value="Graduation"> Graduation </option>
+                                    <label class="form-label"> Bank Name </label>
+                                    <input id="bank_name" type="text"
+                                        class="form-control @error('bank_name') is-invalid @enderror"
+                                        name="bank_name"
+                                        value="{{ isset($edit?->bank_name) ? $edit?->bank_name : old('bank_name') }}"
+                                        placeholder="Enter Bank Name" autocapitalize="off">
+                                    @error('bank_name')
+                                        <span class="invalid-feedback">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label"> Bank Account Number </label>
+                                    <input id="bank_account_no" type="text"
+                                        class="form-control @error('bank_account_no') is-invalid @enderror num_only"
+                                        name="bank_account_no"
+                                        value="{{ isset($edit?->bank_account_no) ? $edit?->bank_account_no : old('bank_account_no') }}"
+                                        placeholder="Enter Bank Account Number" autocapitalize="off">
+                                    @error('bank_account_no')
+                                        <span class="invalid-feedback">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+
+                    {{-- Previous / Last School Details --}}
+                    <div class="col-sm-12" id="previous_school_main">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0 text-primary fw-bold">
+                                Previous / Last School Details
+                            </h6>
+                            <div class="form-check form-check-inline mb-0">
+                                <input type="checkbox" name="is_new_admission" class="form-check-input"
+                                    id="is_new_admission" value="1"
+                                    {{ old('is_new_admission', $edit->is_new_admission ?? 0) == 1 ? 'checked' : '' }}>
+                                <label class="form-check-label fw-semibold" for="is_new_admission">
+                                    New Admission
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="previous_school_section" class="row">
+                            {{-- Last School Name --}}
+                            <div class="col-md-6 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Last School Name</label>
+                                    <input type="text" id="last_school_name" name="last_school_name"
+                                        class="form-control text-uppercase @error('last_school_name') is-invalid @enderror"
+                                        value="{{ old('last_school_name', $edit->last_school_name ?? '') }}"
+                                        placeholder="Enter Last School Name" autocomplete="off">
+                                    @error('last_school_name')
+                                        <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Old GR No --}}
+                            <div class="col-md-6 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Old GR No</label>
+                                    <input type="text" id="old_gr_no" name="old_gr_no"
+                                        class="form-control @error('old_gr_no') is-invalid @enderror"
+                                        value="{{ old('old_gr_no', $edit->old_gr_no ?? '') }}"
+                                        placeholder="Enter Old GR No" autocomplete="off">
+                                    @error('old_gr_no')
+                                        <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Passed Standard --}}
+                            <div class="col-md-3 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Passed Standard</label>
+                                    <select name="passed_standard" id="passed_standard" class="form-control select2 @error('passed_standard') is-invalid @enderror">
+                                        <option value="">Select Passed Std</option>
+                                        @for ($std = 1; $std <= 10; $std++)
+                                            @php $stdVal = 'Std ' . $std; @endphp
+                                            <option value="{{ $stdVal }}"
+                                                {{ (old('passed_standard', $edit->passed_standard ?? '') == $stdVal) ? 'selected' : '' }}>
+                                                {{ $stdVal }}
+                                            </option>
+                                        @endfor
                                     </select>
-                                    @error('product_variant_id')
+                                    @error('passed_standard')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- LC No --}}
+                            <div class="col-md-3 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">LC No</label>
+                                    <input type="text" id="lc_no" name="lc_no"
+                                        class="form-control @error('lc_no') is-invalid @enderror"
+                                        value="{{ old('lc_no', $edit->lc_no ?? '') }}"
+                                        placeholder="Enter LC No" autocomplete="off">
+                                    @error('lc_no')
+                                        <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- LC Date --}}
+                            <div class="col-md-3 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">LC Date</label>
+                                    @php
+                                        $lcDateVal = old('lc_date', $edit->lc_date ?? '');
+                                        $lcDateFormatted = '';
+                                        if (!empty($lcDateVal)) {
+                                            try {
+                                                $lcDateFormatted = \Carbon\Carbon::parse($lcDateVal)->format('d-m-Y');
+                                            } catch (\Exception $e) {
+                                                $lcDateFormatted = $lcDateVal;
+                                            }
+                                        }
+                                    @endphp
+                                    <div class="input-group">
+                                        <input type="text" id="lc_date" name="lc_date"
+                                            class="form-control flatpickr-date @error('lc_date') is-invalid @enderror"
+                                            placeholder="DD-MM-YYYY" autocomplete="off"
+                                            value="{{ $lcDateFormatted }}">
+                                        <span class="input-group-text cursor-pointer" id="lc_date_picker_btn" title="Choose Date">
+                                            <i class="fa-solid fa-calendar-days"></i>
+                                        </span>
+                                    </div>
+                                    @error('lc_date')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Attendance --}}
+                            <div class="col-md-3 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Attendance</label>
+                                    <input type="text" id="attendance" name="attendance"
+                                        class="form-control @error('attendance') is-invalid @enderror"
+                                        value="{{ old('attendance', $edit->attendance ?? '') }}"
+                                        placeholder="Enter Attendance" autocomplete="off">
+                                    @error('attendance')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
                         </div>
-                        <table id="education_details_table" class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Education</th>
-                                    <th>Percentage or CGPA</th>
-                                    <th>Seat Number or Enrollment Number</th>
-                                    <th>Board or University </th>
-                                    <th>Passing Year</th>
-                                    <th>School Name or College Name</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{-- @if (isset($education))
-                                    @foreach ($education as $educationdetail)
-                                        <tr>
-                                            <td>
-                                                <input type="text" name="education[]" class="form-control"
-                                                    placeholder="Education" value="{{ $educationdetail->education }}"
-                                                    readonly>
-                                                <input type="hidden" name="education_id[]"
-                                                    value="{{ $educationdetail->id }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="percentage_cgpa[]"
-                                                    class="form-control num_only" placeholder="Percentage or CGPA"
-                                                    value="{{ $educationdetail->percentage_cgpa }}" autocapitalize="off">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="seat_no_nrollment_no[]"
-                                                    class="form-control num_only"
-                                                    placeholder="Enter Seat Number or Enrollment Number"
-                                                    value="{{ $educationdetail->seat_no_nrollment_no }}"
-                                                    autocapitalize="off">
-                                            </td>
-                                            <td><input type="text" name="board_university[]" class="form-control"
-                                                    placeholder="Enter Board or University"
-                                                    value="{{ $educationdetail->board_university }}"
-                                                    autocapitalize="off"></td>
-                                            <td><input type="text" name="passing_year[]" class="form-control"
-                                                    placeholder="Enter Passing Year"
-                                                    value="{{ $educationdetail->passing_year }}" autocapitalize="off">
-                                            </td>
-                                            <td><input type="text" name="school_name_college_name[]"
-                                                    class="form-control" placeholder="Enter School Name or College Name"
-                                                    value="{{ $educationdetail->school_name_college_name }}"
-                                                    autocapitalize="off"></td>
-
-                                            <td><button data-education_id="{{ $educationdetail->id }}" type="button"
-                                                    class="btn btn-danger remove_row"><i
-                                                        class="fa-solid fa-trash"></i></button></td>
-                                        </tr>
-                                    @endforeach
-                                @endif --}}
-                                @if (old('education'))
-                                    @foreach (old('education') as $index => $edu)
-                                        <tr>
-                                            <td>
-                                                <input type="text" name="education[]" class="form-control"
-                                                    value="{{ $edu }}" readonly>
-                                                <input type="hidden" name="education_id[]"
-                                                    value="{{ old('education_id')[$index] ?? '' }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="percentage_cgpa[]" class="form-control"
-                                                    value="{{ old('percentage_cgpa')[$index] ?? '' }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="seat_no_nrollment_no[]" class="form-control"
-                                                    value="{{ old('seat_no_nrollment_no')[$index] ?? '' }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="board_university[]" class="form-control"
-                                                    value="{{ old('board_university')[$index] ?? '' }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="passing_year[]" class="form-control"
-                                                    value="{{ old('passing_year')[$index] ?? '' }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="school_name_college_name[]"
-                                                    class="form-control"
-                                                    value="{{ old('school_name_college_name')[$index] ?? '' }}">
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn btn-danger remove_row"><i
-                                                        class="fa-solid fa-trash"></i></button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @elseif(isset($education))
-                                    @foreach ($education as $educationdetail)
-                                        <tr>
-                                            <td>
-                                                <input type="text" name="education[]" class="form-control"
-                                                    value="{{ $educationdetail->education }}" readonly>
-                                                <input type="hidden" name="education_id[]"
-                                                    value="{{ $educationdetail->id }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="percentage_cgpa[]" class="form-control"
-                                                    value="{{ $educationdetail->percentage_cgpa }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="seat_no_nrollment_no[]" class="form-control"
-                                                    value="{{ $educationdetail->seat_no_nrollment_no }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="board_university[]" class="form-control"
-                                                    value="{{ $educationdetail->board_university }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="passing_year[]" class="form-control"
-                                                    value="{{ $educationdetail->passing_year }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="school_name_college_name[]"
-                                                    class="form-control"
-                                                    value="{{ $educationdetail->school_name_college_name }}">
-                                            </td>
-                                            <td>
-                                                <button data-education_id="{{ $educationdetail->id }}" type="button"
-                                                    class="btn btn-danger remove_row"><i
-                                                        class="fa-solid fa-trash"></i></button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @endif
-
-
-                            </tbody>
-                        </table>
                     </div>
                 </div>
 
@@ -719,7 +1020,44 @@
 @section('page_leavel_script')
 
     <script>
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        function resetScrollToTop() {
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            $('.content-wrapper, .layout-page, .layout-container').scrollTop(0);
+        }
+        resetScrollToTop();
+
         $(function() {
+            resetScrollToTop();
+            setTimeout(resetScrollToTop, 50);
+            setTimeout(resetScrollToTop, 200);
+
+            // Bus Route Village select2 with custom tag/typing support
+            if ($('#bus_route_village').length) {
+                $('#bus_route_village').select2({
+                    tags: true,
+                    placeholder: 'Select or Type Bus Route Village',
+                    allowClear: true
+                });
+            }
+
+
+
+            // When Admission Std is selected, auto-select same in Current Std if Current Std is not yet set
+            $('#admission_std').on('change', function() {
+                let admStd = $(this).val();
+                if (admStd) {
+                    let currentStdVal = $('#current_std').val();
+                    if (!currentStdVal || $('#current_std option[value="' + admStd + '"]').length > 0) {
+                        $('#current_std').val(admStd).trigger('change.select2');
+                    }
+                }
+            });
+
             // Cleave.js for formatting Aadhaar number
             var cleave = new Cleave('#aadhar_card_no', {
                 delimiters: [' ', ' ', ' '],
@@ -920,8 +1258,8 @@
                                 $('#last_name').val(data.user.last_name || '');
                                 $('#father_name').val(data.user.father_name || '');
                                 $('#mother_name').val(data.user.mother_name || '');
+                                prevSurname = (data.user.first_name || '').trim();
                                 $('#mobile_no').val(data.user.mobile_no || '');
-                                $('#email_address').val(data.user.email || '');
                                 $('#date_of_birth').val(data.user.date_of_birth || '');
 
                                 $("input[name='gender'][value='" + (data.user.gender ||
@@ -939,9 +1277,17 @@
                                 $('#whatsapp_no').val(data.user.whatsapp_no || '');
                                 $('#cast').val(data.user.cast || '');
                                 $('#occupation').val(data.user.occupation || '');
-                                $('#enrolment_no').val(data.user.enrolment_no || '');
+                                $('#gr_no').val(data.user.gr_no || '');
+                                $('#biometric_id').val(data.user.biometric_id || '');
+                                $('#bus_route_village').val(data.user.bus_route_village || '').trigger('change');
+                                $('#admission_date').val(data.user.admission_date || '');
+                                $('#admission_std').val(data.user.admission_std || '').trigger('change');
+                                $('#current_std').val(data.user.current_std || '').trigger('change');
+                                $('#division').val(data.user.division || '').trigger('change');
                                 $('#spid').val(data.user.spid || '');
                                 $('#apaar_id_abc_id').val(data.user.apaar_id_abc_id || '');
+                                $('#bank_name').val(data.user.bank_name || '');
+                                $('#bank_account_no').val(data.user.bank_account_no || '');
 
                                 $('#education_details_table tbody').empty();
                                 if (Array.isArray(data.education_details)) {
@@ -1012,47 +1358,6 @@
                 }
             });
 
-            $('#education').on('change', function() {
-                let selectededucationId = $(this).val();
-                let selectededucationText = $(this).find("option:selected").text();
-
-                if (!selectededucationId) return;
-                let tableBody = $('#education_details_table tbody');
-
-                let isVariantAlreadyAdded = tableBody.find('input[name="education[]"]').filter(function() {
-                    return $(this).val() === selectededucationText;
-                }).length > 0;
-
-                if (isVariantAlreadyAdded) {
-                    toastr.error('This ' + selectededucationText + ' is already added.');
-                    $('#education').val('').trigger('change');
-                    return;
-                }
-
-                let index = $('table tbody tr').length;
-                let newRow = $('<tr>');
-                newRow.html(`
-                    <td>
-                        <input type="text" name="education[]" class="form-control" placeholder="Education" value="` +
-                    selectededucationText + `" readonly>
-                        <input type="hidden" name="education_id[]" value="">
-                    </td>
-                    <td>
-                        <input type="text" name="percentage_cgpa[]" class="form-control num_only" placeholder="Percentage or CGPA" value="" autocapitalize="off">
-                    </td>
-                    <td>
-                        <input type="text" name="seat_no_nrollment_no[]" class="form-control " placeholder="Enter Seat Number or Enrollment Number" value="" autocapitalize="off">
-                    </td>
-                    <td><input type="text" name="board_university[]" class="form-control" placeholder="Enter Board or University" value="" autocapitalize="off"></td>
-                    <td><input type="text" name="passing_year[]" class="form-control" placeholder="Enter Passing Year" value=""></td>
-                    <td><input type="text" name="school_name_college_name[]" class="form-control" placeholder="Enter School Name or College Name" value="" autocapitalize="off"></td>
-                    <td><button type="button" class="btn btn-danger remove_row"><i class="fa-solid fa-trash"></i></button></td>
-                `);
-
-                tableBody.append(newRow);
-
-                $('#education').val('').trigger('change');
-            });
         });
 
         function showMessage(message, type) {
@@ -1080,6 +1385,175 @@
                 }
             });
         }
+    </script>
+
+    <script src="{{ asset('admin/assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
+    <script>
+        function convertDateToWords(dateInput) {
+            if (!dateInput) return '';
+
+            let day, month, year;
+            const str = String(dateInput).trim();
+
+            // Match DD-MM-YYYY or DD/MM/YYYY or DD.MM.YYYY
+            if (/^\d{1,2}[-\/\.]\d{1,2}[-\/\.]\d{4}$/.test(str)) {
+                const parts = str.split(/[-\/\.]/);
+                day = parseInt(parts[0], 10);
+                month = parseInt(parts[1], 10);
+                year = parseInt(parts[2], 10);
+            }
+            // Match YYYY-MM-DD or YYYY/MM/DD or YYYY.MM.DD
+            else if (/^\d{4}[-\/\.]\d{1,2}[-\/\.]\d{1,2}$/.test(str)) {
+                const parts = str.split(/[-\/\.]/);
+                year = parseInt(parts[0], 10);
+                month = parseInt(parts[1], 10);
+                day = parseInt(parts[2], 10);
+            } else {
+                const d = new Date(str);
+                if (isNaN(d.getTime())) return '';
+                day = d.getDate();
+                month = d.getMonth() + 1;
+                year = d.getFullYear();
+            }
+
+            if (!day || !month || !year || month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+                return '';
+            }
+
+            const dayWords = [
+                "", "First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth",
+                "Eleventh", "Twelfth", "Thirteenth", "Fourteenth", "Fifteenth", "Sixteenth", "Seventeenth", "Eighteenth", "Nineteenth", "Twentieth",
+                "Twenty First", "Twenty Second", "Twenty Third", "Twenty Fourth", "Twenty Fifth", "Twenty Sixth", "Twenty Seventh", "Twenty Eighth", "Twenty Ninth", "Thirtieth", "Thirty First"
+            ];
+
+            const months = [
+                "", "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+
+            function numToWords(n) {
+                const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+                    "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+                const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+                if (n === 0) return "";
+                if (n < 20) return ones[n];
+                if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + ones[n % 10] : "");
+                if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 !== 0 ? " " + numToWords(n % 100) : "");
+                if (n < 100000) return numToWords(Math.floor(n / 1000)) + " Thousand" + (n % 1000 !== 0 ? " " + numToWords(n % 1000) : "");
+                return n.toString();
+            }
+
+            const dayText = dayWords[day] || numToWords(day);
+            const monthText = months[month] || "";
+            const yearText = numToWords(year);
+
+            return (dayText + " " + monthText + " " + yearText).trim();
+        }
+
+        function updateDobInWords(val) {
+            const words = convertDateToWords(val);
+            $('#date_of_birth_words').val(words);
+        }
+
+        $(document).ready(function() {
+            let fpDOB = null;
+            let fpAdmDate = null;
+            let fpLC = null;
+            if (typeof flatpickr !== 'undefined') {
+                fpDOB = flatpickr("#date_of_birth", {
+                    dateFormat: "d-m-Y",
+                    allowInput: true,
+                    maxDate: "today",
+                    onChange: function(selectedDates, dateStr, instance) {
+                        updateDobInWords(dateStr);
+                    }
+                });
+
+                $('#dob_picker_btn').on('click', function() {
+                    if (fpDOB) {
+                        fpDOB.open();
+                    }
+                });
+
+                fpAdmDate = flatpickr("#admission_date", {
+                    dateFormat: "d-m-Y",
+                    allowInput: true
+                });
+
+                $('#adm_date_picker_btn').on('click', function() {
+                    if (fpAdmDate) {
+                        fpAdmDate.open();
+                    }
+                });
+
+                fpLC = flatpickr("#lc_date", {
+                    dateFormat: "d-m-Y",
+                    allowInput: true,
+                    maxDate: "today"
+                });
+
+                $('#lc_date_picker_btn').on('click', function() {
+                    if (fpLC) {
+                        fpLC.open();
+                    }
+                });
+            }
+
+            $(document).on('input keyup change blur', '#date_of_birth', function() {
+                updateDobInWords($(this).val());
+            });
+
+            // Initial convert on load
+            updateDobInWords($('#date_of_birth').val());
+        });
+
+        function updateFullNames() {
+            var firstNameEl = document.getElementById('first_name');
+            var fatherNameEl = document.getElementById('father_name');
+            var motherNameEl = document.getElementById('mother_name');
+            var fatherFullNameEl = document.getElementById('father_full_name');
+            var motherFullNameEl = document.getElementById('mother_full_name');
+
+            var surname = (firstNameEl ? firstNameEl.value : '').trim();
+            var fatherName = (fatherNameEl ? fatherNameEl.value : '').trim();
+            var motherName = (motherNameEl ? motherNameEl.value : '').trim();
+
+            var cleanFather = fatherName;
+            if (surname && fatherName) {
+                var regex = new RegExp('^' + surname.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\s+', 'i');
+                cleanFather = fatherName.replace(regex, '');
+            }
+            var fatherFullName = [surname, cleanFather].filter(Boolean).join(' ');
+
+            var cleanMother = motherName;
+            if (surname && motherName) {
+                var regex = new RegExp('^' + surname.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\s+', 'i');
+                cleanMother = motherName.replace(regex, '');
+            }
+            var motherFullName = [surname, cleanMother].filter(Boolean).join(' ');
+
+            if (fatherFullNameEl) {
+                fatherFullNameEl.value = fatherFullName.toUpperCase();
+            }
+            if (motherFullNameEl) {
+                motherFullNameEl.value = motherFullName.toUpperCase();
+            }
+        }
+        window.updateFullNames = updateFullNames;
+
+        $(document).on('input keyup change blur paste', '#first_name, #father_name, #mother_name', function() {
+            updateFullNames();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFullNames();
+        });
+        window.addEventListener('load', function() {
+            updateFullNames();
+        });
+        setTimeout(updateFullNames, 300);
+        setTimeout(updateFullNames, 1000);
     </script>
 
     {{--

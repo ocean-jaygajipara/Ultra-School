@@ -51,10 +51,15 @@ class AdmissionController extends Controller
         'father_name' => "Father's Name",
         'mother_name' => "Mother's Name",
         'full_name' => 'Full Name',
-        'date_of_birth' => 'Date of Birth',
+        'mother_occupation' => "Mother's Occupation",
+        'religion' => 'Religion',
+        'cast' => 'Cast',
         'gender' => 'Gender',
-        'cast' => 'Caste',
+        'birth_place' => 'Birth Place',
         'category' => 'Category',
+        'house' => 'House',
+        'stream' => 'Stream',
+        'date_of_birth' => 'Date of Birth',
         'occupation' => "Father's Occupation",
         'temporary_address' => 'Temporary Address',
         'permanent_address' => 'Permanent Address',
@@ -62,10 +67,8 @@ class AdmissionController extends Controller
         'parent_mobile_no' => "Parent's Mobile No",
         'other_mobile_no' => 'Other Mobile No',
         'whatsapp_no' => 'Whatsapp No',
-        'email_address' => 'Email Address',
         'apaar_id_abc_id' => 'APAAR ID / ABC ID',
         'udise' => 'UDISE No',
-        'enrolment_no' => 'Enrollment No',
         'spid' => 'SPID',
         'gdrivefolderurl' => 'Google Drive Folder URL',
         'status' => 'Status',
@@ -93,10 +96,8 @@ class AdmissionController extends Controller
         'parent_mobile_no',
         'other_mobile_no',
         'whatsapp_no',
-        'email_address',
         'apaar_id_abc_id',
         'udise',
-        'enrolment_no',
         'spid',
         'gdrivefolderurl',
         'status',
@@ -220,13 +221,17 @@ class AdmissionController extends Controller
                         }
                     })
                     ->editColumn('admission_name', function ($row) {
-                        $first  = $row->first_name ?? '';
-                        $last   = $row->last_name ?? '';
-                        $father = $row->father_name ?? '';
+                        $first  = trim($row->first_name ?? '');
+                        $last   = trim($row->last_name ?? '');
+                        $father = trim($row->father_name ?? '');
 
-                        // Create LastName FirstName FatherName
-                        $fullName = trim("$first $last  $father");
-                        // dd($fullName);
+                        if ($first !== '' && $father !== '') {
+                            $cleanFather = trim(preg_replace('/^' . preg_quote($first, '/') . '\s+/i', '', $father));
+                        } else {
+                            $cleanFather = $father;
+                        }
+
+                        $fullName = trim("{$first} {$last} {$cleanFather}");
                         return $fullName ?: '____________';
                     })
                     // ->editColumn('gdrivefolderurl', function ($row) {
@@ -333,7 +338,13 @@ class AdmissionController extends Controller
             abort(403, 'User does not have the right permissions.');
         }
         View::share('modules', $modules);
-        return view($modules['folder_path'] . '.form', compact('modules'));
+        $categories = \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->get();
+        $religions = \App\Models\Master\MasterReligion::where('status', 'active')->orderBy('id')->get();
+        $houses = \App\Models\Master\MasterHouse::where('status', 'active')->orderBy('id')->get();
+        $villages = \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
+        $classes = \App\Models\Master\MasterClass::where('status', 'active')->orderBy('class')->get();
+        $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
+        return view($modules['folder_path'] . '.form', compact('modules', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions'));
     }
 
 
@@ -384,6 +395,12 @@ class AdmissionController extends Controller
             $loginUserId = Auth::user()->id;
             $validated['created_by'] = $loginUserId;
 
+            if (!empty($validated['bus_route_village'])) {
+                \App\Models\Master\MasterBusRouteVillage::firstOrCreate(
+                    ['name' => trim($validated['bus_route_village'])],
+                    ['status' => 'active', 'created_by' => $loginUserId]
+                );
+            }
 
             $admission = Admission::create($validated);
 
@@ -402,20 +419,6 @@ class AdmissionController extends Controller
                 ]);
             } catch (\Exception $e) {
                 \Log::error("Google Drive folder creation failed: " . $e->getMessage());
-            }
-            $education = $request->education;
-            if ($education != "") {
-                foreach ($education as $key => $value) {
-                    EducationDetails::create([
-                        'admission_id' => $admission_id,
-                        'education' => $value,
-                        'percentage_cgpa' => $request->percentage_cgpa[$key] ?? 0,
-                        'seat_no_nrollment_no' => $request->seat_no_nrollment_no[$key] ?? '',
-                        'board_university' => $request->board_university[$key],
-                        'passing_year' => $request->passing_year[$key] ?? 0,
-                        'school_name_college_name' => $request->school_name_college_name[$key],
-                    ]);
-                }
             }
 
             /*
@@ -561,10 +564,13 @@ class AdmissionController extends Controller
 
             $edit = Admission::findOrFail($id);
 
-            $education = EducationDetails::where('admission_id', $id)->get();
-            View::share('education', $education);
-
-            return view($modules['folder_path'] . '.form', compact('modules', 'edit'));
+            $categories = \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->get();
+            $religions = \App\Models\Master\MasterReligion::where('status', 'active')->orderBy('id')->get();
+            $houses = \App\Models\Master\MasterHouse::where('status', 'active')->orderBy('id')->get();
+            $villages = \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
+            $classes = \App\Models\Master\MasterClass::where('status', 'active')->orderBy('class')->get();
+            $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
+            return view($modules['folder_path'] . '.form', compact('modules', 'edit', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions'));
         } catch (\Exception $e) {
 
             return Redirect::route('dashboard')->withErrors($e->getMessage());
@@ -594,6 +600,13 @@ class AdmissionController extends Controller
             $loginUserId = Auth::user()->id;
             $validated['updated_by'] = $loginUserId;
 
+            if (!empty($validated['bus_route_village'])) {
+                \App\Models\Master\MasterBusRouteVillage::firstOrCreate(
+                    ['name' => trim($validated['bus_route_village'])],
+                    ['status' => 'active', 'created_by' => $loginUserId]
+                );
+            }
+
             $admission = Admission::where('id', $id)->firstOrFail();
             $admission_id = $admission->id;
             if ($request->hasFile('profile_pic')) {
@@ -618,29 +631,6 @@ class AdmissionController extends Controller
             }
 
             $admission->update($validated);
-
-            if ($request->has('education_id')) {
-                $education = $request->education;
-                foreach ($education as $key => $value) {
-                    $education_id = $request->education_id[$key];
-                    $data = [
-                        'admission_id' => $admission->id,
-                        'education' => $value,
-                        'percentage_cgpa' => $request->percentage_cgpa[$key] ?? 0,
-                        'seat_no_nrollment_no' => $request->seat_no_nrollment_no[$key] ?? '',
-                        'board_university' => $request->board_university[$key],
-                        'passing_year' => $request->passing_year[$key] ?? 0,
-                        'school_name_college_name' => $request->school_name_college_name[$key],
-                    ];
-
-                    if ($education_id) {
-                        $existingEdu = EducationDetails::find($education_id);
-                        $existingEdu ? $existingEdu->update($data) : EducationDetails::create($data);
-                    } else {
-                        EducationDetails::create($data);
-                    }
-                }
-            }
 
             /*
             if (!$admission?->biometric_id && false) {
@@ -782,13 +772,7 @@ class AdmissionController extends Controller
 
     public function education_detail_delete(Request $request)
     {
-        $id = $request->id;
-        $EducationData = EducationDetails::find($id);
-        if ($EducationData) {
-            $EducationData->delete();
-            return $this->sendResponse([], 'Education Details removed successfully!');
-        }
-        return $this->sendError('Education Details not found!');
+        return $this->sendResponse([], 'Education Details removed successfully!');
     }
 
     public function destroy(Request $request, string $id)
@@ -1486,10 +1470,15 @@ class AdmissionController extends Controller
             case 'biometric_id':
                 return $admission->biometric_id ?? '-';
             case 'full_name':
-                $first = $admission->first_name ?? '';
-                $last = $admission->last_name ?? '';
-                $father = $admission->father_name ?? '';
-                $fullName = trim("{$first} {$last} {$father}");
+                $first = trim($admission->first_name ?? '');
+                $last = trim($admission->last_name ?? '');
+                $father = trim($admission->father_name ?? '');
+                if ($first !== '' && $father !== '') {
+                    $cleanFather = trim(preg_replace('/^' . preg_quote($first, '/') . '\s+/i', '', $father));
+                } else {
+                    $cleanFather = $father;
+                }
+                $fullName = trim("{$first} {$last} {$cleanFather}");
                 return $fullName !== '' ? $fullName : '-';
             case 'date_of_birth':
                 return $admission->date_of_birth
@@ -1505,8 +1494,6 @@ class AdmissionController extends Controller
                 return $admission->other_mobile_no ?? '-';
             case 'whatsapp_no':
                 return $admission->whatsapp_no ?? '-';
-            case 'email_address':
-                return $admission->email_address ?? '-';
             case 'aadhar_card_no':
                 return $admission->aadhar_card_no ?? '-';
             case 'status':

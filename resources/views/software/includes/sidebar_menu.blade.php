@@ -495,10 +495,15 @@
             'timetable-list',
             'student-requests-list',
             'fees-list',
-            'department-list'
+            'department-list',
+            'division-list',
+            'category-list',
+            'school-list',
+            'house-list',
+            'religion-list'
         ])
         <li
-            class="menu-item {{ in_array($sidebar_active, ['course', 'shift', 'class', 'syllabus', 'batch', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'university']) ? 'active open' : '' }}">
+            class="menu-item {{ in_array($sidebar_active, ['course', 'shift', 'class', 'syllabus', 'batch', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'division', 'category', 'school', 'house', 'religion']) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-certificate me-2"></i>
                 <div data-i18n="Course Masters">Course Masters</div>
@@ -550,11 +555,51 @@
                 </li>
                 @enddirectCanAny
 
-                @directCanAny(['university-list', 'university-create', 'university-edit', 'university-delete'])
-                <li class="menu-item {{ $sidebar_active == 'university' ? 'active' : '' }}">
-                    <a href="{{ route('university.index') }}" class="menu-link">
-                        <i class="menu-icon tf-icons bx bxs-school me-2"></i>
-                        <div data-i18n="University Master">University Master</div>
+
+
+                @directCanAny(['division-list', 'division-create', 'division-edit', 'division-delete'])
+                <li class="menu-item {{ $sidebar_active == 'division' ? 'active' : '' }}">
+                    <a href="{{ route('division.index') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-grid-alt me-2"></i>
+                        <div data-i18n="Division Master">Division Master</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
+                @directCanAny(['category-list', 'category-create', 'category-edit', 'category-delete'])
+                <li class="menu-item {{ $sidebar_active == 'category' ? 'active' : '' }}">
+                    <a href="{{ route('category.index') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-category me-2"></i>
+                        <div data-i18n="Category Master">Category Master</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
+
+
+                @directCanAny(['house-list', 'house-create', 'house-edit', 'house-delete'])
+                <li class="menu-item {{ $sidebar_active == 'house' ? 'active' : '' }}">
+                    <a href="{{ route('house.index') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-home-alt me-2"></i>
+                        <div data-i18n="House Master">House Master</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
+                @directCanAny(['religion-list', 'religion-create', 'religion-edit', 'religion-delete'])
+                <li class="menu-item {{ $sidebar_active == 'religion' ? 'active' : '' }}">
+                    <a href="{{ route('religion.index') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-pray me-2"></i>
+                        <div data-i18n="Religion Master">Religion Master</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
+                @directCanAny(['bus-route-village-list', 'bus-route-village-create', 'bus-route-village-edit', 'bus-route-village-delete'])
+                <li class="menu-item {{ $sidebar_active == 'bus-route-village' ? 'active' : '' }}">
+                    <a href="{{ route('bus-route-village.index') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-map-pin me-2"></i>
+                        <div data-i18n="Bus Route Village Master">Bus Route Village Master</div>
                     </a>
                 </li>
                 @enddirectCanAny

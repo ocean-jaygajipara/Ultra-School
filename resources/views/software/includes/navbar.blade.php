@@ -15,18 +15,33 @@
     </div>
 
     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-        {{-- <!-- Search -->
-        <div class="navbar-nav align-items-center">
-            <div class="nav-item navbar-search-wrapper mb-0">
-                <a class="nav-item nav-link search-toggler d-flex align-items-center px-0" href="javascript:void(0);">
-                    <i class="ti ti-search ti-md me-2"></i>
-                    <span class="d-none d-md-inline-block text-muted">Search (Ctrl+/)</span>
-                </a>
+        <!-- Executive School Brand Card (For Principal & Management) -->
+        @php
+            $activeSchool = \App\Services\SchoolDatabaseManager::getActiveSchool();
+        @endphp
+        <div class="navbar-nav align-items-center me-auto d-none d-md-flex">
+            <div class="d-flex align-items-center gap-3 px-3 py-1 rounded-3 shadow-xs" 
+                style="background: linear-gradient(135deg, rgba(25, 14, 128, 0.05) 0%, rgba(25, 14, 128, 0.01) 100%); border: 1px solid rgba(25, 14, 128, 0.14);">
+                <div class="d-flex align-items-center justify-content-center rounded-circle" 
+                    style="width: 36px; height: 36px; background: #190e80; color: #ffffff; box-shadow: 0 3px 8px rgba(25, 14, 128, 0.28);">
+                    <i class="ti ti-school" style="font-size: 1.25rem;"></i>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="fw-bold" style="color: #190e80; font-size: 1.1rem; letter-spacing: 0.5px;" title="{{ $activeSchool['name'] ?? 'Ultra School' }}">
+                        {{ $activeSchool['short_name'] ?? 'CAMPUS' }}
+                    </span>
+                </div>
             </div>
         </div>
-        <!-- /Search --> --}}
 
-        <ul class="navbar-nav flex-row align-items-center ms-auto">
+        <ul class="navbar-nav flex-row align-items-center ms-auto gap-3">
+            <!-- Mobile Badge -->
+            <li class="nav-item d-flex d-md-none align-items-center">
+                <span class="badge text-white px-2 py-1" style="background: #190e80; font-size: 0.75rem;">
+                    {{ $activeSchool['short_name'] ?? 'CAMPUS' }}
+                </span>
+            </li>
+
             <!-- User -->
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">

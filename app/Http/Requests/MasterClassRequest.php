@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Master\MasterClass;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class MasterClassRequest extends FormRequest
 {
@@ -23,12 +24,13 @@ class MasterClassRequest extends FormRequest
      */
     public function rules(Request $request): array
     {
-        $id = $request->route('shift') ?? 0;
+        $id = $request->route('class') ?? 0;
         $rules = [
-            'class' => 'required|unique:' . (new MasterClass())->getTable() . ',class',
-
+            'class' => [
+                'required',
+                Rule::unique((new MasterClass())->getTable(), 'class')->ignore($id),
+            ],
         ];
-        // dd("L-33", $rules, $id, $request->all(), $request->route('master-city'), $request->route()->parameters());
         return $rules;
     }
 

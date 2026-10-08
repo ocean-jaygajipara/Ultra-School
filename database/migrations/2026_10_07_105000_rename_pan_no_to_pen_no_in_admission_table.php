@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('admission', function (Blueprint $table) {
+            if (Schema::hasColumn('admission', 'pan_no')) {
+                $table->renameColumn('pan_no', 'pen_no');
+            } elseif (!Schema::hasColumn('admission', 'pen_no')) {
+                $table->string('pen_no')->nullable()->after('aadhar_card_no');
+            }
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('admission', function (Blueprint $table) {
+            if (Schema::hasColumn('admission', 'pen_no')) {
+                $table->renameColumn('pen_no', 'pan_no');
+            }
+        });
+    }
+};

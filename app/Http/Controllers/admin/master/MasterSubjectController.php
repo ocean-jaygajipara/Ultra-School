@@ -298,5 +298,17 @@ class MasterSubjectController extends Controller
     }
 }
 
+    public function restore($id)
+    {
+        $modules = $this->modules;
 
+        try {
+            $restore_data = MasterSubject::withTrashed()->findOrFail($id);
+            $restore_data->restore();
+
+            return Redirect::back()->withSuccess($modules['title'] . ' restored successfully!');
+        } catch (\Exception $e) {
+            return Redirect::route($modules['route'] . '.index')->withErrors($e->getMessage());
+        }
+    }
 }

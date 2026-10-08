@@ -20,9 +20,34 @@ class AdmissionRequest extends FormRequest
 
     public function prepareForValidation()
     {
-        $this->merge([
+        $mergeData = [
             'aadhar_card_no' => preg_replace('/\s+/', '', $this->aadhar_card_no),
-        ]);
+        ];
+
+        if ($this->filled('date_of_birth')) {
+            $dob = trim($this->date_of_birth);
+            if (preg_match('/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})$/', $dob, $matches)) {
+                $mergeData['date_of_birth'] = sprintf('%04d-%02d-%02d', $matches[3], $matches[2], $matches[1]);
+            }
+        }
+
+        if ($this->filled('admission_date')) {
+            $admDate = trim($this->admission_date);
+            if (preg_match('/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})$/', $admDate, $matches)) {
+                $mergeData['admission_date'] = sprintf('%04d-%02d-%02d', $matches[3], $matches[2], $matches[1]);
+            }
+        }
+
+        if ($this->filled('lc_date')) {
+            $lcDate = trim($this->lc_date);
+            if (preg_match('/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})$/', $lcDate, $matches)) {
+                $mergeData['lc_date'] = sprintf('%04d-%02d-%02d', $matches[3], $matches[2], $matches[1]);
+            }
+        }
+
+        $mergeData['is_new_admission'] = ($this->has('is_new_admission') && ($this->is_new_admission == '1' || $this->is_new_admission === true || $this->is_new_admission == 'on')) ? 1 : 0;
+
+        $this->merge($mergeData);
     }
 
     /**
@@ -47,6 +72,12 @@ class AdmissionRequest extends FormRequest
                 // })->ignore($id),
             ],
 
+            'pen_no' => [
+                'nullable',
+                'string',
+                'max:30',
+            ],
+
             'gr_no' => [
                 'nullable',
                 'string',
@@ -54,7 +85,42 @@ class AdmissionRequest extends FormRequest
                 Rule::unique((new Admission())->getTable(), 'gr_no')->ignore($id),
             ],
 
+            'bus_route_village' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
             'biometric_id' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'admission_date' => [
+                'nullable',
+                'date',
+            ],
+
+            'admission_std' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'current_std' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'division' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'stream' => [
                 'nullable',
                 'string',
                 'max:255',
@@ -123,21 +189,39 @@ class AdmissionRequest extends FormRequest
                 'nullable'
             ],
 
+            'mother_occupation' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'religion' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'house' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
             'date_of_birth' => [
                 'required'
             ],
 
-            'email_address' => [
-                'required',
+            'birth_place' => [
+                'nullable',
+                'string',
+                'max:255',
             ],
+
             'gender' => [
                 'required'
             ],
             'category' => [
                 'required'
-            ],
-            'enrolment_no' => [
-                'nullable'
             ],
             'spid' => [
                 'nullable'
@@ -147,6 +231,49 @@ class AdmissionRequest extends FormRequest
             ],
             'udise' => [
                 'nullable'
+            ],
+            'bank_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'bank_account_no' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'is_new_admission' => [
+                'nullable',
+                'boolean',
+            ],
+            'last_school_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'old_gr_no' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'passed_standard' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'lc_no' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'lc_date' => [
+                'nullable',
+                'date',
+            ],
+            'attendance' => [
+                'nullable',
+                'string',
+                'max:255',
             ],
             'gdrivefolderurl' => [
                 'nullable'
@@ -193,7 +320,6 @@ class AdmissionRequest extends FormRequest
             'permanent_address.required' => 'The Permanent Address is required.',
             'mobile_no.required' => 'The Mobile No. is required.',
             'date_of_birth.required' => 'The Date of Birth is required.',
-            'email_address.required' => 'The Email Address is required.',
             'gender.required' => 'The Gender is required.',
             'category.required' => 'The Category is required.',
             'profile_pic.required' => 'The Profile Picture is required.',

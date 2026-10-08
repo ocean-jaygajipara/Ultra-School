@@ -16,7 +16,7 @@
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('software.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route($route . '.index') }}">View all {{ $page_title }}</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route($route . '.index') }}">View {{ $page_title }}</a></li>
                         <li class="breadcrumb-item active">{{ isset($edit) && $edit?->id ? 'Edit' : 'Add' }} {{ $page_title }}</li>
                     </ol>
                 </div>

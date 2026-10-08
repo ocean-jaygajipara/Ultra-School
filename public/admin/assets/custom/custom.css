@@ -90,3 +90,74 @@ a:hover {
 .menu-icon {
     margin-right: 0 !important;
 }
+
+/* ==========================================================================
+   Global Fix for Horizontal Scroll on Tables, Cards & DataTables
+   ========================================================================== */
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
+
+.content-wrapper,
+.layout-page,
+.layout-container {
+    max-width: 100% !important;
+}
+
+.card {
+    max-width: 100% !important;
+}
+
+.card .table-responsive,
+.card-body .table-responsive,
+.table-responsive {
+    overflow-x: hidden !important;
+}
+
+/* On small mobile screens allow horizontal scroll if columns overflow */
+@media (max-width: 767.98px) {
+    .table-responsive {
+        overflow-x: auto !important;
+    }
+}
+
+/* Fix DataTable width, spacing, and box-sizing */
+table.dataTable,
+table.dataTable th,
+table.dataTable td {
+    box-sizing: border-box !important;
+}
+
+table.dataTable {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+div.dataTables_wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+div.dataTables_wrapper .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+}
+
+div.dataTables_wrapper .row > div[class*="col-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+div.dataTables_scroll,
+div.dataTables_scrollHead,
+div.dataTables_scrollBody,
+div.dataTables_scrollFoot {
+    width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+

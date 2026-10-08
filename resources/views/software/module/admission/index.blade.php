@@ -208,8 +208,8 @@
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th colspan="3"><b>Aadhaar Card No:</b> <span id="modalAadhar" class="text-lowercase"></span>
-                            </th>
+                            <th><b>Aadhaar Card No:</b> <span id="modalAadhar" class="text-lowercase"></span></th>
+                            <th><b>PEN No:</b> <span id="modalPen" class="text-uppercase"></span></th>
                         </tr>
                         <tr>
                             <th><b>Surname:</b> <span id="modalSurname" class="text-uppercase"></span></th>
@@ -230,8 +230,8 @@
                             <th><b>Category:</b> <span id="modalCategory" class="text-lowercase"></span></th>
                         </tr>
                         <tr>
-                            <th colspan="2"><b>Father Occupation:</b> <span id="modalfatheroccupation"
-                                    class="text-lowercase"></span></th>
+                            <th><b>Father Occupation:</b> <span id="modalfatheroccupation" class="text-lowercase"></span></th>
+                            <th><b>Mother Occupation:</b> <span id="modalmotheroccupation" class="text-lowercase"></span></th>
                         </tr>
                         <tr>
                             <th><b>Temporary Address:</b> <span id="modaltemporaryAddress" class="text-lowercase"></span>
@@ -251,7 +251,7 @@
                             </th>
                         </tr>
                         <tr>
-                            <th><b>APAAR ID/ABC ID:</b> <span id="ModalAPAARID" class="text-lowercase"></span></th>
+                            <th><b>APAAR ID:</b> <span id="ModalAPAARID" class="text-lowercase"></span></th>
                             <th><b>UDISE No:</b> <span id="ModalUDISE" class="text-lowercase"></span></th>
 
                         </tr>
@@ -348,7 +348,7 @@
 
                                             <div class="row mb-2">
                                                 <div class="col-md-6">
-                                                    <p class="mb-1"><strong>ABC ID:</strong></p>
+                                                    <p class="mb-1"><strong>APAAR ID:</strong></p>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <p class="mb-1" id="modalUdiseABC">-</p>
@@ -512,6 +512,7 @@
                                 $('#modalDOB').text('-');
                             }
                             $('#modalAadhar').text(data.aadhar_card_no ?? '-');
+                            $('#modalPen').text(data.pen_no ?? '-');
                             $('#modalSurname').text(data.first_name?.toUpperCase() ?? '-');
                             $('#modalName').text(data.last_name?.toUpperCase() ?? '-');
 
@@ -521,6 +522,7 @@
                             $('#modalcast').text(data.cast ?? '-');
                             $('#modalCategory').text(data.category ?? '-');
                             $('#modalfatheroccupation').text(data.occupation ?? '-');
+                            $('#modalmotheroccupation').text(data.mother_occupation ?? '-');
                             $('#modaltemporaryAddress').text(data.temporary_address ?? '-');
                             $('#modalPermAddress').text(data.permanent_address ?? '-');
                             $('#modalSelfMobile').text(data.mobile_no ?? '-');

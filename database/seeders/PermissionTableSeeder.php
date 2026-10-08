@@ -138,6 +138,24 @@ class PermissionTableSeeder extends Seeder
                 'shift-edit',
                 'shift-delete',
             ],
+            'division' => [
+                'division-list',
+                'division-create',
+                'division-edit',
+                'division-delete',
+            ],
+            'category' => [
+                'category-list',
+                'category-create',
+                'category-edit',
+                'category-delete',
+            ],
+            'school' => [
+                'school-list',
+                'school-create',
+                'school-edit',
+                'school-delete',
+            ],
             'syllabus' => [
                 'syllabus-list',
                 'syllabus-create',
@@ -216,6 +234,24 @@ class PermissionTableSeeder extends Seeder
                 'marksheet-issue-create',
                 'marksheet-issue-edit',
                 'marksheet-issue-delete',
+            ],
+            'house' => [
+                'house-list',
+                'house-create',
+                'house-edit',
+                'house-delete',
+            ],
+            'religion' => [
+                'religion-list',
+                'religion-create',
+                'religion-edit',
+                'religion-delete',
+            ],
+            'bus-route-village' => [
+                'bus-route-village-list',
+                'bus-route-village-create',
+                'bus-route-village-edit',
+                'bus-route-village-delete',
             ]
         ];
 

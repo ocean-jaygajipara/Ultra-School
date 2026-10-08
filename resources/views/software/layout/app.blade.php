@@ -65,7 +65,7 @@
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="{{ asset('admin/assets/js/config.js') }}"></script>
 
-    <link rel="stylesheet" href="{{ asset('admin/assets/custom/custom.css') }}" />
+    <link rel="stylesheet" href="{{ asset('admin/assets/custom/custom.css') }}?v={{ time() }}" />
 
 </head>
 
@@ -86,7 +86,7 @@
                     <!-- Content wrapper -->
                     <div class="content-wrapper">
                         <!-- Content -->
-                        <div class="container-fuild flex-grow-1 container-p-y container-p-x">
+                        <div class="container-fluid flex-grow-1 container-p-y container-p-x">
                             @yield('breadcrumb')
 
                             <!-- @include('software.partials.flash_messages') -->

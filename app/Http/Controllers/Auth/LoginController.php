@@ -4,28 +4,15 @@ namespace App\Http\Controllers\Auth;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
-use App\Models\ApiToken;
 use App\Providers\RouteServiceProvider;
+use App\Services\SchoolDatabaseManager;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
-
     use AuthenticatesUsers;
 
     /**
@@ -33,7 +20,6 @@ class LoginController extends Controller
      *
      * @var string
      */
-    // protected $redirectTo = '/home';
     protected $redirectTo = RouteServiceProvider::DASHBOARD;
 
     /**
@@ -49,113 +35,59 @@ class LoginController extends Controller
 
     public function showLoginForm(Request $request)
     {
-        // Auth::logout(); // Logs out the user
+        $schools = SchoolDatabaseManager::all();
+        $selectedSchool = $request->query('school', SchoolDatabaseManager::getActiveSchoolCode());
 
-        // $request->session()->invalidate(); // Invalidates the session
-        // $request->session()->regenerateToken(); // Regenerates the CSRF token
-
-        return view('software.auth.login');
+        return view('software.auth.login', compact('schools', 'selectedSchool'));
     }
-
-    // public function login(Request $request)
-    // {
-    //     // Custom validation rules
-    //     $request->validate([
-    //         'email' => 'required|email',
-    //         'password' => 'required|min:6',
-    //     ]);
-
-    //     // Attempt login with 'api' guard
-    //     if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
-    //         $user = Auth::user();
-
-    //         if (in_array(Helper::getLoginUserRole(), Helper::getApplicationUserRoles()->pluck('name')->toArray())) {
-    //             Auth::logout(); // Logs out the user
-    //             return Redirect::back()->withErrors('Your not admin login user.');
-    //         }
-    //         // dd("Admin 72", $user->roles->toArray(), Helper::getLoginUserRole(), Helper::getApplicationUserRoles()->pluck('name')->toArray());
-    //         if ($user->status == "inactive") {
-    //             Auth::logout(); // Logs out the user
-    //             return Redirect::back()->withErrors(["Conntact to admin. You are Inactive."]);
-    //         }
-    //         return Redirect::route('software.dashboard')->with('success', 'Login successful!');
-    //     }
-    //     return Redirect::back()->withErrors(["Invalid credentials"]);
-    //     // Custom failed response
-    //     return response()->json([
-    //         'message' => 'Invalid credentials'
-    //     ], 401);
-    // }
 
     public function login(Request $request)
     {
         $request->validate([
+            'school_key' => 'required|string',
             'email' => 'required|email',
-            'password' => 'required|min:6',
+            'password' => 'required|min:4',
+        ], [
+            'school_key.required' => 'Please select a school to login.',
         ]);
+
+        $schoolKey = strtolower(trim($request->input('school_key')));
+        if (!SchoolDatabaseManager::exists($schoolKey)) {
+            return Redirect::back()->withInput()->withErrors(['school_key' => 'Invalid school selected.']);
+        }
+
+        // Switch to the chosen school database before attempting authentication
+        SchoolDatabaseManager::switchDatabase($schoolKey);
 
         if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
             $user = Auth::user();
 
             if (in_array(Helper::getLoginUserRole(), Helper::getApplicationUserRoles()->pluck('name')->toArray())) {
                 Auth::logout();
-                return Redirect::back()->withErrors('You are not authorized to login as admin.');
+                return Redirect::back()->withInput()->withErrors(['email' => 'You are not authorized to login as admin.']);
             }
 
             if ($user->status == "inactive") {
                 Auth::logout();
-                return Redirect::back()->withErrors(["Contact admin. Your account is inactive."]);
+                return Redirect::back()->withInput()->withErrors(["email" => "Contact admin. Your account is inactive."]);
             }
 
-            return Redirect::route('software.dashboard')->with('success', 'Login successful!');
+            // Store active school in session
+            SchoolDatabaseManager::setActiveSchool($schoolKey);
 
-            try {
-                $apiResponse = Http::post('http://192.168.31.5:98/api/Auth/Login', [
-                    'Id'          => 0,
-                    'Username'    => 'biomax',
-                    'Password'    => 'biomax',
-                    'OldPassword' => ''
-                ]);
-
-                // if ($apiResponse->successful()) {
-                //     $responseData = $apiResponse->json();
-
-                //     if (isset($responseData['Token'])) {
-                //         $token = $responseData['Token'];
-
-                //         Session::put('external_api_token', $token);
-
-                        // api response token add in database
-                        // $loginUserId = Auth::user()->id;
-                        // ApiToken::create([
-                        //     'api_token' => $token,
-                        //     'created_by' => $loginUserId,
-                        // ]);
-
-                        return Redirect::route('software.dashboard')
-                            ->with('success', 'Login successful! New token saved.');
-                    // } else {
-                    //     return Redirect::route('software.dashboard')
-                    //         ->with('success', 'Login successful! No token returned.');
-                    // }
-                // } else {
-                //     Auth::logout();
-                //     return Redirect::back()->withErrors(['External API login failed.']);
-                // }
-            } catch (\Exception $e) {
-                Auth::logout();
-                return Redirect::back()->withErrors(['API connection error: ' . $e->getMessage()]);
-            }
+            $schoolInfo = SchoolDatabaseManager::getActiveSchool();
+            return Redirect::route('software.dashboard')->with('success', 'Logged in successfully to ' . $schoolInfo['name'] . '!');
         }
-        return Redirect::back()->withErrors(["Invalid credentials"]);
+
+        return Redirect::back()->withInput()->withErrors(["email" => "Invalid credentials for the selected school."]);
     }
 
     public function logout(Request $request)
     {
-        Auth::logout(); // Logs out the user
+        Auth::logout();
 
-        $request->session()->invalidate(); // Invalidates the session
-        $request->session()->regenerateToken(); // Regenerates the CSRF token
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect()->route("login");
     }
 }

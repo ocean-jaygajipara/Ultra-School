@@ -22,7 +22,14 @@ class Admission extends Authenticatable
     protected $fillable = [
         'biometric_id',
         'gr_no',
+        'bus_route_village',
+        'admission_date',
+        'admission_std',
+        'current_std',
+        'division',
+        'stream',
         'aadhar_card_no',
+        'pen_no',
         'first_name',
         'last_name',
         'father_name',
@@ -35,15 +42,26 @@ class Admission extends Authenticatable
         'whatsapp_no',
         'cast',
         'occupation',
+        'mother_occupation',
         'date_of_birth',
-        'email_address',
+        'birth_place',
         'gender',
         'profile_pic',
+        'religion',
+        'house',
         'category',
-        'enrolment_no',
         'spid',
         'apaar_id_abc_id',
         'udise',
+        'bank_name',
+        'bank_account_no',
+        'is_new_admission',
+        'last_school_name',
+        'old_gr_no',
+        'passed_standard',
+        'lc_no',
+        'lc_date',
+        'attendance',
         'gdrivefolderurl',
         'gdrivefolderid',
         'gdrivefoldername',
@@ -55,6 +73,60 @@ class Admission extends Authenticatable
     public function marksheetIssues()
     {
         return $this->hasMany(StudentMarksheetIssue::class, 'admission_id');
+    }
+
+    public function setDateOfBirthAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['date_of_birth'] = null;
+            return;
+        }
+        $str = trim((string)$value);
+        if (preg_match('/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})$/', $str, $matches)) {
+            $this->attributes['date_of_birth'] = sprintf('%04d-%02d-%02d', $matches[3], $matches[2], $matches[1]);
+        } else {
+            try {
+                $this->attributes['date_of_birth'] = \Carbon\Carbon::parse($str)->format('Y-m-d');
+            } catch (\Exception $e) {
+                $this->attributes['date_of_birth'] = $str;
+            }
+        }
+    }
+
+    public function setAdmissionDateAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['admission_date'] = null;
+            return;
+        }
+        $str = trim((string)$value);
+        if (preg_match('/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})$/', $str, $matches)) {
+            $this->attributes['admission_date'] = sprintf('%04d-%02d-%02d', $matches[3], $matches[2], $matches[1]);
+        } else {
+            try {
+                $this->attributes['admission_date'] = \Carbon\Carbon::parse($str)->format('Y-m-d');
+            } catch (\Exception $e) {
+                $this->attributes['admission_date'] = $str;
+            }
+        }
+    }
+
+    public function setLcDateAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['lc_date'] = null;
+            return;
+        }
+        $str = trim((string)$value);
+        if (preg_match('/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})$/', $str, $matches)) {
+            $this->attributes['lc_date'] = sprintf('%04d-%02d-%02d', $matches[3], $matches[2], $matches[1]);
+        } else {
+            try {
+                $this->attributes['lc_date'] = \Carbon\Carbon::parse($str)->format('Y-m-d');
+            } catch (\Exception $e) {
+                $this->attributes['lc_date'] = $str;
+            }
+        }
     }
 
     public function getMarksheetSemestersAttribute()
@@ -117,10 +189,45 @@ class Admission extends Authenticatable
     public function getFullNameAttribute()
     {
         #full_name
-        $first = $this?->first_name ?? '';
-        $father = $this?->father_name ?? '';
-        $last = $this?->last_name ?? '';
-        return trim("{$last} {$father} {$first}");
+        $first = trim($this?->first_name ?? '');
+        $last = trim($this?->last_name ?? '');
+        $father = trim($this?->father_name ?? '');
+
+        if ($first !== '' && $father !== '') {
+            $cleanFather = trim(preg_replace('/^' . preg_quote($first, '/') . '\s+/i', '', $father));
+        } else {
+            $cleanFather = $father;
+        }
+
+        return trim("{$first} {$last} {$cleanFather}");
+    }
+
+    public function getFatherFullNameAttribute()
+    {
+        $first = trim($this?->first_name ?? '');
+        $father = trim($this?->father_name ?? '');
+
+        if ($first !== '' && $father !== '') {
+            $cleanFather = trim(preg_replace('/^' . preg_quote($first, '/') . '\s+/i', '', $father));
+        } else {
+            $cleanFather = $father;
+        }
+
+        return trim("{$first} {$cleanFather}");
+    }
+
+    public function getMotherFullNameAttribute()
+    {
+        $first = trim($this?->first_name ?? '');
+        $mother = trim($this?->mother_name ?? '');
+
+        if ($first !== '' && $mother !== '') {
+            $cleanMother = trim(preg_replace('/^' . preg_quote($first, '/') . '\s+/i', '', $mother));
+        } else {
+            $cleanMother = $mother;
+        }
+
+        return trim("{$first} {$cleanMother}");
     }
 
     public function getProfilePicUrlAttribute()

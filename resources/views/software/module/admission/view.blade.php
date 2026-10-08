@@ -267,14 +267,14 @@
         <div class="admission-header">Admission Details:</div>
         <table class="admission-details-table">
             <tr>
-                <td style="width: 141px;"><strong>GR No. :</strong> {{ $admission->id }}</td>
-                <td style="width: 195px;"><strong>Adm. Date :</strong> {{ $admission->created_at ? $admission->created_at->format('d-m-Y') : '-' }}</td>
-                <td><strong>Course :</strong> {{ $course->course->course_name ?? '-' }}</td>
+                <td style="width: 141px;"><strong>GR No. :</strong> {{ $admission->gr_no ?? $admission->id }}</td>
+                <td style="width: 195px;"><strong>Adm. Date :</strong> {{ $admission->admission_date ? \Carbon\Carbon::parse($admission->admission_date)->format('d-m-Y') : ($admission->created_at ? $admission->created_at->format('d-m-Y') : '-') }}</td>
+                <td><strong>Bus Route :</strong> {{ $admission->bus_route_village ?? '-' }}</td>
             </tr>
             <tr>
-                <td><strong>Fees :</strong> ₹{{ number_format($course->course->course_fees, 0) }}</td>
-                <td><strong>Course Duration :</strong> {{ $course->course->course_year ?? '-' }} Years</td>
-                <td></td>
+                <td><strong>Adm. Std :</strong> {{ $admission->admission_std ?? '-' }}</td>
+                <td><strong>Current Std :</strong> {{ $admission->current_std ?? '-' }}</td>
+                <td><strong>Division :</strong> {{ $admission->division ?? '-' }}</td>
             </tr>
         </table>
 
@@ -290,8 +290,15 @@
         </div>
 
         <div class="info-section">
-            <label>Mother's Name :</label>
+            <label>Mother Name :</label>
             <span class="underline-input">{{ $admission->mother_name ?? '' }}</span>
+        </div>
+
+        <div class="info-section">
+            <label>Father Occupation :</label>
+            <span class="underline-input">{{ $admission->occupation ?? '' }}</span>
+            <label style="margin-left: 15px;">Mother Occupation :</label>
+            <span class="underline-input">{{ $admission->mother_occupation ?? '' }}</span>
         </div>
 
         <div class="info-section" style="align-items: flex-start;">
@@ -314,9 +321,15 @@
         <div class="info-section">
             <label>Date of Birth:</label>
             <span
-                class="underline-input">{{ \Carbon\Carbon::parse($admission->date_of_birth)->format('d/m/Y') ?? '' }}</span>
+                class="underline-input">{{ !empty($admission->date_of_birth) ? \Carbon\Carbon::parse($admission->date_of_birth)->format('d/m/Y') : '' }}</span>
+            <label style="margin-left: 15px;">Birth Place:</label>
+            <span class="underline-input">{{ $admission->birth_place ?? '' }}</span>
             <label style="margin-left: 15px;">Aadhaar No.:</label>
             <span class="underline-input">{{ $admission->aadhar_card_no ?? '' }}</span>
+            @if(!empty($admission->pen_no))
+            <label style="margin-left: 15px;">PEN No.:</label>
+            <span class="underline-input">{{ $admission->pen_no }}</span>
+            @endif
         </div>
 
         <div class="info-section">
@@ -329,50 +342,70 @@
 
         <div class="info-section">
             <label>Caste:</label>
-            <label class="checkbox-label"><input type="checkbox"
-                    {{ $admission->category === 'OPEN' ? 'checked' : '' }}>OPEN</label>
-            <label class="checkbox-label"><input type="checkbox"
-                    {{ $admission->category === 'OBC' ? 'checked' : '' }}>OBC</label>
-            <label class="checkbox-label"><input type="checkbox"
-                    {{ $admission->category === 'SC' ? 'checked' : '' }}>SC</label>
-            <label class="checkbox-label"><input type="checkbox"
-                    {{ $admission->category === 'ST' ? 'checked' : '' }}>ST</label>
-            <label class="checkbox-label"><input type="checkbox"
-                    {{ $admission->category === 'EWS' ? 'checked' : '' }}>EWS</label>
-            <label class="checkbox-label"><input type="checkbox"
-                    {{ $admission->category === 'General' ? 'checked' : '' }}>General</label>
+            @foreach (['Baxipanch', 'SC', 'ST', 'Handicaped', 'Vichar Vimukti jati', 'ex- serviceman', 'general', 'low-profession', 'minority'] as $castOption)
+                <label class="checkbox-label"><input type="checkbox"
+                        {{ (strcasecmp($admission->cast ?? '', $castOption) === 0) ? 'checked' : '' }}>{{ $castOption }}</label>
+            @endforeach
         </div>
 
+        <div class="info-section">
+            <label>Religion :</label>
+            <span class="underline-input">{{ $admission->religion ?? '-' }}</span>
+            <label style="margin-left: 15px;">House :</label>
+            <span class="underline-input">{{ $admission->house ?? '-' }}</span>
+            <label style="margin-left: 15px;">Stream :</label>
+            <span class="underline-input">{{ $admission->stream ?? '-' }}</span>
+        </div>
+
+        <div class="info-section">
+            <label>Category:</label>
+            @php
+                $viewCategories = \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->pluck('name')->toArray();
+                if (!empty($admission->category) && !in_array($admission->category, $viewCategories)) {
+                    $viewCategories[] = $admission->category;
+                }
+            @endphp
+            @foreach ($viewCategories as $catOption)
+                <label class="checkbox-label"><input type="checkbox"
+                        {{ (strcasecmp($admission->category ?? '', $catOption) === 0) ? 'checked' : '' }}>{{ $catOption }}</label>
+            @endforeach
+        </div>
+
+        @if(!empty($admission->bank_name) || !empty($admission->bank_account_no))
+        <div class="info-section">
+            <label>Bank Name :</label>
+            <span class="underline-input">{{ $admission->bank_name ?? '-' }}</span>
+            <label style="margin-left: 15px;">Account No. :</label>
+            <span class="underline-input">{{ $admission->bank_account_no ?? '-' }}</span>
+        </div>
+        @endif
+
         <div class="form-section">
-            <strong style="font-size: 18px; color: #1565c0;">Educational Details:</strong>
-            <table class="education-table">
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Exam</th>
-                        <th>Year & Month of Passing</th>
-                        <th>Board/University</th>
-                        <th>Result with %</th>
-                        <th>Remark / Seat No.</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($admission->educationDetails as $index => $edu)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $edu->education }}</td>
-                            <td>{{ $edu->passing_year ?? '-' }}</td>
-                            <td>{{ $edu->board_university ?? '-' }}</td>
-                            <td>{{ $edu->percentage_cgpa ?? '-' }}</td>
-                            <td>{{ $edu->seat_no_nrollment_no ?? '-' }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6">No records found</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            <strong style="font-size: 18px; color: #1565c0;">Previous / Last School Details:</strong>
+            @if(!empty($admission->is_new_admission))
+                <div class="info-section" style="margin-top: 8px;">
+                    <span class="badge" style="background: #e8f5e9; color: #2e7d32; font-weight: bold; padding: 4px 10px; border-radius: 4px; border: 1px solid #c8e6c9;">Fresh / New Admission (No Previous School)</span>
+                </div>
+            @else
+                <div class="info-section" style="margin-top: 8px;">
+                    <label>Last School Name :</label>
+                    <span class="underline-input" style="flex-grow: 1;">{{ $admission->last_school_name ?? '-' }}</span>
+                </div>
+                <div class="info-section">
+                    <label>Old GR No. :</label>
+                    <span class="underline-input">{{ $admission->old_gr_no ?? '-' }}</span>
+                    <label style="margin-left: 15px;">Passed Standard :</label>
+                    <span class="underline-input">{{ $admission->passed_standard ? 'Std ' . $admission->passed_standard : '-' }}</span>
+                    <label style="margin-left: 15px;">Attendance :</label>
+                    <span class="underline-input">{{ $admission->attendance ?? '-' }}</span>
+                </div>
+                <div class="info-section">
+                    <label>LC No. :</label>
+                    <span class="underline-input">{{ $admission->lc_no ?? '-' }}</span>
+                    <label style="margin-left: 15px;">LC Date :</label>
+                    <span class="underline-input">{{ !empty($admission->lc_date) ? \Carbon\Carbon::parse($admission->lc_date)->format('d-m-Y') : '-' }}</span>
+                </div>
+            @endif
         </div>
 
         <div class="signature-box">
