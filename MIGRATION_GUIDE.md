@@ -1,114 +1,152 @@
-# Multi-School Database Migration & Setup Guide
+# Multi-School Database Migration & Command Reference Guide
 
-આ દસ્તાવેજમાં **Ultra School** પ્રોજેક્ટ માટે Multi-School (Multi-Database) Migration, Database Creation, Seeding અને Data Synchronization ના બધા જ કમાન્ડ્સ અને સ્ટેપ્સ વિગતવાર આપેલા છે.
-
----
-
-## ૧. શાળાઓ અને તેમના ડેટાબેઝનું લિસ્ટ (School Databases)
-
-પ્રોજેક્ટમાં `config/schools.php` મુજબ નીચે મુજબના ૪ અલગ અલગ ડેટાબેઝ છે:
-
-| School Code | School Name | Short Name | Database Name |
-| :--- | :--- | :--- | :--- |
-| `ues` | Ultra English School | **UES** | `ultra_school_ues` |
-| `ups` | Ultra Primary School | **UPS** | `ultra_school_ups` |
-| `uv` | Ultra Vidhyalay | **UV** | `ultra_school_uv` |
-| `us` | Ultra Secondary School | **US** | `ultra_school_us` |
+આ દસ્તાવેજમાં **Ultra School** પ્રોજેક્ટ માટે Multi-School (Multi-Database) Migration, Database Status, Single-School Migration, All-in-One One-Liner Commands, Live Server Configuration અને Cache Commands વિગતવાર આપેલા છે.
 
 ---
 
-## ૨. સામાન્ય સેટઅપ (Initial Setup)
+## ૧. શાળાઓ અને તેમના ડેટાબેઝ (4 Schools & Databases)
 
-1. **XAMPP / MySQL ચાલુ કરો:** ખાતરી કરો કે MySQL સર્વર કાર્યરત છે.
-2. **`.env` ફાઈલ ચકાસો:**
-   ```env
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=ultra_school_ues
-   DB_USERNAME=root
-   DB_PASSWORD=
-   ```
+| School Code | School Name | Short Name | Standards / Medium | Local DB | Live Database |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `ues` | Ultra English School | **UES** | ધોરણ 1 થી 8 (English) | `ultra_school_ues` | `jrosvllq_ultra_school_ues` |
+| `ups` | Ultra Primary School | **UPS** | ધોરણ 1 થી 8 | `ultra_school_ups` | `jrosvllq_ultra_school_ups` |
+| `uv` | Ultra Vidhyalay | **UV** | ધોરણ 1 થી 8 | `ultra_school_uv` | `jrosvllq_ultra_school_uv` |
+| `us` | Ultra Secondary School | **US** | ધોરણ 9 થી 10 (Guj / Eng) | `ultra_school_us` | `jrosvllq_ultra_school_us` |
 
 ---
 
-## ૩. Migration Commands (સ્ટેપ-બાય-સ્ટેપ)
+## ૨. એકસાથે રન કરવાના One-Liner Commands (Copy & Paste)
 
-### A. બધી જ શાળાઓમાં એકસાથે Migration રન કરવું (All Schools)
-
-નવા માઇગ્રેશન બધી જ ૪ સ્કૂલના ડેટાબેઝમાં લાગુ કરવા:
+### 🚀 A. બધી શાળાઓમાં એકસાથે Migration રન કરવાનો કમાન્ડ:
 ```bash
 php artisan schools:migrate
 ```
-> **નોંધ:** જો ડેટાબેઝ MySQL માં બનેલો નહીં હોય તો આ કમાન્ડ આપોઆપ નવો ડેટાબેઝ બનાવી દેશે (`CREATE DATABASE IF NOT EXISTS`).
 
----
-
-### B. કોઈ એક ચોક્કસ શાળા માટે Migration રન કરવું (Single School)
-
-જો ફક્ત કોઈ એક જ સ્કૂલ માટે માઇગ્રેશન ચલાવવું હોય (દા.ત. `ups`, `ues`, `uv`, અથવા `us`):
+### 🔍 B. બધી શાળાઓનું Migration Status એકસાથે ચેક કરવાનો કમાન્ડ:
 ```bash
-# Ultra Primary School (UPS)
-php artisan schools:migrate --school=ups
+php artisan schools:migrate --status
+```
 
-# Ultra Secondary School (US)
-php artisan schools:migrate --school=us
+### ⚡ C. ચારેય શાળાઓ વારાફરતી એક જ લાઈનમાં Migration રન કરવી (Chained):
+```bash
+php artisan schools:migrate --school=ues && php artisan schools:migrate --school=ups && php artisan schools:migrate --school=uv && php artisan schools:migrate --school=us
+```
 
-# Ultra English School (UES)
-php artisan schools:migrate --school=ues
+### 📋 D. ચારેય શાળાઓનું Status એક જ લાઈનમાં જોવા માટે:
+```bash
+php artisan schools:migrate --school=ues --status && php artisan schools:migrate --school=ups --status && php artisan schools:migrate --school=uv --status && php artisan schools:migrate --school=us --status
+```
 
-# Ultra Vidhyalay (UV)
-php artisan schools:migrate --school=uv
+### 🧹 E. બધા જ Cache એકસાથે ક્લિયર અને Cache બનાવવાનો All-in-One કમાન્ડ:
+```bash
+php artisan config:clear && php artisan cache:clear && php artisan route:clear && php artisan view:clear && php artisan config:cache
 ```
 
 ---
 
-### C. Fresh Migration અને Seeding (ડેટાબેઝ રીસેટ કરવા માટે)
+## ૩. અલગ-અલગ સ્કૂલ વાઇઝ Commands
 
-બધા ટેબલ્સ ડ્રોપ કરીને નવેસરથી માઇગ્રેશન + સીડર રન કરવા:
+### A. ચોક્કસ સ્કૂલનું Migration Status જોવા માટે:
 ```bash
-# બધી શાળાઓ માટે Fresh Migration + Seed
+# 1. UES Status
+php artisan schools:migrate --school=ues --status
+
+# 2. UPS Status
+php artisan schools:migrate --school=ups --status
+
+# 3. UV Status
+php artisan schools:migrate --school=uv --status
+
+# 4. US Status (ધોરણ 9 થી 10)
+php artisan schools:migrate --school=us --status
+```
+
+### B. ચોક્કસ સ્કૂલમાં Migration રન કરવા માટે:
+```bash
+# 1. UES Migrate
+php artisan schools:migrate --school=ues
+
+# 2. UPS Migrate
+php artisan schools:migrate --school=ups
+
+# 3. UV Migrate
+php artisan schools:migrate --school=uv
+
+# 4. US Migrate (ધોરણ 9 થી 10)
+php artisan schools:migrate --school=us
+```
+
+### C. Fresh Migration + Seeding (ડેટાબેઝ રીસેટ કરવા માટે):
+```bash
+# બધી શાળાઓ Fresh:
 php artisan schools:migrate --fresh --seed
 
-# માત્ર એક શાળા માટે Fresh Migration
+# માત્ર એક શાળા Fresh:
 php artisan schools:migrate --school=ues --fresh --seed
 ```
 
 ---
 
 ## ૪. ડેટા અને યુઝર્સ Sync કરવા માટે (Data Synchronization)
-
-જો મૂળ ડેટાબેઝમાંથી તમામ સ્કૂલોમાં જરૂરી Users, Roles, Permissions અને Master Tables કોપી કરવા હોય:
-
 ```bash
-# મૂળ ultra_school_ues અથવા ultra_school માંથી બધી સ્કૂલમાં ડેટા કોપી કરવા
 php artisan schools:sync-initial --from=ultra_school_ues
 ```
 
 ---
 
-## ૫. નવું માઇગ્રેશન બનાવતી વખતે Workflow
+## ૫. લાઈવ સર્વર `.env` ફોર્મેટ (Live Multi-Database Configuration)
 
-જ્યારે પણ તમે નવું માઇગ્રેશન બનાવો:
+```env
+APP_NAME="Ultra School"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://ultraschool.org/software/
 
-1. **નવું Migration Create કરો:**
-   ```bash
-   php artisan make:migration add_new_column_to_table
-   ```
-2. **Migration ફાઈલ કોડિંગ પૂર્ણ કરો.**
-3. **બધી શાળાઓમાં Migration રન કરો:**
-   ```bash
-   php artisan schools:migrate
-   ```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+
+# 1. UES (Ultra English School)
+DB_DATABASE_UES=jrosvllq_ultra_school_ues
+DB_USERNAME_UES=jrosvllq_ultra_school_ues
+DB_PASSWORD_UES="ubfXV828A#Q9NE2H"
+
+# 2. UPS (Ultra Primary School)
+DB_DATABASE_UPS=jrosvllq_ultra_school_ups
+DB_USERNAME_UPS=jrosvllq_ultra_school_ups
+DB_PASSWORD_UPS="JllUFO=Q!_J^[j{D"
+
+# 3. UV (Ultra Vidhyalay)
+DB_DATABASE_UV=jrosvllq_ultra_school_uv
+DB_USERNAME_UV=jrosvllq_ultra_school_uv
+DB_PASSWORD_UV="aLtqx9]=WnC#j&XF"
+
+# 4. US (Ultra Secondary - ધોરણ 9 થી 10)
+DB_DATABASE_US=jrosvllq_ultra_school_us
+DB_USERNAME_US=jrosvllq_ultra_school_us
+DB_PASSWORD_US="eLU5yvc.YYB7?4dg"
+
+# Default Connection
+DEFAULT_SCHOOL=ues
+DB_DATABASE=jrosvllq_ultra_school_ues
+DB_USERNAME=jrosvllq_ultra_school_ues
+DB_PASSWORD="ubfXV828A#Q9NE2H"
+
+# Session & Cache Settings (Always use 'file' for multi-school setup)
+SESSION_DRIVER=file
+CACHE_STORE=file
+```
 
 ---
 
-## ૬. જરૂરી Cache & Config Clear Commands
+## ૬. નવું Migration બનાવતી વખતે Workflow
 
-કોઈપણ મોટા ફેરફાર પછી કેશ ક્લિયર કરવા માટે:
-```bash
-php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
-```
+1. **નવું Migration Create કરો:**
+   ```bash
+   php artisan make:migration add_field_name_to_table
+   ```
+2. **Migration માં `hasColumn` / `hasTable` સેફ્ટી ચેક રાખો.**
+3. **બધી શાળાઓમાં રન કરો:**
+   ```bash
+   php artisan schools:migrate
+   ```
