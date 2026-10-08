@@ -56,29 +56,7 @@ class MigrateAllSchoolsCommand extends Command
         $this->info(' Multi-School Databases Migration & Setup ');
         $this->info('====================================================');
 
-        // Step 1: Ensure MySQL databases exist
-        foreach ($schools as $code => $school) {
-            $dbName = $school['database'];
-            $this->info("Checking database for [{$school['short_name']}]: {$dbName}...");
-
-            try {
-                // Connect without database to create if not exists
-                $pdo = new \PDO(
-                    "mysql:host=" . config('database.connections.mysql.host') . ";port=" . config('database.connections.mysql.port'),
-                    config('database.connections.mysql.username'),
-                    config('database.connections.mysql.password'),
-                    [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
-                );
-
-                $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
-                $this->info("✓ Database `{$dbName}` is ready.");
-            } catch (\Exception $e) {
-                $this->error("Failed to create/check database `{$dbName}`: " . $e->getMessage());
-                return Command::FAILURE;
-            }
-        }
-
-        // Step 2: Migrate each school database
+        // Migrate each school database using its specific credentials
         foreach ($schools as $code => $school) {
             $dbName = $school['database'];
             $this->newLine();
@@ -86,30 +64,34 @@ class MigrateAllSchoolsCommand extends Command
             $this->info("Migrating [{$school['name']}] (DB: {$dbName})...");
             $this->info("----------------------------------------------------");
 
-            SchoolDatabaseManager::switchDatabase($code);
+            try {
+                SchoolDatabaseManager::switchDatabase($code);
 
-            $migrateCommand = $fresh ? 'migrate:fresh' : 'migrate';
-            $params = [
-                '--database' => 'mysql',
-                '--force' => true,
-            ];
+                $migrateCommand = $fresh ? 'migrate:fresh' : 'migrate';
+                $params = [
+                    '--database' => 'mysql',
+                    '--force' => true,
+                ];
 
-            if ($seed) {
-                $params['--seed'] = true;
-            }
+                if ($seed) {
+                    $params['--seed'] = true;
+                }
 
-            $exitCode = Artisan::call($migrateCommand, $params, $this->output);
+                $exitCode = Artisan::call($migrateCommand, $params, $this->output);
 
-            if ($exitCode !== 0) {
-                $this->error("Migration failed for [{$school['name']}].");
-            } else {
-                $this->info("✓ Successfully migrated [{$school['name']}].");
+                if ($exitCode !== 0) {
+                    $this->error("Migration encountered issues for [{$school['name']}].");
+                } else {
+                    $this->info("✓ Successfully migrated [{$school['name']}].");
+                }
+            } catch (\Exception $e) {
+                $this->error("Failed to migrate [{$school['name']}]: " . $e->getMessage());
             }
         }
 
         $this->newLine();
         $this->info('====================================================');
-        $this->info(' All school databases have been processed successfully! ');
+        $this->info(' All school databases processed! ');
         $this->info('====================================================');
 
         return Command::SUCCESS;
