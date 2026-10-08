@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('master_universities', function (Blueprint $table) {
-           $table->id();
-            $table->string('name')->nullable();
-            $table->string('status')->default('active')->comment('active, inactive');
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
-            $table->timestamps();
-            $table->string('deleted_by')->nullable();
-            $table->softDeletes();
-        });
+        if (!Schema::hasTable('master_universities')) {
+            Schema::create('master_universities', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->nullable();
+                $table->string('status')->default('active')->comment('active, inactive');
+                $table->string('created_by')->nullable();
+                $table->string('updated_by')->nullable();
+                $table->timestamps();
+                $table->string('deleted_by')->nullable();
+                $table->softDeletes();
+            });
+        }
     }
 
     /**

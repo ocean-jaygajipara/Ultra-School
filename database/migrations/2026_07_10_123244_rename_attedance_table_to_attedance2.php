@@ -10,7 +10,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::rename('attedance', 'attedance2');
+        if (Schema::hasTable('attedance') && !Schema::hasTable('attedance2')) {
+            Schema::rename('attedance', 'attedance2');
+        }
     }
 
     /**
