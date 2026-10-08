@@ -95,9 +95,19 @@ class SchoolDatabaseManager
             return;
         }
 
-        $dbName = $school['database'];
+        $dbName = $school['database'] ?? null;
+        if ($dbName) {
+            Config::set('database.connections.mysql.database', $dbName);
+        }
 
-        Config::set('database.connections.mysql.database', $dbName);
+        if (!empty($school['username'])) {
+            Config::set('database.connections.mysql.username', $school['username']);
+        }
+
+        if (isset($school['password'])) {
+            Config::set('database.connections.mysql.password', $school['password']);
+        }
+
         DB::purge('mysql');
         DB::reconnect('mysql');
     }
