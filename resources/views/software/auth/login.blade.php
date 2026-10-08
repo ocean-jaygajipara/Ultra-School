@@ -128,10 +128,11 @@
 
                         <div class="mb-3 position-relative">
                             <label for="school_key" class="form-label fw-bold">Select School <span class="text-danger">*</span></label>
-                            <select name="school_key" id="school_key" class="select2 form-select @error('school_key') is-invalid @enderror" data-placeholder="Select School" required>
+                            <select name="school_key" id="school_key" class="select2 form-select @error('school_key') is-invalid @enderror" data-placeholder="-- Select School --" required>
+                                <option value="">-- Select School --</option>
                                 @foreach ($schools as $sCode => $sInfo)
-                                    <option value="{{ $sCode }}" {{ (old('school_key', $selectedSchool ?? 'ues') === $sCode) ? 'selected' : '' }}>
-                                        🏫 {{ $sInfo['name'] }}
+                                    <option value="{{ $sCode }}" {{ (old('school_key', $selectedSchool) === $sCode) ? 'selected' : '' }}>
+                                        🏫 {{ $sInfo['name'] }} ({{ $sInfo['short_name'] }})
                                     </option>
                                 @endforeach
                             </select>

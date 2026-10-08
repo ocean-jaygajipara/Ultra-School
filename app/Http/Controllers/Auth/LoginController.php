@@ -36,7 +36,7 @@ class LoginController extends Controller
     public function showLoginForm(Request $request)
     {
         $schools = SchoolDatabaseManager::all();
-        $selectedSchool = $request->query('school', SchoolDatabaseManager::getActiveSchoolCode());
+        $selectedSchool = $request->query('school', null);
 
         return view('software.auth.login', compact('schools', 'selectedSchool'));
     }
