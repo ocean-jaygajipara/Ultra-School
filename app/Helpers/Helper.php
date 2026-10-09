@@ -27,7 +27,7 @@ class Helper
         }
         $user = Auth::user();
         $userRole = strtolower(self::getLoginUserRole());
-        if (in_array($userRole, ['developer', 'super-admin'])) {
+        if ($userRole === 'developer') {
             return true;
         }
         return $user->permissions->pluck('name')->contains($permission) || $user->getAllPermissions()->pluck('name')->contains($permission);
@@ -40,7 +40,7 @@ class Helper
         }
         $user = Auth::user();
         $userRole = strtolower(self::getLoginUserRole());
-        if (in_array($userRole, ['developer', 'super-admin'])) {
+        if ($userRole === 'developer') {
             return true;
         }
         return $user->permissions->whereIn('name', $permissions)->isNotEmpty() || $user->getAllPermissions()->whereIn('name', $permissions)->isNotEmpty();
