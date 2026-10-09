@@ -10,9 +10,7 @@
 @section('title', $page_title)
 
 @section('page_style_file')
-    {{-- <link href="{{ asset('public/assets/admin/plugins/datatable/dataTables.bootstrap4.min.css') }}" rel="stylesheet" type="text/css"> --}}
 @endsection
-
 
 @section('content')
     <div class="d-flex justify-content-lg-between px-1">
@@ -30,9 +28,65 @@
         ])
     </div>
 
-    <!-- @include('software.partials.flash_messages') -->
+    <style>
+        .permission-module-card {
+            border: 1px solid #e7e7e8;
+            border-radius: 8px;
+            background: #fff;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .permission-module-card:hover {
+            border-color: #7367f0;
+            box-shadow: 0 4px 12px rgba(115, 103, 240, 0.08);
+        }
+        .permission-card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ededee;
+            padding: 10px 16px;
+            border-top-left-radius: 7px;
+            border-top-right-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .permission-item-box {
+            border: 1px solid #ececee;
+            border-radius: 6px;
+            padding: 8px 12px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease-in-out;
+            height: 100%;
+        }
+        .permission-item-box:hover {
+            background-color: #f3f2ff;
+            border-color: #7367f0;
+        }
+        .permission-item-box.checked-item {
+            background-color: #f4f3ff;
+            border-color: #7367f0;
+        }
+        .permission-item-box .form-check-input {
+            cursor: pointer;
+            margin-top: 0;
+            width: 1.15em;
+            height: 1.15em;
+        }
+        .permission-item-box .form-check-label {
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #4b4b4b;
+            word-break: break-word;
+        }
+    </style>
 
-    <div class="card shadow">
+    <div class="card shadow my-3">
         <div class="card-header d-none">
             <h2 class="mb-0">
                 {{ $page_title }}
@@ -63,193 +117,201 @@
                 </div>
 
                 <div class="row">
-                    <div class="form-group col-md-12">
-                        <label for="formGroupExampleInput" class="d-block">Gived Permission</label>
-
+                    <div class="col-md-12">
                         @php
-                            $groupedPermissions = collect($permissions)->groupBy('group');
+                            $hiddenGroups = ['country', 'state', 'city', 'pincode', 'document-type', 'documents'];
+                            $groupedPermissions = collect($permissions)
+                                ->filter(function ($item) use ($hiddenGroups) {
+                                    $grp = strtolower(is_array($item) ? ($item['group'] ?? '') : ($item->group ?? ''));
+                                    return !in_array($grp, $hiddenGroups);
+                                })
+                                ->groupBy('group');
                         @endphp
 
-                        @foreach ($groupedPermissions as $group => $perms)
-                            <div class="border rounded p-3 mb-2">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input group-checkbox"
-                                        id="group-{{ Str::slug($group) }}">
-                                    <label class="custom-control-label font-weight-bold"
-                                        for="group-{{ Str::slug($group) }}">{{ ucfirst($group) }}</label>
-                                </div>
-                                <div class="row mt-2">
-                                    @foreach ($perms as $perm)
-                                        <div class="col-md-3">
-                                            <div class="custom-control custom-switch">
-                                                <input type="checkbox" class="custom-control-input permission-checkbox"
-                                                    id="perm-{{ $perm->id }}" name="permission[]"
-                                                    value="{{ $perm->id }}"
-                                                    {{ isset($rolePermissions) && in_array($perm->id, $rolePermissions) ? 'checked' : '' }}>
-                                                <label class="custom-control-label"
-                                                    for="perm-{{ $perm->id }}">{{ $perm->name }}</label>
-                                            </div>
-                                        </div>
-                                    @endforeach
+                        <!-- Header Actions Bar -->
+                        <div class="card mb-3 border-0 bg-light shadow-none">
+                            <div class="card-body p-3">
+                                <div class="row align-items-center g-2">
+                                    <div class="col-md-6 col-12">
+                                        <h5 class="mb-0 text-primary fw-bold">
+                                            <i class="ti ti-shield-lock me-1"></i> Given Permissions
+                                        </h5>
+                                    </div>
+                                    <div class="col-md-6 col-12 text-md-end text-start">
+                                        <input type="text" id="permissionSearchInput" class="form-control form-control-sm d-inline-block w-auto mt-2 mt-md-0" placeholder="Search permission..." style="max-width: 200px;">
+                                    </div>
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
+
+                        <!-- Grouped Permission Cards -->
+                        <div id="permissionModulesContainer">
+                            @foreach ($groupedPermissions as $group => $perms)
+                                @php
+                                    $groupSlug = Str::slug($group ?: 'other');
+                                    $groupTitle = ucfirst(str_replace(['-', '_'], ' ', $group ?: 'Other'));
+                                @endphp
+                                <div class="permission-module-card group-card" data-module-name="{{ strtolower($groupTitle) }}">
+                                    <div class="permission-card-header">
+                                        <div class="d-flex align-items-center">
+                                            <div class="form-check form-check-primary m-0 me-2">
+                                                <input type="checkbox" class="form-check-input group-checkbox" id="group-{{ $groupSlug }}">
+                                            </div>
+                                            <label class="form-check-label fw-bold fs-6 mb-0 cursor-pointer" for="group-{{ $groupSlug }}">
+                                                {{ $groupTitle }}
+                                            </label>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-label-primary group-counter-badge me-2">0 / {{ count($perms) }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3">
+                                        <div class="row g-2">
+                                            @foreach ($perms as $perm)
+                                                @php
+                                                    $isChecked = isset($rolePermissions) && in_array($perm->id, $rolePermissions);
+                                                @endphp
+                                                <div class="col-lg-3 col-md-4 col-sm-6 perm-col" data-perm-name="{{ strtolower($perm->name) }}">
+                                                    <div class="permission-item-box {{ $isChecked ? 'checked-item' : '' }}">
+                                                        <div class="form-check form-check-primary m-0 w-100 d-flex align-items-center">
+                                                            <input type="checkbox" class="form-check-input permission-checkbox"
+                                                                id="perm-{{ $perm->id }}" name="permission[]"
+                                                                value="{{ $perm->id }}"
+                                                                {{ $isChecked ? 'checked' : '' }}>
+                                                            <label class="form-check-label flex-grow-1" for="perm-{{ $perm->id }}">
+                                                                {{ $perm->name }}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
 
                         @error('permission')
-                            <span class="invalid-feedback" role="alert">
+                            <span class="invalid-feedback d-block mt-2" role="alert">
                                 <strong>{{ $message }}</strong>
                             </span>
                         @enderror
                     </div>
+                </div>
 
-                    {{-- <div class="row">
-                    <div class="col-md-4">
-                        <label class="form-label"> Permission Groups </label>
-                        <ul class="list-group">
-                            @php
-                                $groupedPermissions = collect($permissions)->groupBy('group');
-                            @endphp
-                            @foreach ($groupedPermissions as $group => $perms)
-                                <li class="list-group-item">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input group-checkbox" id="group-{{ Str::slug($group) }}">
-                                        <label class="custom-control-label font-weight-bold" for="group-{{ Str::slug($group) }}">{{ ucfirst($group) }}</label>
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
+                <div class="row mt-3">
+                    <div class="col-md-12 text-center">
+                        <button type="submit" class="btn btn-success mt-1 mb-1">
+                            {{ isset($edit) ? 'Update' : 'Submit' }}
+                        </button>
+                        <a href="{{ route($route . '.index') }}" class="btn btn-danger mt-1 mb-1">Cancel</a>
                     </div>
-                    <div class="col-md-8">
-                        <label class="form-label"> Permissions </label>
-                        <div id="permissions-container">
-                            @foreach ($groupedPermissions as $group => $perms)
-                                <div class="permissions-group d-none" id="permissions-{{ Str::slug($group) }}">
-                                    <div class="row">
-                                        @foreach ($perms as $perm)
-                                            <div class="col-md-4">
-                                                <div class="custom-control custom-switch">
-                                                    <input type="checkbox" class="custom-control-input permission-checkbox" id="perm-{{ $perm->id }}" name="permission[]" value="{{ $perm->id }}"
-                                                        {{ isset($rolePermissions) && in_array($perm->id, $rolePermissions) ? 'checked' : '' }}>
-                                                    <label class="custom-control-label" for="perm-{{ $perm->id }}">{{ $perm->name }}</label>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div> --}}
-
-                    <div class="row">
-                        <div class="col-md-12 text-center">
-                            <button type="submit" class="btn btn-success mt-1 mb-1">
-                                {{ isset($edit) ? 'Update' : 'Submit' }}
-                            </button>
-                            <a href="{{ route($route . '.index') }}" class="btn btn-danger mt-1 mb-1">Cancel</a>
-                        </div>
-                    </div>
+                </div>
             </form>
         </div>
     </div>
-
 @endsection
 
-
-@section('page_leavel_script1')
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Show permissions for a group when clicked
-            document.querySelectorAll('.group-checkbox').forEach(groupCheckbox => {
-                groupCheckbox.addEventListener('change', function() {
-                    let groupId = this.id.replace('group-', '');
-                    let permissionsDiv = document.getElementById(`permissions-${groupId}`);
-
-                    if (this.checked) {
-                        permissionsDiv.classList.remove('d-none');
-                        permissionsDiv.querySelectorAll('.permission-checkbox').forEach(checkbox =>
-                            checkbox.checked = true);
-                    } else {
-                        permissionsDiv.classList.add('d-none');
-                        permissionsDiv.querySelectorAll('.permission-checkbox').forEach(checkbox =>
-                            checkbox.checked = false);
-                    }
-                });
-            });
-
-            // Handle individual permission checkbox click
-            document.querySelectorAll('.permission-checkbox').forEach(permissionCheckbox => {
-                permissionCheckbox.addEventListener('change', function() {
-                    let groupElement = this.closest('.permissions-group').previousElementSibling
-                        .querySelector('.group-checkbox');
-                    let groupPermissions = this.closest('.permissions-group').querySelectorAll(
-                        '.permission-checkbox');
-                    let allChecked = [...groupPermissions].every(checkbox => checkbox.checked);
-                    let anyChecked = [...groupPermissions].some(checkbox => checkbox.checked);
-
-                    groupElement.checked = allChecked;
-                    groupElement.indeterminate = !allChecked && anyChecked;
-                });
-            });
-
-            // Initialize checkboxes based on existing selections
-            document.querySelectorAll('.group-checkbox').forEach(groupCheckbox => {
-                let groupId = groupCheckbox.id.replace('group-', '');
-                let permissionsDiv = document.getElementById(`permissions-${groupId}`);
-                let groupPermissions = permissionsDiv.querySelectorAll('.permission-checkbox');
-                let allChecked = [...groupPermissions].every(checkbox => checkbox.checked);
-                let anyChecked = [...groupPermissions].some(checkbox => checkbox.checked);
-
-                groupCheckbox.checked = allChecked;
-                groupCheckbox.indeterminate = !allChecked && anyChecked;
-                if (anyChecked) {
-                    permissionsDiv.classList.remove('d-none');
-                }
-            });
-        });
-    </script>
-@endsection
 @section('page_leavel_script')
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Handle group checkbox click
-            document.querySelectorAll('.group-checkbox').forEach(groupCheckbox => {
-                groupCheckbox.addEventListener('change', function() {
-                    let groupId = this.id.replace('group-', '');
-                    let checkboxes = document.querySelectorAll(`.permission-checkbox[id^="perm-"]`);
+        $(document).ready(function() {
+            function updateSingleGroup(card) {
+                var total = card.find('.permission-checkbox').length;
+                var checked = card.find('.permission-checkbox:checked').length;
+                var groupCb = card.find('.group-checkbox');
+                var badge = card.find('.group-counter-badge');
 
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox.closest('.border').querySelector(
-                                `#group-${groupId}`)) {
-                            checkbox.checked = this.checked;
+                if (badge.length) {
+                    badge.text(checked + ' / ' + total);
+                }
+
+                if (total > 0 && checked === total) {
+                    groupCb.prop('checked', true).prop('indeterminate', false);
+                    badge.removeClass('bg-label-secondary bg-label-warning').addClass('bg-label-success');
+                } else if (checked > 0) {
+                    groupCb.prop('checked', false).prop('indeterminate', true);
+                    badge.removeClass('bg-label-secondary bg-label-success').addClass('bg-label-primary');
+                } else {
+                    groupCb.prop('checked', false).prop('indeterminate', false);
+                    badge.removeClass('bg-label-success bg-label-primary').addClass('bg-label-secondary');
+                }
+            }
+
+            function updateAllGroups() {
+                $('.group-card').each(function() {
+                    updateSingleGroup($(this));
+                });
+            }
+
+            // Initialize state on page load
+            updateAllGroups();
+
+            // Toggle all permissions for a group
+            $(document).on('change', '.group-checkbox', function() {
+                var isChecked = $(this).is(':checked');
+                var card = $(this).closest('.group-card');
+                card.find('.permission-checkbox').prop('checked', isChecked);
+                if (isChecked) {
+                    card.find('.permission-item-box').addClass('checked-item');
+                } else {
+                    card.find('.permission-item-box').removeClass('checked-item');
+                }
+                updateSingleGroup(card);
+            });
+
+            // Update on individual permission change
+            $(document).on('change', '.permission-checkbox', function() {
+                var box = $(this).closest('.permission-item-box');
+                if ($(this).is(':checked')) {
+                    box.addClass('checked-item');
+                } else {
+                    box.removeClass('checked-item');
+                }
+                var card = $(this).closest('.group-card');
+                updateSingleGroup(card);
+            });
+
+            // Click whole box to toggle checkbox
+            $(document).on('click', '.permission-item-box', function(e) {
+                if ($(e.target).is('input[type="checkbox"]') || $(e.target).is('label')) {
+                    return;
+                }
+                var cb = $(this).find('.permission-checkbox');
+                cb.prop('checked', !cb.is(':checked')).trigger('change');
+            });
+
+            // Search filter
+            $('#permissionSearchInput').on('keyup change', function() {
+                var val = $.trim($(this).val()).toLowerCase();
+                if (!val) {
+                    $('.group-card').show();
+                    $('.perm-col').show();
+                    return;
+                }
+
+                $('.group-card').each(function() {
+                    var groupCard = $(this);
+                    var groupName = groupCard.attr('data-module-name') || '';
+                    var hasMatchingPerm = false;
+
+                    groupCard.find('.perm-col').each(function() {
+                        var permCol = $(this);
+                        var permName = permCol.attr('data-perm-name') || '';
+                        if (permName.indexOf(val) > -1 || groupName.indexOf(val) > -1) {
+                            permCol.show();
+                            hasMatchingPerm = true;
+                        } else {
+                            permCol.hide();
                         }
                     });
+
+                    if (hasMatchingPerm) {
+                        groupCard.show();
+                    } else {
+                        groupCard.hide();
+                    }
                 });
-            });
-
-            // Handle individual permission checkbox click
-            document.querySelectorAll('.permission-checkbox').forEach(permissionCheckbox => {
-                permissionCheckbox.addEventListener('change', function() {
-                    let groupElement = this.closest('.border').querySelector('.group-checkbox');
-                    let groupPermissions = this.closest('.border').querySelectorAll(
-                        '.permission-checkbox');
-                    let allChecked = [...groupPermissions].every(checkbox => checkbox.checked);
-                    let anyChecked = [...groupPermissions].some(checkbox => checkbox.checked);
-
-                    groupElement.checked = allChecked;
-                    groupElement.indeterminate = !allChecked && anyChecked;
-                });
-            });
-
-            // Initialize group checkboxes based on existing selections
-            document.querySelectorAll('.group-checkbox').forEach(groupCheckbox => {
-                let groupPermissions = groupCheckbox.closest('.border').querySelectorAll(
-                    '.permission-checkbox');
-                let allChecked = [...groupPermissions].every(checkbox => checkbox.checked);
-                let anyChecked = [...groupPermissions].some(checkbox => checkbox.checked);
-
-                groupCheckbox.checked = allChecked;
-                groupCheckbox.indeterminate = !allChecked && anyChecked;
             });
         });
     </script>

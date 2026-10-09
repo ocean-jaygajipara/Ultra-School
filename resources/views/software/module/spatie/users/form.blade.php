@@ -205,13 +205,21 @@
             let total = card.find('.permission-checkbox').length;
             let checked = card.find('.permission-checkbox:checked').length;
             let groupCb = card.find('.group-checkbox');
+            let badge = card.find('.group-counter-badge');
+
+            if (badge.length) {
+                badge.text(checked + ' / ' + total);
+            }
 
             if (total > 0 && checked === total) {
                 groupCb.prop('checked', true).prop('indeterminate', false);
+                badge.removeClass('bg-label-secondary bg-label-warning').addClass('bg-label-success');
             } else if (checked > 0) {
                 groupCb.prop('checked', false).prop('indeterminate', true);
+                badge.removeClass('bg-label-secondary bg-label-success').addClass('bg-label-primary');
             } else {
                 groupCb.prop('checked', false).prop('indeterminate', false);
+                badge.removeClass('bg-label-success bg-label-primary').addClass('bg-label-secondary');
             }
         }
 
@@ -226,13 +234,33 @@
             let isChecked = $(this).is(':checked');
             let card = $(this).closest('.group-card');
             card.find('.permission-checkbox').prop('checked', isChecked);
+            if (isChecked) {
+                card.find('.permission-item-box').addClass('checked-item');
+            } else {
+                card.find('.permission-item-box').removeClass('checked-item');
+            }
             updateGroupCheckboxState(card);
         });
 
-        // Delegated event: Update group checkbox when clicking an individual permission
+        // Delegated event: Update group checkbox and box highlight when clicking an individual permission
         $(document).on('change', '.permission-checkbox', function() {
+            let box = $(this).closest('.permission-item-box');
+            if ($(this).is(':checked')) {
+                box.addClass('checked-item');
+            } else {
+                box.removeClass('checked-item');
+            }
             let card = $(this).closest('.group-card');
             updateGroupCheckboxState(card);
+        });
+
+        // Click whole item box to toggle checkbox
+        $(document).on('click', '.permission-item-box', function(e) {
+            if ($(e.target).is('input[type="checkbox"]') || $(e.target).is('label')) {
+                return;
+            }
+            let cb = $(this).find('.permission-checkbox');
+            cb.prop('checked', !cb.is(':checked')).trigger('change');
         });
 
         $(".selectRole").on("change", function() {
