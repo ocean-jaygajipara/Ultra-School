@@ -344,7 +344,8 @@ class AdmissionController extends Controller
         $villages = \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
         $classes = \App\Models\Master\MasterClass::where('status', 'active')->orderBy('class')->get();
         $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
-        return view($modules['folder_path'] . '.form', compact('modules', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions'));
+        $schoolStandards = \App\Services\SchoolDatabaseManager::getSchoolStandards();
+        return view($modules['folder_path'] . '.form', compact('modules', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions', 'schoolStandards'));
     }
 
 
@@ -570,7 +571,8 @@ class AdmissionController extends Controller
             $villages = \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
             $classes = \App\Models\Master\MasterClass::where('status', 'active')->orderBy('class')->get();
             $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
-            return view($modules['folder_path'] . '.form', compact('modules', 'edit', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions'));
+            $schoolStandards = \App\Services\SchoolDatabaseManager::getSchoolStandards();
+            return view($modules['folder_path'] . '.form', compact('modules', 'edit', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions', 'schoolStandards'));
         } catch (\Exception $e) {
 
             return Redirect::route('dashboard')->withErrors($e->getMessage());

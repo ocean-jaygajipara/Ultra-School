@@ -143,9 +143,10 @@
                             </div>
 
                             @php
-                                $classList = isset($classes) && $classes->count() > 0 
-                                    ? $classes->pluck('class')->toArray() 
-                                    : ['Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th-Science', '11th-Commerce', '11th-Arts', '12th-Science', '12th-Commerce', '12th-Arts'];
+                                $activeSchoolCode = \App\Services\SchoolDatabaseManager::getActiveSchoolCode();
+                                $classList = isset($schoolStandards) && !empty($schoolStandards) 
+                                    ? $schoolStandards 
+                                    : \App\Services\SchoolDatabaseManager::getSchoolStandards($activeSchoolCode);
                                 $selectedAdmStd = old('admission_std', $edit->admission_std ?? '');
                                 $selectedCurrentStd = old('current_std', $edit->current_std ?? '');
                             @endphp
@@ -159,6 +160,9 @@
                                         @foreach($classList as $cls)
                                             <option value="{{ $cls }}" {{ ($selectedAdmStd == $cls) ? 'selected' : '' }}>{{ $cls }}</option>
                                         @endforeach
+                                        @if(!empty($selectedAdmStd) && !in_array($selectedAdmStd, $classList))
+                                            <option value="{{ $selectedAdmStd }}" selected>{{ $selectedAdmStd }}</option>
+                                        @endif
                                     </select>
                                     @error('admission_std')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
@@ -175,6 +179,9 @@
                                         @foreach($classList as $cls)
                                             <option value="{{ $cls }}" {{ ($selectedCurrentStd == $cls) ? 'selected' : '' }}>{{ $cls }}</option>
                                         @endforeach
+                                        @if(!empty($selectedCurrentStd) && !in_array($selectedCurrentStd, $classList))
+                                            <option value="{{ $selectedCurrentStd }}" selected>{{ $selectedCurrentStd }}</option>
+                                        @endif
                                     </select>
                                     @error('current_std')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
@@ -919,15 +926,22 @@
                             <div class="col-md-3 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <label class="form-label">Passed Standard</label>
+                                    @php
+                                        $activeSchoolCode = \App\Services\SchoolDatabaseManager::getActiveSchoolCode();
+                                        $passedStdList = \App\Services\SchoolDatabaseManager::getSchoolPassedStandards($activeSchoolCode);
+                                        $selectedPassedStd = old('passed_standard', $edit->passed_standard ?? '');
+                                    @endphp
                                     <select name="passed_standard" id="passed_standard" class="form-control select2 @error('passed_standard') is-invalid @enderror">
                                         <option value="">Select Passed Std</option>
-                                        @for ($std = 1; $std <= 10; $std++)
-                                            @php $stdVal = 'Std ' . $std; @endphp
+                                        @foreach ($passedStdList as $stdVal)
                                             <option value="{{ $stdVal }}"
-                                                {{ (old('passed_standard', $edit->passed_standard ?? '') == $stdVal) ? 'selected' : '' }}>
+                                                {{ ($selectedPassedStd == $stdVal) ? 'selected' : '' }}>
                                                 {{ $stdVal }}
                                             </option>
-                                        @endfor
+                                        @endforeach
+                                        @if(!empty($selectedPassedStd) && !in_array($selectedPassedStd, $passedStdList))
+                                            <option value="{{ $selectedPassedStd }}" selected>{{ $selectedPassedStd }}</option>
+                                        @endif
                                     </select>
                                     @error('passed_standard')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>

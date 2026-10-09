@@ -111,4 +111,59 @@ class SchoolDatabaseManager
         DB::purge('mysql');
         DB::reconnect('mysql');
     }
+
+    /**
+     * Get standards for the active school (or specified school code).
+     * UES: 1 to 8
+     * UPS: 1 to 8
+     * UV: 1 to 8
+     * US: 9 to 10
+     */
+    public static function getSchoolStandards(?string $code = null): array
+    {
+        $code = $code ? strtolower(trim($code)) : self::getActiveSchoolCode();
+        $school = self::get($code);
+        if ($school && !empty($school['standards'])) {
+            return $school['standards'];
+        }
+
+        switch ($code) {
+            case 'us':
+                return [
+                    '9th - Gujarati Medium',
+                    '9th - English Medium',
+                    '10th - Gujarati Medium',
+                    '10th - English Medium',
+                ];
+            case 'ues':
+            case 'ups':
+            case 'uv':
+            default:
+                return ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+        }
+    }
+
+    /**
+     * Get passed standards for the active school (or specified school code).
+     * UES, UPS, UV: Std 1 to Std 8
+     * US: Std 8, Std 9, Std 10
+     */
+    public static function getSchoolPassedStandards(?string $code = null): array
+    {
+        $code = $code ? strtolower(trim($code)) : self::getActiveSchoolCode();
+        $school = self::get($code);
+        if ($school && !empty($school['passed_standards'])) {
+            return $school['passed_standards'];
+        }
+
+        switch ($code) {
+            case 'us':
+                return ['Std 8', 'Std 9', 'Std 10'];
+            case 'ues':
+            case 'ups':
+            case 'uv':
+            default:
+                return ['Std 1', 'Std 2', 'Std 3', 'Std 4', 'Std 5', 'Std 6', 'Std 7', 'Std 8'];
+        }
+    }
 }
