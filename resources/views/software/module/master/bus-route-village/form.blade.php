@@ -52,6 +52,23 @@
                             @enderror
                         </div>
                     </div>
+
+                    {{-- Transport Charge --}}
+                    <div class="col-md-6 col-sm-12 mb-3">
+                        <div class="form-group">
+                            <label class="form-label">Transport Charge (₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input id="charge" type="number" step="0.01" min="0"
+                                    class="form-control @error('charge') is-invalid @enderror" name="charge"
+                                    value="{{ isset($edit?->charge) ? $edit?->charge : old('charge', '0') }}"
+                                    placeholder="Enter transport charge / fee">
+                            </div>
+                            @error('charge')
+                                <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">

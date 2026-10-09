@@ -23,11 +23,13 @@ class MasterBusRouteVillageController extends Controller
     public $modules = [];
     protected array $exportableColumns = [
         'name' => 'Village Name',
+        'charge' => 'Transport Charge (₹)',
         'status' => 'Status',
     ];
 
     protected array $defaultExportColumns = [
         'name',
+        'charge',
         'status',
     ];
 
@@ -63,6 +65,7 @@ class MasterBusRouteVillageController extends Controller
         try {
             $columns = [
                 (object)['data' => "name", 'name' => 'name', 'td_label' => 'Village Name'],
+                (object)['data' => "charge", 'name' => 'charge', 'td_label' => 'Transport Charge (₹)', 'className' => 'text-end', 'width' => '15%'],
                 (object)['data' => "status", 'name' => 'status', 'td_label' => 'Status', 'className' => 'w-5 text-center', 'width' => '10%'],
                 (object)['data' => "action", 'name' => 'action', 'td_label' => 'Action', 'orderable' => false, 'searchable' => false, 'className' => 'w-10 text-center'],
             ];
@@ -75,8 +78,14 @@ class MasterBusRouteVillageController extends Controller
                     ->filter(function ($query) use ($request) {
                         $search = $request->input('search.value');
                         if (!empty($search)) {
-                            $query->where('name', 'like', "%{$search}%");
+                            $query->where(function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%")
+                                  ->orWhere('charge', 'like', "%{$search}%");
+                            });
                         }
+                    })
+                    ->editColumn('charge', function ($row) {
+                        return '₹' . number_format((float)($row->charge ?? 0), 2);
                     })
                     ->editColumn('status', function ($row) use ($modules) {
                         if ($row->status === "active") {
@@ -504,6 +513,8 @@ class MasterBusRouteVillageController extends Controller
         switch ($columnKey) {
             case 'name':
                 return $village->name ?? '-';
+            case 'charge':
+                return isset($village->charge) ? (float)$village->charge : 0;
             case 'status':
                 return ucfirst($village->status ?? '-');
             default:

@@ -13,6 +13,7 @@ class MasterBusRouteVillage extends Model
 
     protected $fillable = [
         'name',
+        'charge',
         'status',
         'created_by',
         'updated_by',

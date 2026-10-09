@@ -34,6 +34,11 @@ class MasterBusRouteVillageRequest extends FormRequest
                     ->whereNull('deleted_at')
                     ->ignore($id),
             ],
+            'charge' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
         ];
     }
 }

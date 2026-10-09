@@ -44,8 +44,15 @@ class AdmissionController extends Controller
     public $modules = [];
     protected array $exportableColumns = [
         'id' => 'REG No.',
+        'gr_no' => 'GR No.',
+        'bus_route_village' => 'Bus Route Village',
+        'admission_date' => 'Admission Date',
+        'admission_std' => 'Admission Std',
+        'current_std' => 'Current Std',
+        'division' => 'Division',
         // 'biometric_id' => 'Biometric ID',
         'aadhar_card_no' => 'Aadhaar No',
+        'pen_no' => 'PEN No.',
         'first_name' => 'First Name',
         'last_name' => 'Last Name',
         'father_name' => "Father's Name",
@@ -70,14 +77,20 @@ class AdmissionController extends Controller
         'apaar_id_abc_id' => 'APAAR ID / ABC ID',
         'udise' => 'UDISE No',
         'spid' => 'SPID',
+        'bank_name' => 'Bank Name',
+        'bank_account_no' => 'Bank Account No.',
         'gdrivefolderurl' => 'Google Drive Folder URL',
         'status' => 'Status',
-        'created_at' => 'Admission Date',
+        'created_at' => 'Created At',
         'course_names' => 'Course',
     ];
 
     protected array $defaultExportColumns = [
         'id',
+        'gr_no',
+        'bus_route_village',
+        'current_std',
+        'division',
         // 'biometric_id',
         'aadhar_card_no',
         'first_name',
@@ -112,7 +125,7 @@ class AdmissionController extends Controller
             'route' => 'admission',
             'table_name' => (new Admission())->getTable(),
             'permission_prefix' => 'admission',
-            'api_ip' => 'http://192.168.31.5:98/',
+            // 'api_ip' => 'http://192.168.31.5:98/',
         ];
     }
 
@@ -1485,6 +1498,10 @@ class AdmissionController extends Controller
             case 'date_of_birth':
                 return $admission->date_of_birth
                     ? \Carbon\Carbon::parse($admission->date_of_birth)->format('d-m-Y')
+                    : '-';
+            case 'admission_date':
+                return $admission->admission_date
+                    ? \Carbon\Carbon::parse($admission->admission_date)->format('d-m-Y')
                     : '-';
             case 'gender':
                 return $admission->gender ?? '-';
