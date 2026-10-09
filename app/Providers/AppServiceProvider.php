@@ -27,14 +27,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        /** This is use for Spatie Direct Permission check */
+        /** This is use for Spaite Direct Permission check */
         Blade::if('directCan', function ($permission) {
-            return \App\Helpers\Helper::directCan($permission);
+            $directPermissionArray = Auth::user()->permissions->pluck('name');
+            return Auth::check() && count($directPermissionArray) > 0 && in_array($permission, $directPermissionArray->toArray());
         });
 
-        /** This is use for Spatie Direct Any Permission check */
+        /** This is use for Spaite Direct Any Permission check */
         Blade::if('directCanAny', function ($permissions) {
-            return \App\Helpers\Helper::directCanAny((array) $permissions);
+            return Auth::check() && Auth::user()->permissions->whereIn('name', (array) $permissions)->isNotEmpty();
         });
 
         // Passport::loadKeysFrom(__DIR__.'/../secrets/oauth');
