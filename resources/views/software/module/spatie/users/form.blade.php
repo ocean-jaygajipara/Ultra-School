@@ -201,6 +201,40 @@
             }, 1000);
         }
 
+        function updateGroupCheckboxState(card) {
+            let total = card.find('.permission-checkbox').length;
+            let checked = card.find('.permission-checkbox:checked').length;
+            let groupCb = card.find('.group-checkbox');
+
+            if (total > 0 && checked === total) {
+                groupCb.prop('checked', true).prop('indeterminate', false);
+            } else if (checked > 0) {
+                groupCb.prop('checked', false).prop('indeterminate', true);
+            } else {
+                groupCb.prop('checked', false).prop('indeterminate', false);
+            }
+        }
+
+        function initAllGroupCheckboxes() {
+            $('.group-card').each(function() {
+                updateGroupCheckboxState($(this));
+            });
+        }
+
+        // Delegated event: Toggle all permissions when clicking a group checkbox
+        $(document).on('change', '.group-checkbox', function() {
+            let isChecked = $(this).is(':checked');
+            let card = $(this).closest('.group-card');
+            card.find('.permission-checkbox').prop('checked', isChecked);
+            updateGroupCheckboxState(card);
+        });
+
+        // Delegated event: Update group checkbox when clicking an individual permission
+        $(document).on('change', '.permission-checkbox', function() {
+            let card = $(this).closest('.group-card');
+            updateGroupCheckboxState(card);
+        });
+
         $(".selectRole").on("change", function() {
             console.log("L-149", $(this).val());
             let _url = "{{ route('search-permission') }}";
@@ -220,6 +254,7 @@
                     if (extraData?.response && extraData?.response == "html") {
                         // $(".showRoleWisePermission").append(responseData);
                         $(".showRoleWisePermission").empty().append(responseData);
+                        initAllGroupCheckboxes();
                     } else {
                         console.log("Permission response generated", response);
                     }
