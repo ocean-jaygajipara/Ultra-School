@@ -261,6 +261,9 @@ Route::match(['get', 'post'], 'standard/restore/{id}', [MasterStandardController
 Route::match(['get', 'post'], 'standard-update-status', [MasterStandardController::class, 'status_update'])->name('standard.status-update');
 Route::delete('/standard/permanent-delete/{id}', [MasterStandardController::class, 'permanentDelete'])->name('standard.permanent-delete');
 
+Route::post('academic-year/{id}/set-current', [\App\Http\Controllers\admin\master\MasterAcademicYearController::class, 'setCurrent'])->name('academic-year.set-current');
+Route::resource('academic-year', \App\Http\Controllers\admin\master\MasterAcademicYearController::class)->except(['show']);
+
 
 /** Master House Modules */
 Route::get('house/export-excel', [MasterHouseController::class, 'exportExcel'])->name('house.export-excel');
@@ -575,5 +578,11 @@ Route::get('student_report/print', [StudentReportController::class, 'printReport
 Route::get('student_report/pdf', [StudentReportController::class, 'downloadPdf'])->name('student_report.pdf');
 Route::get('student_report/students-list', [StudentReportController::class, 'getStudentsList'])->name('student_report.students_list');
 Route::match(['get', 'post'], 'student_report/bulk-pdf', [StudentReportController::class, 'bulkDownloadPdf'])->name('student_report.bulk_pdf');
+
+/** Class Wise Report Routes */
+Route::get('class-report', [\App\Http\Controllers\admin\ClassReportController::class, 'index'])->name('class-report.index');
+Route::post('class-report', [\App\Http\Controllers\admin\ClassReportController::class, 'filter'])->name('class-report.filter');
+Route::post('class-report/print', [\App\Http\Controllers\admin\ClassReportController::class, 'printList'])->name('class-report.print');
+Route::post('class-report/export-excel', [\App\Http\Controllers\admin\ClassReportController::class, 'exportExcel'])->name('class-report.export-excel');
 
 

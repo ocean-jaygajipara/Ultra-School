@@ -1,193 +1,336 @@
 @extends('software.layout.app')
 
-@section('title', 'Admin Login')
+@section('title', 'Login')
+
+@php
+    $schoolIcons = [
+        'ues' => 'ti-language',
+        'ups' => 'ti-backpack',
+        'uv'  => 'ti-building-community',
+        'us'  => 'ti-certificate',
+    ];
+    $currentSchool = old('school_key', $selectedSchool);
+@endphp
 
 @section('page_style_file')
-    <link rel="stylesheet" href="{{ asset('admin/assets/vendor/libs/@form-validation/form-validation.css') }}" />
-    <link rel="stylesheet" href="{{ asset('admin/assets/vendor/libs/select2/select2.css') }}" />
-    <link rel="stylesheet" href="{{ asset('admin/assets/vendor/css/pages/page-auth.css') }}" />
-
-    <!-- AOS Animation CSS -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
-
     <style>
         :root {
-            --brand-royal-blue: #190e80;
-            --brand-royal-blue-hover: #120963;
-            --brand-royal-blue-light: rgba(25, 14, 128, 0.08);
+            --lg-navy: #1f2580;
+            --lg-navy-2: #2e3a9e;
+            --lg-red: #e1141c;
+            --lg-sky: #bfe3f7;
+            --lg-sky-soft: #eef7fd;
+            --lg-gold: #f5b400;
+            --lg-line: #e1e4f2;
+            --lg-muted: #5f6488;
         }
-        .select2-container--default .select2-selection--single {
-            height: calc(2.25rem + 8px);
-            padding: 0.45rem 0.85rem;
-            border: 1px solid #dbdade;
-            border-radius: 0.375rem;
+
+        body { background: #f4f6fc; }
+
+        .lg-wrap {
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            transition: all 0.2s ease-in-out;
+            justify-content: center;
+            padding: 24px;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(191, 227, 247, .6), transparent 35%),
+                radial-gradient(circle at 90% 90%, rgba(245, 180, 0, .18), transparent 35%),
+                #f4f6fc;
         }
-        .select2-container--default.select2-container--focus .select2-selection--single,
-        .select2-container--default.select2-container--open .select2-selection--single {
-            border-color: var(--brand-royal-blue) !important;
-            box-shadow: 0 0 0 0.2rem rgba(25, 14, 128, 0.15);
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #4b465c;
-            padding-left: 0;
-            font-size: 0.9375rem;
-            line-height: 1.5;
-            font-weight: 500;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 100%;
-            top: 0;
-            right: 10px;
-        }
-        .select2-dropdown {
-            border: 1px solid #dbdade;
-            border-radius: 0.5rem;
-            box-shadow: 0 8px 24px rgba(25, 14, 128, 0.14);
-            z-index: 9999;
+
+        .lg-card {
+            width: 100%;
+            max-width: 1040px;
+            background: #fff;
+            border-radius: 26px;
             overflow: hidden;
+            box-shadow: 0 30px 70px -25px rgba(31, 37, 128, .35);
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
         }
-        .select2-search--dropdown .select2-search__field {
-            border: 1px solid #dbdade;
-            border-radius: 0.375rem;
-            padding: 0.4rem 0.75rem;
+
+        /* Brand side */
+        .lg-brand {
+            position: relative;
+            color: #fff;
+            padding: 44px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background:
+                radial-gradient(circle at 85% 10%, rgba(245, 180, 0, .38), transparent 40%),
+                radial-gradient(circle at 0% 100%, rgba(191, 227, 247, .3), transparent 45%),
+                linear-gradient(160deg, #171c6b 0%, var(--lg-navy-2) 100%);
         }
-        .select2-search--dropdown .select2-search__field:focus {
-            border-color: var(--brand-royal-blue);
-            outline: none;
-            box-shadow: 0 0 0 0.15rem rgba(25, 14, 128, 0.15);
+        .lg-logo {
+            width: 200px; max-width: 70%;
+            background: #fff; border-radius: 24px; padding: 14px;
+            box-shadow: 0 0 0 5px rgba(245, 180, 0, .65), 0 20px 40px -15px rgba(0, 0, 0, .5);
+            margin: 0 auto 26px; display: block;
         }
-        .select2-results__option {
-            padding: 8px 14px;
-            font-size: 0.92rem;
-            transition: background-color 0.15s ease;
+        .lg-brand h1 { color: #fff; font-size: 1.9rem; font-weight: 800; margin: 0; text-align: center; letter-spacing: -.5px; }
+        .lg-brand .lg-place {
+            text-align: center; color: var(--lg-gold); font-weight: 700;
+            letter-spacing: .3em; text-transform: uppercase; font-size: .8rem; margin-top: 4px;
         }
-        .select2-results__option--highlighted[aria-selected],
-        .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: var(--brand-royal-blue) !important;
-            color: #ffffff !important;
+        .lg-motto {
+            margin: 22px auto 0; max-width: 340px; text-align: center;
+            background: rgba(255, 255, 255, .1); border: 1px solid rgba(191, 227, 247, .35);
+            border-radius: 14px; padding: 12px 16px; color: #e6f2fc; font-size: .95rem;
         }
-        .select2-container--default .select2-results__option[aria-selected="true"] {
-            background-color: var(--brand-royal-blue-light);
-            color: var(--brand-royal-blue);
-            font-weight: 600;
+        .lg-points { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 10px; }
+        .lg-points li { display: flex; align-items: center; gap: 10px; color: #d6e6f7; font-size: .9rem; }
+        .lg-points i {
+            width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: rgba(245, 180, 0, .18); color: var(--lg-gold); font-size: 1rem;
         }
-        .btn-brand-primary {
-            background-color: var(--brand-royal-blue) !important;
-            border-color: var(--brand-royal-blue) !important;
-            color: #ffffff !important;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(25, 14, 128, 0.25);
-            transition: all 0.2s ease;
+
+        /* Form side */
+        .lg-form { padding: 44px 46px; }
+        .lg-form h2 { color: var(--lg-navy); font-weight: 800; font-size: 1.6rem; margin: 0; }
+        .lg-form .lg-sub { color: var(--lg-muted); margin: 6px 0 26px; }
+
+        .lg-label {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+            color: var(--lg-muted); margin-bottom: 10px;
         }
-        .btn-brand-primary:hover {
-            background-color: var(--brand-royal-blue-hover) !important;
-            border-color: var(--brand-royal-blue-hover) !important;
-            box-shadow: 0 6px 16px rgba(25, 14, 128, 0.35);
+
+        .lg-schools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+        .lg-school input { position: absolute; opacity: 0; pointer-events: none; }
+        .lg-school label {
+            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            border: 1.5px solid var(--lg-line); border-radius: 14px; padding: 11px 12px;
+            background: #fafbff; transition: all .18s; height: 100%; position: relative;
+        }
+        .lg-school label:hover { border-color: var(--lg-sky); background: var(--lg-sky-soft); }
+        .lg-school .lg-ico {
+            width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: #e8eafb; color: var(--lg-navy); font-size: 1.15rem; transition: all .18s;
+        }
+        .lg-school .lg-code { display: block; color: var(--lg-navy); font-weight: 800; font-size: .95rem; line-height: 1.1; }
+        .lg-school .lg-name { display: block; color: var(--lg-muted); font-size: .74rem; line-height: 1.25; }
+        .lg-school .lg-check {
+            position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%;
+            background: var(--lg-navy); color: #fff; font-size: .75rem;
+            display: none; align-items: center; justify-content: center;
+        }
+        .lg-school input:checked + label {
+            border-color: var(--lg-navy); background: #fff;
+            box-shadow: 0 0 0 4px rgba(191, 227, 247, .7);
+        }
+        .lg-school input:checked + label .lg-ico { background: var(--lg-navy); color: var(--lg-gold); }
+        .lg-school input:checked + label .lg-check { display: inline-flex; }
+        .lg-school input:focus-visible + label { outline: 2px solid var(--lg-navy); outline-offset: 2px; }
+
+        .lg-field { position: relative; margin-bottom: 18px; }
+        .lg-field > i.lg-lead {
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+            color: var(--lg-navy-2); font-size: 1.15rem; pointer-events: none;
+        }
+        .lg-input {
+            width: 100%; height: 50px; border-radius: 14px;
+            border: 1.5px solid var(--lg-line); background: #fafbff;
+            padding: 0 46px 0 46px; font-size: .95rem; color: var(--lg-navy);
+            transition: border-color .2s, box-shadow .2s, background .2s;
+        }
+        .lg-input::placeholder { color: #a5a9c7; }
+        .lg-input:focus { outline: none; border-color: var(--lg-navy); background: #fff; box-shadow: 0 0 0 4px rgba(191, 227, 247, .7); }
+        .lg-input.is-invalid { border-color: var(--lg-red); }
+        .lg-eye {
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            width: 36px; height: 36px; border: 0; border-radius: 10px; background: transparent;
+            color: var(--lg-muted); font-size: 1.15rem; cursor: pointer;
+        }
+        .lg-eye:hover { background: var(--lg-sky-soft); color: var(--lg-navy); }
+        .lg-caps {
+            display: none; margin-top: 6px; font-size: .78rem; color: #a86b00;
+            background: #fff6dc; border: 1px solid #ffe39a; border-radius: 8px; padding: 4px 10px;
+        }
+
+        .lg-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .lg-remember { display: flex; align-items: center; gap: 8px; color: var(--lg-muted); font-size: .88rem; cursor: pointer; margin: 0; }
+        .lg-remember input { width: 18px; height: 18px; accent-color: var(--lg-navy); cursor: pointer; }
+
+        .lg-btn {
+            width: 100%; height: 52px; border: 0; border-radius: 14px;
+            background: linear-gradient(135deg, var(--lg-navy), var(--lg-navy-2));
+            color: #fff; font-weight: 700; font-size: 1rem; letter-spacing: .3px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 12px 24px -10px rgba(31, 37, 128, .7);
+            transition: transform .15s, box-shadow .15s;
+        }
+        .lg-btn:hover { transform: translateY(-1px); box-shadow: 0 16px 28px -10px rgba(31, 37, 128, .8); }
+        .lg-btn:disabled { opacity: .8; transform: none; cursor: wait; }
+
+        .lg-alert {
+            display: flex; gap: 10px; align-items: flex-start;
+            background: #fff1f1; border: 1px solid #f7c3c5; color: #b80f16;
+            border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; font-size: .88rem;
+        }
+        .lg-alert i { font-size: 1.15rem; margin-top: 1px; }
+        .lg-alert ul { margin: 0; padding-left: 16px; }
+
+        .lg-error { color: var(--lg-red); font-size: .8rem; margin-top: -12px; margin-bottom: 14px; }
+
+        .lg-foot { text-align: center; margin-top: 22px; color: var(--lg-muted); font-size: .82rem; }
+        .lg-foot a { color: var(--lg-navy); font-weight: 600; }
+
+        @media (max-width: 991.98px) {
+            .lg-card { grid-template-columns: 1fr; max-width: 520px; }
+            .lg-brand { padding: 28px 24px; }
+            .lg-points { display: none; }
+            .lg-motto { display: none; }
+            .lg-logo { width: 130px; margin-bottom: 14px; }
+            .lg-brand h1 { font-size: 1.4rem; }
+            .lg-form { padding: 28px 22px; }
+        }
+        @media (max-width: 420px) {
+            .lg-schools { grid-template-columns: 1fr; }
         }
     </style>
 @endsection
 
 @section('content')
-    <!-- Content -->
-    <div class="authentication-wrapper authentication-cover position-relative"
-        style="min-height: 100vh; background-image: url('{{ asset('admin/assets/img/illustrations/vector-privacy-protection-and-software-for-development.jpg') }}'); background-size: cover; background-position: center;">
+    <div class="lg-wrap">
+        <div class="lg-card">
+            {{-- Brand side --}}
+            <div class="lg-brand">
+                <div>
+                    <img class="lg-logo" src="{{ asset('admin/assets/images/logo-light.png') }}" alt="Ultra School Logo">
+                    <h1>Ultra School</h1>
+                    <div class="lg-place">Keshod</div>
+                    <div class="lg-motto">न हि ज्ञानेन सदृशं पवित्रमिह विद्यते</div>
+                </div>
+                <ul class="lg-points">
+                    <li><i class="ti ti-users"></i> Admissions, students &amp; class reports</li>
+                    <li><i class="ti ti-certificate"></i> Certificates, results &amp; attendance</li>
+                    <li><i class="ti ti-shield-lock"></i> Secure login for every school</li>
+                </ul>
+            </div>
 
-        <!-- Dark Overlay -->
-        <div style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1;"></div>
+            {{-- Form side --}}
+            <div class="lg-form">
+                <h2>Welcome back 👋</h2>
+                <p class="lg-sub">Choose your school and sign in to continue.</p>
 
-        <div class="authentication-inner row" style="position:relative; z-index:2;">
-            <!-- Login -->
-            <div class="d-flex col-12 col-lg-5 align-items-center justify-content-center p-sm-5 p-4">
-                <div class="w-100"
-                    style="max-width: 420px; background: rgb(255 255 255); border-radius: 15px; padding: 30px;"
-                    data-aos="zoom-in" data-aos-duration="1000" data-aos-delay="200">
+                <form id="formAuthentication" action="{{ route('login') }}" method="post" novalidate>
+                    @csrf
 
-                    <!-- Logo -->
-                    <div class="app-brand mb-4 text-center">
-                        <a href="{{ route('login') }}" class="app-brand-link gap-2">
-                            <img class="w-100" src="{{ asset('admin/assets/images/logo-light.png') }}" />
-                        </a>
-                    </div>
-
-                    <!-- Login Form -->
-                    <form id="formAuthentication" class="mb-3" action="{{ route('login') }}" method="post">
-                        @csrf
-
-                        @if ($errors->any())
-                            <div class="alert alert-danger p-2 mb-3" style="font-size: 0.85rem;">
-                                <ul class="mb-0 ps-3">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        <div class="mb-3 position-relative">
-                            <label for="school_key" class="form-label fw-bold">Select School <span class="text-danger">*</span></label>
-                            <select name="school_key" id="school_key" class="select2 form-select @error('school_key') is-invalid @enderror" data-placeholder="-- Select School --" required>
-                                <option value="">-- Select School --</option>
-                                @foreach ($schools as $sCode => $sInfo)
-                                    <option value="{{ $sCode }}" {{ (old('school_key', $selectedSchool) === $sCode) ? 'selected' : '' }}>
-                                        🏫 {{ $sInfo['name'] }} ({{ $sInfo['short_name'] }})
-                                    </option>
+                    @if ($errors->any())
+                        <div class="lg-alert">
+                            <i class="ti ti-alert-circle"></i>
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
                                 @endforeach
-                            </select>
-                            @error('school_key')
-                                <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
-                            @enderror
+                            </ul>
                         </div>
+                    @endif
 
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="text" class="form-control" id="email" name="email" placeholder="Enter your email"
-                                autofocus value="{{ old('email') }}" />
-                        </div>
-                        <div class="mb-3 form-password-toggle">
-                            <label class="form-label" for="password">Password</label>
-                            <div class="input-group input-group-merge">
-                                <input type="password" id="password" class="form-control" name="password"
-                                    placeholder="••••••••••" aria-describedby="password" />
-                                <span class="input-group-text cursor-pointer"><i class="ti ti-eye-off"></i></span>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-brand-primary d-grid w-100 py-2">Sign in</button>
-                    </form>
-
-                    <div class="text-center mt-3">
-                        <a href="{{ route('software.privacy-policy') }}" target="_blank" class="">
-                            Privacy Policy
-                        </a>
+                    <div class="lg-label">
+                        <span>1. Select School</span>
                     </div>
+                    <div class="lg-schools">
+                        @foreach ($schools as $sCode => $sInfo)
+                            <div class="lg-school">
+                                <input type="radio" name="school_key" id="school_{{ $sCode }}" value="{{ $sCode }}"
+                                    {{ $currentSchool === $sCode ? 'checked' : '' }} required>
+                                <label for="school_{{ $sCode }}">
+                                    <span class="lg-ico"><i class="ti {{ $schoolIcons[$sCode] ?? 'ti-school' }}"></i></span>
+                                    <span>
+                                        <span class="lg-code">{{ $sInfo['short_name'] }}</span>
+                                        <span class="lg-name">{{ $sInfo['name'] }}</span>
+                                    </span>
+                                    <span class="lg-check"><i class="ti ti-check"></i></span>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="lg-error d-none" id="schoolError">Please select your school.</div>
+
+                    <div class="lg-label"><span>2. Login Details</span></div>
+
+                    <div class="lg-field">
+                        <i class="ti ti-mail lg-lead"></i>
+                        <input type="email" class="lg-input @error('email') is-invalid @enderror" id="email" name="email"
+                            placeholder="Email address" value="{{ old('email') }}" autocomplete="username" required>
+                    </div>
+
+                    <div class="lg-field">
+                        <i class="ti ti-lock lg-lead"></i>
+                        <input type="password" class="lg-input @error('password') is-invalid @enderror" id="password"
+                            name="password" placeholder="Password" autocomplete="current-password" required>
+                        <button type="button" class="lg-eye" id="togglePassword" title="Show / hide password">
+                            <i class="ti ti-eye"></i>
+                        </button>
+                        <div class="lg-caps" id="capsWarning"><i class="ti ti-alert-triangle"></i> Caps Lock is ON</div>
+                    </div>
+
+                    <div class="lg-row">
+                        <label class="lg-remember">
+                            <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}>
+                            Remember me
+                        </label>
+                    </div>
+
+                    <button type="submit" class="lg-btn" id="loginBtn">
+                        <i class="ti ti-login"></i> <span>Sign in</span>
+                    </button>
+                </form>
+
+                <div class="lg-foot">
+                    © {{ date('Y') }} Ultra School, Keshod ·
+                    <a href="{{ route('software.privacy-policy') }}" target="_blank">Privacy Policy</a>
                 </div>
             </div>
-            <!-- /Login -->
         </div>
     </div>
-    <!-- / Content -->
 @endsection
 
 @section('page_leavel_script')
-    <script src="{{ asset('admin/assets/vendor/libs/select2/select2.js') }}"></script>
-    <script src="{{ asset('admin/assets/js/pages-auth.js') }}"></script>
-
-    <!-- AOS JS -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init();
+        (function() {
+            var $form = $('#formAuthentication');
+            var $pwd = $('#password');
 
-        $(document).ready(function () {
-            if ($.fn.select2) {
-                $('#school_key').select2({
-                    placeholder: 'Select School',
-                    width: '100%',
-                    dropdownParent: $('#school_key').closest('.mb-3')
-                });
+            $('#togglePassword').on('click', function() {
+                var show = $pwd.attr('type') === 'password';
+                $pwd.attr('type', show ? 'text' : 'password');
+                $(this).find('i').attr('class', show ? 'ti ti-eye-off' : 'ti ti-eye');
+                $pwd.trigger('focus');
+            });
+
+            $pwd.on('keyup keydown', function(e) {
+                var on = e.originalEvent && e.originalEvent.getModifierState && e.originalEvent.getModifierState('CapsLock');
+                $('#capsWarning').toggle(!!on);
+            });
+
+            $('input[name="school_key"]').on('change', function() {
+                $('#schoolError').addClass('d-none');
+                if (!$('#email').val()) $('#email').trigger('focus');
+            });
+
+            $form.on('submit', function(e) {
+                if (!$('input[name="school_key"]:checked').length) {
+                    e.preventDefault();
+                    $('#schoolError').removeClass('d-none');
+                    return;
+                }
+                $('#loginBtn').prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm"></span> <span>Signing in...</span>');
+            });
+
+            if (!$('input[name="school_key"]:checked').length) {
+                $('input[name="school_key"]').first().trigger('focus');
+            } else if (!$('#email').val()) {
+                $('#email').trigger('focus');
+            } else {
+                $pwd.trigger('focus');
             }
-        });
+        })();
     </script>
 @endsection

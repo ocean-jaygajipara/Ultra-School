@@ -24,8 +24,8 @@ class Admission extends Authenticatable
         'gr_no',
         'bus_route_village',
         'admission_date',
-        'admission_std',
-        'current_std',
+        'admission_std_id',
+        'current_std_id',
         'division',
         'roll_no',
         'stream',
@@ -74,6 +74,36 @@ class Admission extends Authenticatable
     public function marksheetIssues()
     {
         return $this->hasMany(StudentMarksheetIssue::class, 'admission_id');
+    }
+
+    public function admissionStandard()
+    {
+        return $this->belongsTo(\App\Models\Master\MasterStandard::class, 'admission_std_id')->withTrashed();
+    }
+
+    public function currentStandard()
+    {
+        return $this->belongsTo(\App\Models\Master\MasterStandard::class, 'current_std_id')->withTrashed();
+    }
+
+    /**
+     * Standard names (read only) resolved from Standard Master.
+     */
+    public function getAdmissionStdAttribute(): ?string
+    {
+        return $this->admissionStandard?->name;
+    }
+
+    public function getCurrentStdAttribute(): ?string
+    {
+        return $this->currentStandard?->name;
+    }
+
+    public static function standardIdByName(?string $name): ?int
+    {
+        $name = trim((string) $name);
+
+        return $name === '' ? null : \App\Models\Master\MasterStandard::where('name', $name)->value('id');
     }
 
     public function setDateOfBirthAttribute($value)

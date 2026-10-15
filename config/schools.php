@@ -23,6 +23,7 @@ return [
             'database'         => env('DB_DATABASE_UES', 'ultra_school_ues'),
             'username'         => env('DB_USERNAME_UES', env('DB_USERNAME')),
             'password'         => env('DB_PASSWORD_UES', env('DB_PASSWORD')),
+            'drive_folder_id'  => env('GOOGLE_DRIVE_FOLDER_ID_UES'),
         ],
         'ups' => [
             'code'             => 'ups',
@@ -33,6 +34,7 @@ return [
             'database'         => env('DB_DATABASE_UPS', 'ultra_school_ups'),
             'username'         => env('DB_USERNAME_UPS', env('DB_USERNAME')),
             'password'         => env('DB_PASSWORD_UPS', env('DB_PASSWORD')),
+            'drive_folder_id'  => env('GOOGLE_DRIVE_FOLDER_ID_UPS'),
         ],
         'uv' => [
             'code'             => 'uv',
@@ -43,6 +45,7 @@ return [
             'database'         => env('DB_DATABASE_UV', 'ultra_school_uv'),
             'username'         => env('DB_USERNAME_UV', env('DB_USERNAME')),
             'password'         => env('DB_PASSWORD_UV', env('DB_PASSWORD')),
+            'drive_folder_id'  => env('GOOGLE_DRIVE_FOLDER_ID_UV'),
         ],
         'us' => [
             'code'             => 'us',
@@ -58,6 +61,7 @@ return [
             'database'         => env('DB_DATABASE_US', 'ultra_school_us'),
             'username'         => env('DB_USERNAME_US', env('DB_USERNAME')),
             'password'         => env('DB_PASSWORD_US', env('DB_PASSWORD')),
+            'drive_folder_id'  => env('GOOGLE_DRIVE_FOLDER_ID_US'),
         ],
     ],
 ];

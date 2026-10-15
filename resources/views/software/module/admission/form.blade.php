@@ -15,6 +15,348 @@
         .swal2-popup.swal-wide {
             width: 550px !important;
         }
+
+        .afx {
+            --navy: #1f2580;
+            --navy-2: #2e3a9e;
+            --red: #e1141c;
+            --sky: #bfe3f7;
+            --sky-soft: #eef7fd;
+            --gold: #f5b400;
+            --line: #e1e4f2;
+            --muted: #5f6488;
+        }
+
+        .afx-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 18px;
+            padding: 22px 26px;
+            margin-top: 1rem;
+            background: linear-gradient(120deg, var(--navy) 0%, var(--navy-2) 100%);
+            color: #fff;
+            box-shadow: 0 10px 28px rgba(31, 37, 128, .22);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .afx-hero::after {
+            content: "";
+            position: absolute;
+            right: -50px;
+            top: -70px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .06);
+        }
+
+        .afx-year {
+            position: relative;
+            z-index: 1;
+            margin-left: auto;
+            background: rgba(255, 255, 255, .12);
+            border: 1px solid rgba(255, 255, 255, .25);
+            border-radius: 14px;
+            padding: 8px 16px;
+            text-align: right;
+            line-height: 1.3;
+        }
+
+        .afx-year small {
+            display: block;
+            font-size: .68rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .afx-year strong {
+            display: block;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .afx-year span,
+        .afx-year a {
+            font-size: .76rem;
+            color: rgba(255, 255, 255, .8);
+        }
+
+        .afx-year a {
+            text-decoration: underline;
+        }
+
+        .afx-year.is-missing {
+            background: var(--red);
+            border-color: var(--red);
+        }
+
+        @media (max-width: 767px) {
+            .afx-hero { flex-wrap: wrap; }
+            .afx-year { margin-left: 0; text-align: left; }
+        }
+
+        .afx-hero-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: var(--gold);
+            flex-shrink: 0;
+        }
+
+        .afx-hero h4 {
+            color: #fff;
+            font-weight: 700;
+            margin: 0 0 2px;
+        }
+
+        .afx-hero p {
+            margin: 0;
+            color: rgba(255, 255, 255, .78);
+            font-size: .9rem;
+        }
+
+        .afx-card {
+            border: 1px solid var(--line) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 4px 18px rgba(31, 37, 128, .06) !important;
+        }
+
+        .afx-card > .card-body {
+            margin: 0 !important;
+            padding: 22px;
+        }
+
+        .afx hr {
+            display: none;
+        }
+
+        .afx-sec {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            margin: 22px 0 14px !important;
+            padding: 11px 14px;
+            border-radius: 12px;
+            background: var(--sky-soft);
+            border-left: 4px solid var(--navy);
+            color: var(--navy) !important;
+            font-size: .98rem;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+        }
+
+        .afx-sec.is-static {
+            cursor: default;
+        }
+
+        .afx form > .row > div:first-child .afx-sec,
+        .afx-sec.first {
+            margin-top: 0 !important;
+        }
+
+        .afx-sec-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            background: var(--navy);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
+
+        .afx-sec-title {
+            flex: 1;
+        }
+
+        .afx-sec-chev {
+            transition: transform .2s ease;
+            font-size: 1.2rem;
+        }
+
+        .afx-sec.collapsed .afx-sec-chev {
+            transform: rotate(-90deg);
+        }
+
+        .afx .form-label {
+            font-weight: 600;
+            color: #3a3f6b;
+            font-size: .82rem;
+            margin-bottom: 5px;
+        }
+
+        .afx .form-label:has(#copy_address) {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .afx .form-control,
+        .afx .form-select,
+        .afx .select2-container--default .select2-selection--single,
+        .afx .select2-container--default .select2-selection--multiple {
+            border-radius: 10px !important;
+            border-color: #d6d9ec !important;
+            min-height: 40px;
+        }
+
+        .afx .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 38px;
+        }
+
+        .afx .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 38px;
+        }
+
+        .afx .form-control:focus,
+        .afx .select2-container--focus .select2-selection,
+        .afx .select2-container--open .select2-selection {
+            border-color: var(--navy-2) !important;
+            box-shadow: 0 0 0 3px rgba(46, 58, 158, .12) !important;
+        }
+
+        .afx .form-control.is-invalid {
+            border-color: var(--red) !important;
+        }
+
+        .afx .input-group > .form-control {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+
+        .afx .input-group-text {
+            border-radius: 0 10px 10px 0 !important;
+            background: var(--sky-soft);
+            color: var(--navy);
+            border-color: #d6d9ec;
+        }
+
+        .afx textarea.form-control {
+            min-height: 90px;
+        }
+
+        .afx .form-control[readonly] {
+            background: #f7f8fd !important;
+        }
+
+        .afx-photo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .afx-photo-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 2px solid var(--sky);
+            background: #e9ebf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--navy);
+            font-size: 1.1rem;
+            overflow: hidden;
+        }
+
+        .afx-photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .afx-photo .form-control {
+            flex: 1;
+        }
+
+        #previous_school_main > .d-flex {
+            padding: 11px 14px;
+            border-radius: 12px;
+            background: var(--sky-soft);
+            border-left: 4px solid var(--navy);
+            margin-top: 22px;
+        }
+
+        #previous_school_main > .d-flex h6 {
+            color: var(--navy) !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: .98rem;
+        }
+
+        .afx-actions {
+            position: sticky;
+            bottom: 0;
+            z-index: 5;
+            margin: 24px -22px -22px !important;
+            padding: 14px 22px;
+            background: rgba(255, 255, 255, .96);
+            backdrop-filter: blur(4px);
+            border-top: 1px solid var(--line);
+            border-radius: 0 0 18px 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .afx-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .9rem;
+            border: 1px solid transparent;
+            text-decoration: none;
+            transition: all .15s ease;
+        }
+
+        .afx-btn-primary {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .afx-btn-primary:hover {
+            background: var(--navy-2);
+            color: #fff;
+        }
+
+        .afx-btn-light {
+            background: #fff;
+            color: var(--muted);
+            border-color: var(--line);
+        }
+
+        .afx-btn-light:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        @media (max-width: 575px) {
+            .afx-actions .afx-btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
     </style>
 
     {{-- <link href="{{ asset('public/assets/admin/plugins/datatable/dataTables.bootstrap4.min.css') }}" rel="stylesheet" type="text/css"> --}}
@@ -39,13 +381,35 @@
 
 
 
-    <div class="card shadow my-3">
-        <div class="card-header d-none">
-            <h2 class="mb-0">
-                {{ $page_title }}
-            </h2>
+    <div class="afx">
+    <div class="afx-hero">
+        <div class="afx-hero-icon"><i class="ti {{ isset($edit) && $edit?->id ? 'ti-user-edit' : 'ti-user-plus' }}"></i></div>
+        <div>
+            <h4>{{ isset($edit) && $edit?->id ? 'Edit Student' : 'New Admission' }}</h4>
+            <p>
+                @if (isset($edit) && $edit?->id)
+                    Update details of {{ trim(($edit->first_name ?? '') . ' ' . ($edit->last_name ?? '') . ' ' . ($edit->father_name ?? '')) }}
+                @else
+                    Fill in the student details below. Fields marked <span style="color:#ffb3b6;">*</span> are required.
+                @endif
+            </p>
         </div>
-        <div class="card-body my-4">
+        @php $afxYear = \App\Models\Master\MasterAcademicYear::current(); @endphp
+        <div class="afx-year {{ $afxYear ? '' : 'is-missing' }}">
+            @if ($afxYear)
+                <small>Academic Year</small>
+                <strong>{{ $afxYear->name }}</strong>
+                <span>{{ $afxYear->start_date->format('d-m-Y') }} to {{ $afxYear->end_date->format('d-m-Y') }}</span>
+            @else
+                <small>Academic Year</small>
+                <strong>Not set</strong>
+                <a href="{{ route('academic-year.index') }}">Add in Academic Year Master</a>
+            @endif
+        </div>
+    </div>
+
+    <div class="card afx-card my-3">
+        <div class="card-body">
             <form
                 action="{{ isset($edit) && $edit?->id ? route($route . '.update', [$edit?->id]) : route($route . '.store') }}"
                 method="POST" enctype="multipart/form-data">
@@ -57,6 +421,15 @@
                     <!-- Hidden fields to pass to controller -->
                     <input type="hidden" name="aadhar_card_no" id="aadhar_hidden">
                     <input type="hidden" name="admission_id" id="admission_hidden">
+
+                    <div>
+                        <h6 class="afx-sec first" data-bs-toggle="collapse" href="#aadharSection" role="button"
+                            aria-expanded="true" aria-controls="aadharSection">
+                            <span class="afx-sec-icon"><i class="ti ti-school"></i></span>
+                            <span class="afx-sec-title">Admission Details</span>
+                            <i class="ti ti-chevron-down afx-sec-chev"></i>
+                        </h6>
+                    </div>
 
                     <div class="collapse show" id="aadharSection">
                         <div class="row">
@@ -143,27 +516,28 @@
                             </div>
 
                             @php
-                                $classList = isset($schoolStandards)
-                                    ? $schoolStandards
-                                    : \App\Models\Master\MasterStandard::where('status', 'active')->orderBy('id')->pluck('name')->filter()->values()->all();
-                                $selectedAdmStd = old('admission_std', $edit->admission_std ?? '');
-                                $selectedCurrentStd = old('current_std', $edit->current_std ?? '');
+                                $selectedAdmStd = (string) old('admission_std_id', $edit->admission_std_id ?? '');
+                                $selectedCurrentStd = (string) old('current_std_id', $edit->current_std_id ?? '');
+                                $stdOptions = \App\Models\Master\MasterStandard::withTrashed()
+                                    ->where(function ($q) use ($selectedAdmStd, $selectedCurrentStd) {
+                                        $q->where(fn ($a) => $a->where('status', 'active')->whereNull('deleted_at'))
+                                            ->orWhereIn('id', array_filter([$selectedAdmStd, $selectedCurrentStd]));
+                                    })
+                                    ->orderBy('id')
+                                    ->pluck('name', 'id');
                             @endphp
 
                             {{-- Admission Std --}}
                             <div class="col-md-4 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <label class="form-label">Admission Std</label>
-                                    <select name="admission_std" id="admission_std" class="form-control select2">
+                                    <select name="admission_std_id" id="admission_std" class="form-control select2">
                                         <option value="">Select Admission Std</option>
-                                        @foreach($classList as $cls)
-                                            <option value="{{ $cls }}" {{ ($selectedAdmStd == $cls) ? 'selected' : '' }}>{{ $cls }}</option>
+                                        @foreach($stdOptions as $stdId => $stdName)
+                                            <option value="{{ $stdId }}" {{ $selectedAdmStd === (string) $stdId ? 'selected' : '' }}>{{ $stdName }}</option>
                                         @endforeach
-                                        @if(!empty($selectedAdmStd) && !in_array($selectedAdmStd, $classList))
-                                            <option value="{{ $selectedAdmStd }}" selected>{{ $selectedAdmStd }}</option>
-                                        @endif
                                     </select>
-                                    @error('admission_std')
+                                    @error('admission_std_id')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
@@ -173,16 +547,13 @@
                             <div class="col-md-4 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <label class="form-label">Current Std</label>
-                                    <select name="current_std" id="current_std" class="form-control select2">
+                                    <select name="current_std_id" id="current_std" class="form-control select2">
                                         <option value="">Select Current Std</option>
-                                        @foreach($classList as $cls)
-                                            <option value="{{ $cls }}" {{ ($selectedCurrentStd == $cls) ? 'selected' : '' }}>{{ $cls }}</option>
+                                        @foreach($stdOptions as $stdId => $stdName)
+                                            <option value="{{ $stdId }}" {{ $selectedCurrentStd === (string) $stdId ? 'selected' : '' }}>{{ $stdName }}</option>
                                         @endforeach
-                                        @if(!empty($selectedCurrentStd) && !in_array($selectedCurrentStd, $classList))
-                                            <option value="{{ $selectedCurrentStd }}" selected>{{ $selectedCurrentStd }}</option>
-                                        @endif
                                     </select>
-                                    @error('current_std')
+                                    @error('current_std_id')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
@@ -197,15 +568,20 @@
                                             ? $divisions
                                              : \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
                                     @endphp
+                                    @php
+                                        $selectedDivision = old('division', $edit->division ?? '');
+                                        $divisionNames = collect($divisionList)->map(fn ($d) => is_object($d) ? $d->name : $d);
+                                    @endphp
                                     <select name="division" id="division" class="form-control select2">
                                         <option value="">Select Division</option>
-                                        @foreach ($divisionList as $dItem)
-                                            @php $dName = is_object($dItem) ? $dItem->name : $dItem; @endphp
-                                            <option value="{{ $dName }}"
-                                                {{ (old('division', $edit->division ?? '') == $dName) ? 'selected' : '' }}>
+                                        @foreach ($divisionNames as $dName)
+                                            <option value="{{ $dName }}" {{ $selectedDivision == $dName ? 'selected' : '' }}>
                                                 {{ $dName }}
                                             </option>
                                         @endforeach
+                                        @if ($selectedDivision !== '' && !$divisionNames->contains($selectedDivision))
+                                            <option value="{{ $selectedDivision }}" selected>{{ $selectedDivision }}</option>
+                                        @endif
                                     </select>
                                     @error('division')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
@@ -217,21 +593,23 @@
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <label class="form-label">Profile Picture <span class="text-danger">*</span></label>
-                                    <input type="file" class="form-control @error('profile_pic') is-invalid @enderror"
-                                        name="profile_pic" accept="image/*">
+                                    <div class="afx-photo">
+                                        <div class="afx-photo-preview" id="profilePicPreview">
+                                            @if (!empty($edit?->profile_pic))
+                                                <img src="{{ asset($edit->profile_pic) }}" alt="Profile Picture">
+                                            @else
+                                                <i class="ti ti-camera"></i>
+                                            @endif
+                                        </div>
+                                        <input type="file" id="profile_pic_input"
+                                            class="form-control @error('profile_pic') is-invalid @enderror"
+                                            name="profile_pic" accept="image/*">
+                                    </div>
                                     @error('profile_pic')
-                                        <span class="invalid-feedback">
+                                        <span class="invalid-feedback d-block">
                                             <strong>{{ $message }}</strong>
                                         </span>
                                     @enderror
-
-                                    {{-- Show existing image if editing --}}
-                                    @isset($edit?->profile_pic)
-                                        <div class="mt-2">
-                                            <img src="{{ asset($edit->profile_pic) }}" alt="Profile Picture"
-                                                style="height:100px; width:100px; object-fit:cover; border-radius:50%;">
-                                        </div>
-                                    @endisset
                                 </div>
                             </div>
 
@@ -258,10 +636,11 @@
                     <hr>
 
                     <div class="text-left">
-                        <h6 class="menu-link menu-toggle d-flex align-items-center justify-content-between"
-                            data-bs-toggle="collapse" href="#personalDetails" role="button" aria-expanded="true"
-                            aria-controls="personalDetails">
-                            <span class="ms-3">Personal Details</span>
+                        <h6 class="afx-sec" data-bs-toggle="collapse" href="#personalDetails" role="button"
+                            aria-expanded="true" aria-controls="personalDetails">
+                            <span class="afx-sec-icon"><i class="ti ti-user"></i></span>
+                            <span class="afx-sec-title">Personal Details</span>
+                            <i class="ti ti-chevron-down afx-sec-chev"></i>
                         </h6>
                     </div>
 
@@ -435,12 +814,15 @@
                                     @endphp
                                     <select name="cast" id="cast" class="form-control select2 @error('cast') is-invalid @enderror">
                                         <option value="">Select Cast</option>
-                                        @foreach ($castList as $castItem)
-                                            @php $castName = is_object($castItem) ? $castItem->name : $castItem; @endphp
+                                        @php $castNames = collect($castList)->map(fn ($c) => is_object($c) ? $c->name : $c); @endphp
+                                        @foreach ($castNames as $castName)
                                             <option value="{{ $castName }}" {{ ($selectedCast == $castName) ? 'selected' : '' }}>
                                                 {{ $castName }}
                                             </option>
                                         @endforeach
+                                        @if ($selectedCast !== '' && !$castNames->contains($selectedCast))
+                                            <option value="{{ $selectedCast }}" selected>{{ $selectedCast }}</option>
+                                        @endif
                                     </select>
                                     @error('cast')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
@@ -500,12 +882,15 @@
                                     @endphp
                                     <select name="house" id="house" class="form-control select2 @error('house') is-invalid @enderror">
                                         <option value="">Select House</option>
-                                        @foreach ($houseList as $hItem)
-                                            @php $hName = is_object($hItem) ? $hItem->name : $hItem; @endphp
+                                        @php $houseNames = collect($houseList)->map(fn ($h) => is_object($h) ? $h->name : $h); @endphp
+                                        @foreach ($houseNames as $hName)
                                             <option value="{{ $hName }}" {{ ($selectedHouse == $hName) ? 'selected' : '' }}>
                                                 {{ $hName }}
                                             </option>
                                         @endforeach
+                                        @if ($selectedHouse !== '' && !$houseNames->contains($selectedHouse))
+                                            <option value="{{ $selectedHouse }}" selected>{{ $selectedHouse }}</option>
+                                        @endif
                                     </select>
                                     @error('house')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
@@ -610,11 +995,11 @@
                     </div>
                     <hr>
                     <div class="text-left">
-                        <h6 class="text-decoration-none  menu-link menu-toggle d-flex align-items-center justify-content-between"
-                            data-bs-toggle="collapse" href="#ContactDetails" role="button" aria-expanded="true"
-                            aria-controls="ContactDetails">
-                            <span class="ms-3">Contact Details</span>
-
+                        <h6 class="afx-sec" data-bs-toggle="collapse" href="#ContactDetails" role="button"
+                            aria-expanded="true" aria-controls="ContactDetails">
+                            <span class="afx-sec-icon"><i class="ti ti-address-book"></i></span>
+                            <span class="afx-sec-title">Contact Details</span>
+                            <i class="ti ti-chevron-down afx-sec-chev"></i>
                         </h6>
                     </div>
                     <div class="collapse show mt-2" id="ContactDetails">
@@ -727,10 +1112,11 @@
                     </div>
                     <hr>
                     <div class="text-left">
-                        <h6 class="text-decoration-none  menu-link menu-toggle d-flex align-items-center justify-content-between"
-                            data-bs-toggle="collapse" href="#Academy" role="button" aria-expanded="true"
-                            aria-controls="Academy">
-                            <span class="ms-3"> Academic Details </span>
+                        <h6 class="afx-sec" data-bs-toggle="collapse" href="#Academy" role="button"
+                            aria-expanded="true" aria-controls="Academy">
+                            <span class="afx-sec-icon"><i class="ti ti-id-badge-2"></i></span>
+                            <span class="afx-sec-title">Academic Details</span>
+                            <i class="ti ti-chevron-down afx-sec-chev"></i>
                         </h6>
                     </div>
 
@@ -832,10 +1218,11 @@
                     <hr>
 
                     <div class="text-left">
-                        <h6 class="text-decoration-none menu-link menu-toggle d-flex align-items-center justify-content-between"
-                            data-bs-toggle="collapse" href="#bankDetails" role="button" aria-expanded="true"
-                            aria-controls="bankDetails">
-                            <span class="ms-3"> Bank Details </span>
+                        <h6 class="afx-sec" data-bs-toggle="collapse" href="#bankDetails" role="button"
+                            aria-expanded="true" aria-controls="bankDetails">
+                            <span class="afx-sec-icon"><i class="ti ti-building-bank"></i></span>
+                            <span class="afx-sec-title">Bank Details</span>
+                            <i class="ti ti-chevron-down afx-sec-chev"></i>
                         </h6>
                     </div>
 
@@ -879,7 +1266,8 @@
                     {{-- Previous / Last School Details --}}
                     <div class="col-sm-12" id="previous_school_main">
                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 text-primary fw-bold">
+                            <h6 class="mb-0 fw-bold">
+                                <span class="afx-sec-icon"><i class="ti ti-building-community"></i></span>
                                 Previous / Last School Details
                             </h6>
                             <div class="form-check form-check-inline mb-0">
@@ -1009,16 +1397,15 @@
                     </div>
                 </div>
 
-                <div class="row mt-5">
-                    <div class="col-md-12 text-center">
-                        <button type="submit" class="btn btn-success mt-1">
-                            {{ isset($edit) ? 'Update' : 'Submit' }}
-                        </button>
-                        <a href="{{ route($route . '.index') }}" class="btn btn-danger mt-1">Cancel</a>
-                    </div>
+                <div class="afx-actions">
+                    <a href="{{ route($route . '.index') }}" class="afx-btn afx-btn-light"><i class="ti ti-x"></i> Cancel</a>
+                    <button type="submit" class="afx-btn afx-btn-primary">
+                        <i class="ti ti-device-floppy"></i> {{ isset($edit) ? 'Update Student' : 'Save Admission' }}
+                    </button>
                 </div>
             </form>
         </div>
+    </div>
     </div>
 
 @endsection
@@ -1031,6 +1418,20 @@
 @endsection
 
 @section('page_leavel_script')
+
+    <script>
+        $(function() {
+            $('#profile_pic_input').on('change', function() {
+                var file = this.files && this.files[0];
+                if (!file || !file.type.startsWith('image/')) return;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#profilePicPreview').html($('<img>', { src: e.target.result, alt: 'Profile Picture' }));
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
 
     <script>
         if ('scrollRestoration' in history) {
@@ -1057,6 +1458,22 @@
                     allowClear: true
                 });
             }
+
+            [
+                ['#cast', 'Select or Type Cast'],
+                ['#house', 'Select or Type House'],
+                ['#division', 'Select or Type Division'],
+            ].forEach(function([selector, placeholder]) {
+                var $el = $(selector);
+                if (!$el.length) return;
+                if ($el.hasClass('select2-hidden-accessible')) $el.select2('destroy');
+                $el.select2({
+                    tags: true,
+                    placeholder: placeholder,
+                    allowClear: true,
+                    width: '100%'
+                });
+            });
 
 
 
@@ -1294,8 +1711,8 @@
                                 $('#biometric_id').val(data.user.biometric_id || '');
                                 $('#bus_route_village').val(data.user.bus_route_village || '').trigger('change');
                                 $('#admission_date').val(data.user.admission_date || '');
-                                $('#admission_std').val(data.user.admission_std || '').trigger('change');
-                                $('#current_std').val(data.user.current_std || '').trigger('change');
+                                $('#admission_std').val(data.user.admission_std_id || '').trigger('change');
+                                $('#current_std').val(data.user.current_std_id || '').trigger('change');
                                 $('#division').val(data.user.division || '').trigger('change');
                                 $('#spid').val(data.user.spid || '');
                                 $('#apaar_id_abc_id').val(data.user.apaar_id_abc_id || '');
@@ -1596,7 +2013,9 @@
                 }
 
                 var id = '{{ $edit?->id }}';
-                var folderName = id + '-' + first_name + '-' + father_name + '-' + last_name;
+                var folderName = [first_name, last_name, father_name].map(function(v) {
+                    return $.trim(v || '');
+                }).filter(Boolean).join(' ');
                 var OldfolderName = '{{ $edit?->gdrivefoldername }}';
                 var OldfolderId = '{{ $edit?->gdrivefolderid }}';
                 if (isValid) {

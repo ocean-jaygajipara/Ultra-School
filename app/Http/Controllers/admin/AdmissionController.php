@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Imports\StudentImport;
 use Illuminate\Http\Request;
 use App\Models\Admission;
+use App\Models\AdmissionClassHistory;
+use App\Models\Master\MasterAcademicYear;
 use App\Models\EducationDetails;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -204,7 +206,8 @@ class AdmissionController extends Controller
                 }
 
                 if ($request->filled('filter_standard')) {
-                    $data->where('current_std', $request->input('filter_standard'));
+                    $filterStandard = $request->input('filter_standard');
+                    $data->whereHas('currentStandard', fn ($q) => $q->where('name', $filterStandard));
                 }
 
                 if ($request->filled('filter_division')) {
@@ -265,10 +268,10 @@ class AdmissionController extends Controller
 
                     ->editColumn('gdrivefolderurl', function ($row) {
                         if (!empty($row->gdrivefolderurl) && !empty($row->gdrivefolderid) && !empty($row->gdrivefoldername)) {
-                            $folderName = $row->id . '- ' . trim($row->first_name . ' ' . $row->last_name . ' ' . $row->father_name);
-                            return '<a href="' . $row->gdrivefolderurl . '" target="_blank" data-id="' . $row->id . '" data-foldername="' . $folderName . '" data-folderurl="' . $row->gdrivefolderurl . '" class="btn btn-sm open_google_drive_folder" title="Open Google Drive Folder"> <i class="fab fa-google-drive" style="font-size:18px;"></i> </a>';
+                            $folderName = trim($row->first_name . ' ' . $row->last_name . ' ' . $row->father_name);
+                            return '<a href="' . $row->gdrivefolderurl . '" target="_blank" data-id="' . $row->id . '" data-foldername="' . $folderName . '" data-folderurl="' . $row->gdrivefolderurl . '" class="adm-act adm-act-icon adm-act-drive open_google_drive_folder" title="Open Google Drive Folder"><i class="fab fa-google-drive"></i></a>';
                         } else {
-                            return '<a href="javascript:void(0)" data-id="' . $row->id . '" class="btn btn-primary btn-sm create_google_drive_folder" title="Create Google Drive Folder"> <i class="fa fa-folder-plus"></i> </a>';
+                            return '<a href="javascript:void(0)" data-id="' . $row->id . '" class="adm-act adm-act-icon adm-act-folder create_google_drive_folder" title="Create Google Drive Folder"><i class="fa fa-folder-plus"></i></a>';
                         }
                     })
 
@@ -295,7 +298,7 @@ class AdmissionController extends Controller
                         return "-";
                     })
                     ->addColumn('book_button', function ($row) {
-                        return '<button class="btn btn-info btn-sm book-btn" data-id="' . $row->id . '" data-name="' . $row->first_name . '"> Book </button>';
+                        return '<button class="adm-act adm-act-book book-btn" data-id="' . $row->id . '" data-name="' . $row->first_name . '"><i class="ti ti-book"></i> Book</button>';
                     })
 
                     // ->addColumn('bonafide_button', function ($row) {
@@ -307,29 +310,29 @@ class AdmissionController extends Controller
                     // })
 
                     ->addColumn('view_button', function ($row) {
-                        return '<button class="btn btn-success btn-sm view-btn" data-id="' . $row->id . '" data-name="' . $row->first_name . '" data-mobile="' . $row->mobile_no . '">View</button>';
+                        return '<button class="adm-act adm-act-view view-btn" data-id="' . $row->id . '" data-name="' . $row->first_name . '" data-mobile="' . $row->mobile_no . '"><i class="ti ti-eye"></i> View</button>';
                     })
                     // Replace the existing attendance_button code in your controller (around line 130)
                     ->addColumn('attendance_button', function ($row) {
-                        return '<a href="' . url('software/attedance') . '" class="btn btn-warning btn-sm open-attendance" data-admission-id="' . $row->id . '" target="_blank" title="View Attendance"> <i class="bx bx-calendar-check"></i> </a>';
+                        return '<a href="' . url('software/attedance') . '" class="adm-act adm-act-icon adm-act-att open-attendance" data-admission-id="' . $row->id . '" target="_blank" title="View Attendance"><i class="ti ti-calendar-check"></i></a>';
                     })
 
                     ->addColumn('test_button', function ($row) {
-                        return '<a href="' . url('software/test_report') . '" class="btn btn-info btn-sm open-test" data-admission-id="' . $row->id . '" title="View Test Report"> <i class="bx bx-file"></i> </a>';
+                        return '<a href="' . url('software/test_report') . '" class="adm-act adm-act-icon adm-act-test open-test" data-admission-id="' . $row->id . '" title="View Test Report"><i class="ti ti-file-text"></i></a>';
                     })
 
                     ->addColumn('action', function ($row) use ($modules, $editPermisstion, $deletePermisstion) {
                         $btn = '';
                         if (!$row->deleted_at) {
                             if ($editPermisstion) {
-                                $btn .= '<a href="' . route($modules["route"] . ".edit", [$row->id]) . '" class="btn btn-primary btn-sm mx-1">Update</a>';
+                                $btn .= '<a href="' . route($modules["route"] . ".edit", [$row->id]) . '" class="adm-act adm-act-update mx-1"><i class="ti ti-edit"></i> Update</a>';
                             }
 
                             if ($deletePermisstion) {
-                                $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".destroy", [$row->id]) . '" class="btn btn-danger btn-icon deletebutton mx-1"><i class="fa-solid fa-trash"></i></a>';
+                                $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".destroy", [$row->id]) . '" class="adm-act adm-act-icon adm-act-delete deletebutton mx-1" title="Delete"><i class="ti ti-trash"></i></a>';
                             }
                         } else {
-                            $btn .= '<a href="javascript:void(0)" data-restore="' . route($modules["route"] . ".restore", ['id' => $row->id]) . '" class="btn btn-light mx-1 record-restore"><i class="ti ti-history"></i> Restore</a>';
+                            $btn .= '<a href="javascript:void(0)" data-restore="' . route($modules["route"] . ".restore", ['id' => $row->id]) . '" class="adm-act adm-act-restore mx-1 record-restore"><i class="ti ti-history"></i> Restore</a>';
                         }
 
                         return $btn ?: '-';
@@ -389,6 +392,13 @@ class AdmissionController extends Controller
 
         View::share('modules', $modules);
         $validated = $request->validated();
+
+        $academicYear = MasterAcademicYear::forDate($validated['admission_date'] ?? null) ?? MasterAcademicYear::current();
+        if (!$academicYear) {
+            return Redirect::back()->withInput()
+                ->withErrors('No academic year found for this admission date. Please add it in Academic Year Master first.');
+        }
+
         if ($request->hasFile('profile_pic')) {
             $file = $request->file('profile_pic');
 
@@ -422,20 +432,16 @@ class AdmissionController extends Controller
             $loginUserId = Auth::user()->id;
             $validated['created_by'] = $loginUserId;
 
-            if (!empty($validated['bus_route_village'])) {
-                \App\Models\Master\MasterBusRouteVillage::firstOrCreate(
-                    ['name' => trim($validated['bus_route_village'])],
-                    ['status' => 'active', 'created_by' => $loginUserId]
-                );
-            }
+            $validated = $this->syncFormMasters($validated, $loginUserId);
 
             $admission = Admission::create($validated);
+            AdmissionClassHistory::record($admission, $loginUserId, $academicYear);
 
             $admission_id = $admission->id;
             try {
-                $folderName = $admission->id . '- ' . trim($admission->first_name . ' ' . $admission->last_name . ' ' . $admission->father_name);
+                $folderName = trim($admission->first_name . ' ' . $admission->last_name . ' ' . $admission->father_name);
 
-                $parentFolderId = env('GOOGLE_DRIVE_FOLDER_ID', '1cogAtOqCv8C8yfwPum2WzDTUekOi3J1U'); // Main Student Folder ID
+                $parentFolderId = \App\Services\SchoolDatabaseManager::getDriveFolderId() ?: '1cogAtOqCv8C8yfwPum2WzDTUekOi3J1U'; // Main Student Folder ID
 
                 $folderData = \App\Helpers\GoogleDriveHelper::createFolder($folderName, $parentFolderId);
 
@@ -545,8 +551,8 @@ class AdmissionController extends Controller
                     ->withErrors('Admission created, but API sync failed: ' . $apiResponse->body());
             }
                     */
-            if (Helper::directCan('course-register-create')) {
-                return Redirect::route('cource-registration.create', ['admission_id' => $admission_id])->with('success', $admission->first_name . ' has been successfully admitted.');
+            if (Helper::directCan($modules['permission_prefix'] . '-edit')) {
+                return Redirect::route($modules['route'] . '.roll-number', $admission_id)->with('success', $admission->first_name . ' has been successfully admitted.');
             }
             return Redirect::route($modules['route'] . '.index')->with('success', $admission->first_name . ' has been successfully admitted.');
         } catch (\Exception $e) {
@@ -557,6 +563,7 @@ class AdmissionController extends Controller
     public function show(Request $request)
     {
         $student = Admission::withTrashed()->find($request->id);
+        $student?->append(['admission_std', 'current_std']);
 
         $studentCourses = CourceRegistration::with(['course', 'class', 'shift', 'batch'])
             ->withTrashed()
@@ -622,18 +629,19 @@ class AdmissionController extends Controller
         $validated['father_name'] = strtoupper($validated['father_name']);
         $validated['mother_name'] = strtoupper($validated['mother_name']);
 
+        $academicYear = MasterAcademicYear::current();
+        if (!$academicYear) {
+            return Redirect::back()->withInput()
+                ->withErrors('No current academic year is set. Please add it in Academic Year Master first.');
+        }
+
         // dd($validated,$request->all());
         $token = Session::get('external_api_token');
         try {
             $loginUserId = Auth::user()->id;
             $validated['updated_by'] = $loginUserId;
 
-            if (!empty($validated['bus_route_village'])) {
-                \App\Models\Master\MasterBusRouteVillage::firstOrCreate(
-                    ['name' => trim($validated['bus_route_village'])],
-                    ['status' => 'active', 'created_by' => $loginUserId]
-                );
-            }
+            $validated = $this->syncFormMasters($validated, $loginUserId);
 
             $admission = Admission::where('id', $id)->firstOrFail();
             $admission_id = $admission->id;
@@ -658,13 +666,14 @@ class AdmissionController extends Controller
                 $validated['profile_pic'] = 'uploads/profile_pics/' . $folderName . '/' . $filename;
             }
 
-            $classChanged = ($validated['current_std'] ?? $admission->current_std) !== $admission->current_std
+            $classChanged = (int) ($validated['current_std_id'] ?? $admission->current_std_id) !== (int) $admission->current_std_id
                 || ($validated['division'] ?? $admission->division) !== $admission->division;
             if ($classChanged) {
                 $validated['roll_no'] = null;
             }
 
             $admission->update($validated);
+            AdmissionClassHistory::record($admission, $loginUserId, $academicYear);
 
             return Redirect::route('admission.roll-number', $admission->id)
                 ->with('success', $modules['title'] . ' updated successfully. Please confirm the roll number.');
@@ -797,7 +806,14 @@ class AdmissionController extends Controller
         $admission = Admission::findOrFail($id);
         $suggestedRollNo = $admission->roll_no ?: $this->nextRollNumber($admission);
 
-        return view($modules['folder_path'] . '.roll-number', compact('modules', 'admission', 'suggestedRollNo'));
+        $history = AdmissionClassHistory::with(['academicYear', 'standard'])
+            ->where('admission_id', $admission->id)
+            ->get()
+            ->sortBy(fn ($row) => $row->academicYear?->start_date?->timestamp ?? PHP_INT_MAX)
+            ->values();
+        $currentYear = MasterAcademicYear::current();
+
+        return view($modules['folder_path'] . '.roll-number', compact('modules', 'admission', 'suggestedRollNo', 'history', 'currentYear'));
     }
 
     public function rollNumberStore(Request $request, string $id)
@@ -809,7 +825,7 @@ class AdmissionController extends Controller
 
         $admission = Admission::findOrFail($id);
 
-        if (empty($admission->current_std) || empty($admission->division)) {
+        if (empty($admission->current_std_id) || empty($admission->division)) {
             return Redirect::back()->withErrors('Please set Current Std and Division for this student before generating a roll number.');
         }
 
@@ -819,7 +835,7 @@ class AdmissionController extends Controller
                 'integer',
                 'min:1',
                 Rule::unique($admission->getTable(), 'roll_no')
-                    ->where('current_std', $admission->current_std)
+                    ->where('current_std_id', $admission->current_std_id)
                     ->where('division', $admission->division)
                     ->whereNull('deleted_at')
                     ->ignore($admission->id),
@@ -832,6 +848,7 @@ class AdmissionController extends Controller
             'roll_no' => (int) $request->roll_no,
             'updated_by' => Auth::id(),
         ]);
+        AdmissionClassHistory::recordRoll($admission, Auth::id());
 
         return Redirect::route($modules['route'] . '.index')
             ->with('success', 'Roll No. ' . $admission->roll_no . ' saved for ' . trim($admission->first_name . ' ' . $admission->last_name) . ' (' . $admission->current_std . ' - ' . $admission->division . ').');
@@ -839,11 +856,11 @@ class AdmissionController extends Controller
 
     protected function nextRollNumber(Admission $admission): ?int
     {
-        if (empty($admission->current_std) || empty($admission->division)) {
+        if (empty($admission->current_std_id) || empty($admission->division)) {
             return null;
         }
 
-        $max = Admission::where('current_std', $admission->current_std)
+        $max = Admission::where('current_std_id', $admission->current_std_id)
             ->where('division', $admission->division)
             ->where('id', '!=', $admission->id)
             ->max('roll_no');
@@ -967,9 +984,9 @@ class AdmissionController extends Controller
         $admission = Admission::findOrFail($request->id);
 
         try {
-            $folderName = $admission->id . '- ' . trim($admission->first_name . ' ' . $admission->last_name . ' ' . $admission->father_name);
+            $folderName = trim($admission->first_name . ' ' . $admission->last_name . ' ' . $admission->father_name);
 
-            $parentFolderId = env('GOOGLE_DRIVE_FOLDER_ID', '1cogAtOqCv8C8yfwPum2WzDTUekOi3J1U'); // Main Student Folder ID
+            $parentFolderId = \App\Services\SchoolDatabaseManager::getDriveFolderId() ?: '1cogAtOqCv8C8yfwPum2WzDTUekOi3J1U'; // Main Student Folder ID
 
             $folderData = \App\Helpers\GoogleDriveHelper::createFolder($folderName, $parentFolderId);
 
@@ -1433,6 +1450,41 @@ class AdmissionController extends Controller
         return \App\Models\Master\MasterStandard::where('status', 'active')->orderBy('id')->pluck('name')->filter()->values()->all();
     }
 
+    /**
+     * Values typed directly in the admission form (not picked from the list)
+     * are added to their master, so they show up in the dropdown next time.
+     */
+    protected function syncFormMasters(array $validated, int $userId): array
+    {
+        $masters = [
+            'bus_route_village' => [\App\Models\Master\MasterBusRouteVillage::class, false],
+            'cast'              => [\App\Models\Master\MasterCategory::class, true],
+            'house'             => [\App\Models\Master\MasterHouse::class, false],
+            'division'          => [\App\Models\Master\MasterDivision::class, true],
+        ];
+
+        foreach ($masters as $field => [$model, $upper]) {
+            $value = trim((string) ($validated[$field] ?? ''));
+            if ($value === '') {
+                continue;
+            }
+            if ($upper) {
+                $value = mb_strtoupper($value);
+            }
+
+            $master = $model::where('name', $value)->first();
+            if (!$master) {
+                $master = $model::create(['name' => $value, 'status' => 'active', 'created_by' => $userId]);
+            } elseif ($master->status !== 'active') {
+                $master->update(['status' => 'active', 'updated_by' => $userId]);
+            }
+
+            $validated[$field] = $master->name;
+        }
+
+        return $validated;
+    }
+
     protected function resolveCertificateRequestData(Request $request): array
     {
         $today = now();
@@ -1509,7 +1561,8 @@ class AdmissionController extends Controller
         }
 
         if ($request->filled('filter_standard')) {
-            $query->where('current_std', $request->input('filter_standard'));
+            $filterStandard = $request->input('filter_standard');
+            $query->whereHas('currentStandard', fn ($q) => $q->where('name', $filterStandard));
         }
 
         if ($request->filled('filter_division')) {

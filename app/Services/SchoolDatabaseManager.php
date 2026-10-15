@@ -113,6 +113,20 @@ class SchoolDatabaseManager
     }
 
     /**
+     * Google Drive parent folder for student folders of the active school.
+     * Falls back to the common GOOGLE_DRIVE_FOLDER_ID when the school has none.
+     */
+    public static function getDriveFolderId(?string $code = null): ?string
+    {
+        $code = $code ? strtolower(trim($code)) : self::getActiveSchoolCode();
+        $school = self::get($code);
+
+        return ($school['drive_folder_id'] ?? null)
+            ?: config('filesystems.disks.google.folderId')
+            ?: null;
+    }
+
+    /**
      * Get standards for the active school (or specified school code).
      * UES: 1 to 8
      * UPS: 1 to 8

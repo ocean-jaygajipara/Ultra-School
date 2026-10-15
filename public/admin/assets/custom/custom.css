@@ -59,7 +59,21 @@
 }
 
 .bg-menu-theme.menu-vertical .menu-item.active > .menu-link:not(.menu-toggle) {
-    background: linear-gradient(92deg, var(--bs-primary) 22.16%, var(--bs-primary-light3) 76.47%)
+    background: linear-gradient(92deg, #1f2580 0%, #2e3a9e 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px -4px rgba(31, 37, 128, .55) !important;
+    border-left: 4px solid #f5b400;
+}
+
+.bg-menu-theme.menu-vertical .menu-item.active > .menu-link:not(.menu-toggle) i,
+.bg-menu-theme.menu-vertical .menu-item.active > .menu-link:not(.menu-toggle) div {
+    color: #fff !important;
+}
+
+.bg-menu-theme.menu-vertical .menu-item.open > .menu-toggle,
+.bg-menu-theme.menu-vertical .menu-item.active > .menu-toggle {
+    background: #eef0fb !important;
+    color: #1f2580 !important;
 }
 
 .breadcrumb-item, .breadcrumb-item a {

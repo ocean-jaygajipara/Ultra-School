@@ -165,6 +165,24 @@
         </li>
         @enddirectCanAny
 
+        @directCanAny(['class-report-list'])
+        <li class="menu-item {{ $sidebar_active == 'class-report' ? 'active open' : '' }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="ti ti-report-analytics me-2"></i>
+                <div data-i18n="Report">Report</div>
+            </a>
+            <ul class="menu-sub">
+                @directCan('class-report-list')
+                <li class="menu-item {{ $sidebar_active == 'class-report' ? 'active' : '' }}">
+                    <a href="{{ route('class-report.index') }}" class="menu-link">
+                        <div data-i18n="Class Wise Report">Class Wise Report</div>
+                    </a>
+                </li>
+                @enddirectCan
+            </ul>
+        </li>
+        @enddirectCanAny
+
 
         @directCanAny(['attedance-list', 'attedance-create', 'attedance-edit', 'attedance-delete', 'daily-attendance-list', 'daily-attendance-create', 'daily-attendance-edit', 'daily-attendance-delete', 'faculty-attendance-list'])
         <li class="menu-item {{ $sidebar_active == 'attedance' || $sidebar_active == 'attedance-report' || $sidebar_active == 'faculty-attendance' || $sidebar_active == 'daily-attendance' ? 'active open' : '' }}">
@@ -499,13 +517,14 @@
             'division-list',
             'category-list',
             'standard-list',
+            'academic-year-list',
             'school-list',
             'house-list',
             'religion-list',
             'bus-route-village-list'
         ])
         <li
-            class="menu-item {{ in_array($sidebar_active, ['course', 'shift', 'class', 'syllabus', 'batch', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'division', 'category', 'standard', 'school', 'house', 'religion', 'bus-route-village']) ? 'active open' : '' }}">
+            class="menu-item {{ in_array($sidebar_active, ['course', 'shift', 'class', 'syllabus', 'batch', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'division', 'category', 'standard', 'academic-year', 'school', 'house', 'religion', 'bus-route-village']) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-certificate me-2"></i>
                 <div data-i18n="Course Masters">Course Masters</div>
@@ -578,6 +597,14 @@
                 <li class="menu-item {{ $sidebar_active == 'standard' ? 'active' : '' }}">
                     <a href="{{ route('standard.index') }}" class="menu-link">
                         <div data-i18n="Standard Master">Standard Master</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
+                @directCanAny(['academic-year-list', 'academic-year-create', 'academic-year-edit', 'academic-year-delete'])
+                <li class="menu-item {{ $sidebar_active == 'academic-year' ? 'active' : '' }}">
+                    <a href="{{ route('academic-year.index') }}" class="menu-link">
+                        <div data-i18n="Academic Year Master">Academic Year Master</div>
                     </a>
                 </li>
                 @enddirectCanAny

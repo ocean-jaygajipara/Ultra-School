@@ -102,16 +102,16 @@ class AdmissionRequest extends FormRequest
                 'date',
             ],
 
-            'admission_std' => [
+            'admission_std_id' => [
                 'nullable',
-                'string',
-                'max:255',
+                'integer',
+                'exists:master_standards,id',
             ],
 
-            'current_std' => [
+            'current_std_id' => [
                 'nullable',
-                'string',
-                'max:255',
+                'integer',
+                'exists:master_standards,id',
             ],
 
             'division' => [

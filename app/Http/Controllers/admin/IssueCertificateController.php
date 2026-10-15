@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admission;
 use App\Models\IssueCertificateHistory;
 use App\Models\IssueCertificateLetterRecommendation;
+use App\Models\Master\MasterAcademicYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -90,7 +91,7 @@ class IssueCertificateController extends Controller
             'certificate_type' => 'required|in:bonafide,tc,english-medium,letter-recommendation',
             'student_id' => 'required|exists:admission,id',
             'issue_date' => 'nullable|string',
-            'academic_year' => 'nullable|string',
+            'academic_year' => 'nullable|string|exists:master_academic_years,name,deleted_at,NULL',
             'recommender_type' => 'nullable|string|in:principal,faculty',
             'faculty_id' => 'nullable|exists:users,id',
             'recommender_name' => 'nullable|string|max:255',
@@ -236,26 +237,20 @@ class IssueCertificateController extends Controller
     private function getCertificateDefaults(): array
     {
         $today = now();
-        $currYear = (int)$today->format('Y');
-        $academicYear = ($today->month >= 6) ? $currYear . '-' . ($currYear + 1) : ($currYear - 1) . '-' . $currYear;
+        $academicYear = MasterAcademicYear::current() ?? MasterAcademicYear::forDate($today->format('Y-m-d'));
 
         return [
             'issue_date' => $today->format('Y-m-d'),
-            'academic_year' => $academicYear,
+            'academic_year' => $academicYear?->name,
         ];
     }
 
     private function getAcademicYears(): array
     {
-        $today = now();
-        $currYear = (int)$today->format('Y');
-        $currentAcademicStartYear = ($today->month >= 6) ? $currYear : ($currYear - 1);
-
-        $years = [];
-        for ($y = $currentAcademicStartYear; $y >= $currentAcademicStartYear - 15; $y--) {
-            $years[] = $y . '-' . ($y + 1);
-        }
-        return $years;
+        return MasterAcademicYear::where('status', 'active')
+            ->orderByDesc('start_date')
+            ->pluck('name')
+            ->all();
     }
 
     private function getHistories(string $type)

@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        if (Schema::hasTable('admission_class_histories')) {
+            return;
+        }
+
+        Schema::create('admission_class_histories', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('admission_id')->index();
+            $table->string('academic_year', 20)->nullable();
+            $table->string('standard')->nullable();
+            $table->string('division')->nullable();
+            $table->unsignedInteger('roll_no')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('admission_class_histories');
+    }
+};

@@ -123,6 +123,7 @@ class StudentImport implements ToCollection
 
             $nameParts = preg_split('/\s+/', mb_strtoupper($fullName));
             $fatherName = $this->cleanText($get('father_name'));
+            $rowStandardId = Admission::standardIdByName($rowStandard);
 
             try {
                 Admission::create([
@@ -134,8 +135,8 @@ class StudentImport implements ToCollection
                     'mobile_no'         => $this->cleanNumberText($get('mobile_no')),
                     'date_of_birth'     => $this->parseDate($get('dob')),
                     'admission_date'    => $this->parseDate($get('admission')),
-                    'admission_std'     => $rowStandard,
-                    'current_std'       => $rowStandard,
+                    'admission_std_id'  => $rowStandardId,
+                    'current_std_id'    => $rowStandardId,
                     'division'          => $rowDivision !== null ? mb_strtoupper($rowDivision) : null,
                     'cast'              => $this->upperOrNull($get('cast')),
                     'religion'          => $this->cleanText($get('religion')),

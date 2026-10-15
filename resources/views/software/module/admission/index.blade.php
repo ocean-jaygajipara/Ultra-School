@@ -27,6 +27,248 @@
     <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css') }}">
     <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">                                                                                                                                        <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css"> -->
 
+    <style>
+        /* Colours from the school logo: navy, red, sky, gold */
+        .adm-ui {
+            --adm-ink: #1f2580;
+            --adm-ink-2: #2e3a9e;
+            --adm-muted: #5f6488;
+            --adm-line: #e1e4f2;
+            --adm-soft: #f7f8fd;
+            --adm-red: #e1141c;
+            --adm-red-soft: #fff1f1;
+            --adm-sky: #bfe3f7;
+            --adm-sky-soft: #eef7fd;
+            --adm-gold: #f5b400;
+        }
+
+        .adm-panel {
+            background: #fff;
+            border: 1px solid var(--adm-line);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px -12px rgba(31, 37, 128, .15);
+        }
+
+        .adm-hero {
+            background:
+                radial-gradient(circle at 88% 15%, rgba(245, 180, 0, .35), transparent 42%),
+                radial-gradient(circle at 5% 130%, rgba(191, 227, 247, .35), transparent 45%),
+                linear-gradient(135deg, #171c6b 0%, var(--adm-ink-2) 100%);
+            color: #fff;
+            border-radius: 18px;
+            padding: 22px 26px;
+            margin-bottom: 20px;
+        }
+        .adm-hero h3 { color: #fff; margin: 0; font-weight: 700; letter-spacing: -.3px; }
+        .adm-hero p { color: #d6e6f7; margin: 4px 0 0; font-size: .875rem; }
+        .adm-hero-icon {
+            width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+            background: rgba(245, 180, 0, .18); border: 1px solid rgba(245, 180, 0, .6);
+            color: var(--adm-gold); font-size: 1.5rem;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .adm-stat {
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid rgba(191, 227, 247, .35);
+            border-radius: 12px; padding: 8px 16px; min-width: 104px;
+        }
+        .adm-stat small { display: block; color: var(--adm-sky); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+        .adm-stat strong { color: #fff; font-size: 1.15rem; }
+        .adm-stat.is-red { background: var(--adm-red); border-color: var(--adm-red); }
+        .adm-stat.is-red small { color: #ffd9db; }
+
+        .adm-ui .adm-label {
+            display: block; font-size: .72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .08em;
+            color: var(--adm-muted); margin-bottom: 8px;
+        }
+        .adm-ui #filter_section .form-control,
+        .adm-ui #filter_section .select2-container--default .select2-selection--single {
+            height: 46px !important;
+            border: 1.5px solid var(--adm-line) !important;
+            border-radius: 12px !important;
+            background: var(--adm-soft) !important;
+        }
+        .adm-ui #filter_section .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 43px !important; padding-left: 14px !important; color: var(--adm-ink) !important; font-weight: 500;
+        }
+        .adm-ui #filter_section .select2-container--default .select2-selection--single .select2-selection__arrow { height: 44px !important; }
+        .adm-ui #filter_section .form-control:focus,
+        .adm-ui #filter_section .select2-container--open .select2-selection--single {
+            border-color: var(--adm-ink) !important; background: #fff !important;
+            box-shadow: 0 0 0 4px rgba(191, 227, 247, .7) !important;
+        }
+        .adm-btn-clear {
+            height: 46px; padding: 0 18px; border-radius: 12px;
+            border: 1.5px solid #f7c3c5; background: var(--adm-red-soft); color: var(--adm-red);
+            font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all .2s;
+        }
+        .adm-btn-clear:hover { background: var(--adm-red); color: #fff; border-color: var(--adm-red); }
+
+        .adm-ui .adm-table-card { padding: 18px 20px; }
+        .adm-ui #yajra-datatables { border-collapse: separate !important; border-spacing: 0; }
+        .adm-ui #yajra-datatables thead th {
+            background: var(--adm-ink) !important; color: #fff !important;
+            font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+            padding: 13px 14px; border: 0 !important; white-space: nowrap;
+        }
+        .adm-ui #yajra-datatables thead th:first-child { border-top-left-radius: 12px; }
+        .adm-ui #yajra-datatables thead th:last-child { border-top-right-radius: 12px; }
+        .adm-ui #yajra-datatables tbody td {
+            padding: 11px 14px; border-bottom: 1px solid #eef0f8; vertical-align: middle; color: #2b2f55;
+        }
+        .adm-ui #yajra-datatables.table-striped > tbody > tr:nth-of-type(odd) > * { --bs-table-accent-bg: #fafbff; }
+        .adm-ui #yajra-datatables.table-hover > tbody > tr:hover > * { --bs-table-accent-bg: var(--adm-sky-soft); }
+        .adm-ui #yajra-datatables thead .sorting:before,
+        .adm-ui #yajra-datatables thead .sorting:after,
+        .adm-ui #yajra-datatables thead .sorting_asc:before,
+        .adm-ui #yajra-datatables thead .sorting_asc:after,
+        .adm-ui #yajra-datatables thead .sorting_desc:before,
+        .adm-ui #yajra-datatables thead .sorting_desc:after { color: var(--adm-sky); }
+
+        .adm-ui .dataTables_wrapper .dataTables_length select {
+            border: 1.5px solid var(--adm-line); border-radius: 10px; background-color: var(--adm-soft);
+        }
+        .adm-ui .dataTables_wrapper .dataTables_info { color: var(--adm-muted); font-size: .85rem; }
+        .adm-ui .dataTables_wrapper .page-item .page-link {
+            border-radius: 10px !important; margin: 0 3px; border: 1px solid var(--adm-line);
+            color: var(--adm-ink); font-weight: 600;
+        }
+        .adm-ui .dataTables_wrapper .page-item.active .page-link {
+            background: var(--adm-ink) !important; border-color: var(--adm-ink) !important; color: #fff !important;
+            box-shadow: 0 4px 10px -4px rgba(31, 37, 128, .6);
+        }
+        .adm-ui .dataTables_wrapper .page-item:not(.active):not(.disabled) .page-link:hover {
+            background: var(--adm-sky-soft); border-color: var(--adm-sky);
+        }
+        .adm-act {
+            display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+            height: 32px; padding: 0 14px; border-radius: 10px;
+            font-size: .78rem; font-weight: 600; line-height: 1; white-space: nowrap;
+            border: 1px solid transparent; cursor: pointer; text-decoration: none;
+            transition: transform .15s, box-shadow .15s, background .15s, color .15s;
+        }
+        .adm-act i { font-size: 1rem; }
+        .adm-act:hover { transform: translateY(-1px); box-shadow: 0 6px 14px -6px rgba(31, 37, 128, .45); }
+        .adm-act.disabled { opacity: .6; pointer-events: none; }
+        .adm-act-icon { width: 34px; padding: 0; }
+
+        .adm-act-view { background: #e8eafb; color: #1f2580; border-color: #cfd3f5; }
+        .adm-act-view:hover { background: #1f2580; color: #fff; }
+
+        .adm-act-att { background: #fff6dc; color: #a86b00; border-color: #ffe39a; }
+        .adm-act-att:hover { background: #f5b400; color: #fff; }
+
+        .adm-act-test { background: #eef7fd; color: #1565a6; border-color: #bfe3f7; }
+        .adm-act-test:hover { background: #1565a6; color: #fff; }
+
+        .adm-act-drive { background: #fff; color: #1f2580; border-color: #e1e4f2; }
+        .adm-act-drive i { background: linear-gradient(135deg, #1fa463 0%, #ffd04b 50%, #4688f4 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .adm-act-drive:hover { border-color: #bfe3f7; background: #eef7fd; }
+
+        .adm-act-folder { background: #f7f8fd; color: #5f6488; border: 1.5px dashed #c5c9e6; }
+        .adm-act-folder:hover { background: #1f2580; color: #fff; border-style: solid; border-color: #1f2580; }
+
+        .adm-act-book { background: #eef7fd; color: #1f2580; border-color: #bfe3f7; }
+        .adm-act-book:hover { background: #2e3a9e; color: #fff; }
+
+        .adm-act-update { background: linear-gradient(135deg, #1f2580, #2e3a9e); color: #fff; }
+        .adm-act-update:hover { color: #fff; box-shadow: 0 6px 14px -4px rgba(31, 37, 128, .6); }
+
+        .adm-act-delete { background: #fff1f1; color: #e1141c; border-color: #f7c3c5; }
+        .adm-act-delete:hover { background: #e1141c; color: #fff; }
+
+        .adm-act-restore { background: #f7f8fd; color: #1f2580; border-color: #e1e4f2; }
+        .adm-act-restore:hover { background: #1f2580; color: #fff; }
+
+        /* Student Info modal */
+        .si-modal { border: 0; border-radius: 20px; overflow: hidden; }
+        .si-modal .modal-body { position: relative; }
+        .si-close {
+            position: absolute; top: 16px; right: 16px; z-index: 5;
+            background-color: #fff; border-radius: 50%; padding: 10px; opacity: .9;
+            box-shadow: 0 4px 12px rgba(31, 37, 128, .2);
+        }
+        .si-side {
+            background:
+                radial-gradient(circle at 85% 8%, rgba(245, 180, 0, .35), transparent 40%),
+                radial-gradient(circle at 0% 100%, rgba(191, 227, 247, .3), transparent 45%),
+                linear-gradient(160deg, #171c6b 0%, #2e3a9e 100%);
+            color: #fff; text-align: center; padding: 36px 26px 28px;
+        }
+        .si-photo-wrap {
+            width: 140px; height: 140px; margin: 0 auto 16px; border-radius: 50%;
+            padding: 5px; background: linear-gradient(135deg, #f5b400, #ffe08a);
+            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, .5);
+        }
+        .si-photo {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            border: 4px solid #fff; background: #fff;
+        }
+        .si-initials {
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.6rem; font-weight: 800; color: #1f2580; background: #eef7fd;
+        }
+        .si-name { color: #fff; font-weight: 800; font-size: 1.25rem; margin: 0 0 4px; line-height: 1.3; }
+        .si-father { color: #bfe3f7; font-size: .85rem; min-height: 1.2em; }
+        .si-tags { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 14px 0 18px; }
+        .si-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(255, 255, 255, .14); border: 1px solid rgba(191, 227, 247, .4);
+            padding: 5px 12px; border-radius: 50rem; font-size: .8rem; font-weight: 600;
+        }
+        .si-tag-gold { background: rgba(245, 180, 0, .2); border-color: rgba(245, 180, 0, .55); color: #ffe08a; }
+        .si-keys { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+        .si-key { background: rgba(255, 255, 255, .1); border-radius: 12px; padding: 10px 6px; }
+        .si-key small { display: block; color: #bfe3f7; font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; }
+        .si-key strong { color: #fff; font-size: 1rem; word-break: break-all; }
+        .si-actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+        .si-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            height: 40px; border-radius: 12px; font-weight: 600; font-size: .85rem;
+            text-decoration: none; transition: transform .15s, box-shadow .15s;
+        }
+        .si-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px -8px rgba(0, 0, 0, .5); }
+        .si-btn-light { background: rgba(255, 255, 255, .15); color: #fff; border: 1px solid rgba(255, 255, 255, .3); }
+        .si-btn-light:hover { background: #fff; color: #1f2580; }
+        .si-btn-primary { grid-column: 1 / -1; background: #e1141c; color: #fff; }
+        .si-btn-primary:hover { color: #fff; background: #c40f16; }
+
+        .si-main { padding: 28px 28px 24px; background: #fff; }
+        .si-main-head { margin-bottom: 16px; padding-right: 40px; }
+        .si-main-head h5 { color: #1f2580; font-weight: 800; }
+        .si-tabs {
+            gap: 6px; padding: 6px; background: #f7f8fd; border-radius: 14px;
+            border: 1px solid #e1e4f2; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .si-tabs .nav-link {
+            border: 0; border-radius: 10px; color: #5f6488; font-weight: 600; font-size: .85rem;
+            padding: 8px 14px; display: inline-flex; align-items: center; gap: 6px; background: transparent;
+        }
+        .si-tabs .nav-link:hover { color: #1f2580; background: #eef7fd; }
+        .si-tabs .nav-link.active { background: #1f2580; color: #fff; box-shadow: 0 6px 14px -6px rgba(31, 37, 128, .6); }
+        .si-tab-content { min-height: 300px; }
+        .si-field {
+            background: #f7f8fd; border: 1px solid #e1e4f2; border-left: 4px solid #bfe3f7;
+            border-radius: 12px; padding: 10px 14px; height: 100%; transition: border-color .15s, background .15s;
+        }
+        .si-field:hover { background: #eef7fd; border-left-color: #1f2580; }
+        .si-field small {
+            display: block; color: #5f6488; font-size: .7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px;
+        }
+        .si-field span { color: #1f2580; font-weight: 600; font-size: .95rem; word-break: break-word; }
+        .si-field span.is-empty { color: #b0b4cf; font-weight: 500; font-style: italic; font-size: .85rem; }
+
+        @media (max-width: 991.98px) {
+            .si-main { padding: 22px 18px; }
+        }
+
+        .adm-ui .dataTables_processing {
+            background: #fff; border: 1px solid var(--adm-sky); border-radius: 12px;
+            color: var(--adm-ink); font-weight: 600; box-shadow: 0 10px 25px -10px rgba(31, 37, 128, .35);
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -44,14 +286,30 @@
     </div>
 
 
-    <div class="row my-3">
+    <div class="row my-3 adm-ui">
+        <div class="col-12">
+            <div class="adm-hero d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="adm-hero-icon"><i class="ti ti-school"></i></span>
+                    <div>
+                        <h3>{{ $page_title }}</h3>
+                        <p>Search, filter and manage all admitted students.</p>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <div class="adm-stat"><small>Total Students</small><strong id="admStatTotal">—</strong></div>
+                    <div class="adm-stat is-red"><small>Showing</small><strong id="admStatFiltered">—</strong></div>
+                </div>
+            </div>
+        </div>
+
         <div class="col-12 mb-4" id="filter_section" style="display: none;">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="row align-items-end">
+            <div class="adm-panel">
+                <div class="card-body p-4">
+                    <div class="row align-items-end g-3">
                         <!-- Filter Input -->
                         <div class="col-md-4">
-                            <label for="search" class="form-label">Filter by Student</label>
+                            <label for="search" class="adm-label"><i class="ti ti-search me-1"></i> Filter by Student</label>
                             <input list="search" id="search_id" name="search"
                                 class="form-control search @error('search') is-invalid @enderror"
                                 value="{{ old('search') }}" placeholder="Search">
@@ -61,7 +319,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label for="filter_standard" class="form-label">Filter by Standard</label>
+                            <label for="filter_standard" class="adm-label"><i class="ti ti-school me-1"></i> Standard</label>
                             <select id="filter_standard" class="form-select select2">
                                 <option value="">All Standards</option>
                                 @foreach ($standards ?? [] as $std)
@@ -71,7 +329,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <label for="filter_division" class="form-label">Filter by Division</label>
+                            <label for="filter_division" class="adm-label"><i class="ti ti-layout-grid me-1"></i> Division</label>
                             <select id="filter_division" class="form-select select2">
                                 <option value="">All Divisions</option>
                                 @foreach ($divisions ?? [] as $div)
@@ -82,9 +340,8 @@
 
                         <!-- Clear Filter Button -->
                         <div class="col-md-2">
-                            <button type="button" title="Clear Filter" id="cilory_filter"
-                                class="btn btn-outline-danger mt-4">
-                                <i class="ti ti-x"></i>
+                            <button type="button" title="Clear Filter" id="cilory_filter" class="adm-btn-clear">
+                                <i class="ti ti-rotate"></i> Clear
                             </button>
                         </div>
                     </div>
@@ -92,8 +349,8 @@
             </div>
         </div>
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
+            <div class="adm-panel">
+                <div class="adm-table-card">
                     <div class="table-responsive">
                         <!-- <table id="yajra-datatables" class="dt-responsive table table-hover"> -->
                         <!-- <table id="yajra-datatables" class="dt-responsive table table-hover" style="width:100%"> -->
@@ -211,23 +468,13 @@
         </div>
     </div>
     <!-- Modal -->
-    <!-- Course/View Modal -->
+    <!-- Student Info Modal -->
     <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="infoModalLabel">Student Info (Id : <span id="modalID"
-                            class="text-lowercase"></span>)</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="text-center my-3" id="profilePicWrap">
-                    <img id="profilePic" src="" alt="Student Image" class="rounded-circle border border-2"
-                        style="width: 120px; height: 120px; object-fit: cover;">
-                </div>
-
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content si-modal">
                 @php
                     $infoSections = [
-                        'School Details' => [
+                        'school' => ['School', 'ti-school', [
                             'gr_no' => 'GR No.',
                             'roll_no' => 'Roll No.',
                             'admission_date' => 'Admission Date',
@@ -237,8 +484,8 @@
                             'stream' => 'Stream',
                             'house' => 'House',
                             'bus_route_village' => 'Bus Route Village',
-                        ],
-                        'Personal Details' => [
+                        ]],
+                        'personal' => ['Personal', 'ti-user', [
                             'first_name' => 'Surname',
                             'last_name' => 'Name',
                             'father_name' => 'Father Name',
@@ -251,61 +498,105 @@
                             'category' => 'Category',
                             'occupation' => 'Father Occupation',
                             'mother_occupation' => 'Mother Occupation',
-                        ],
-                        'Contact Details' => [
+                        ]],
+                        'contact' => ['Contact', 'ti-phone', [
                             'mobile_no' => 'Mobile No.',
                             'parent_mobile_no' => 'Parent Mobile No.',
                             'other_mobile_no' => 'Other Mobile No.',
                             'whatsapp_no' => 'WhatsApp No.',
                             'temporary_address' => 'Temporary Address',
                             'permanent_address' => 'Permanent Address',
-                        ],
-                        'Academic IDs' => [
+                        ]],
+                        'ids' => ['IDs & Bank', 'ti-id', [
                             'aadhar_card_no' => 'Aadhaar Card No.',
                             'pen_no' => 'PEN No.',
                             'apaar_id_abc_id' => 'APAAR ID',
                             'udise' => 'UDISE',
                             'spid' => 'SPID',
-                        ],
-                        'Bank Details' => [
                             'bank_name' => 'Bank Name',
                             'bank_account_no' => 'Bank Account No.',
-                        ],
-                        'Previous / Last School Details' => [
+                        ]],
+                        'previous' => ['Previous School', 'ti-building-community', [
                             'last_school_name' => 'Last School Name',
                             'old_gr_no' => 'Old GR No.',
                             'passed_standard' => 'Passed Standard',
                             'lc_no' => 'LC No.',
                             'lc_date' => 'LC Date',
                             'attendance' => 'Attendance',
-                        ],
+                        ]],
                     ];
                     $dateFields = ['admission_date', 'date_of_birth', 'lc_date'];
+                    $wideFields = ['temporary_address', 'permanent_address', 'last_school_name', 'bus_route_village'];
                 @endphp
 
-                <div class="px-3 pb-3">
-                    @foreach ($infoSections as $sectionTitle => $fields)
-                        <h6 class="text-primary fw-bold mt-3 mb-2">{{ $sectionTitle }}</h6>
-                        <table class="table table-bordered mb-0">
-                            <tbody>
-                                @foreach (array_chunk($fields, 2, true) as $pair)
-                                    <tr>
-                                        @foreach ($pair as $field => $label)
-                                            <td class="w-50" @if (count($pair) === 1) colspan="2" @endif>
-                                                <b>{{ $label }}:</b>
-                                                <span class="student-info-field" data-field="{{ $field }}"
-                                                    @if (in_array($field, $dateFields)) data-type="date" @endif></span>
-                                            </td>
-                                        @endforeach
-                                    </tr>
+                <div class="modal-body p-0">
+                    <button type="button" class="btn-close si-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="row g-0">
+                        {{-- Profile side --}}
+                        <div class="col-lg-4 si-side">
+                            <div class="si-photo-wrap">
+                                <img id="profilePic" src="" alt="Student Photo" class="si-photo d-none">
+                                <div id="profileInitials" class="si-photo si-initials">--</div>
+                            </div>
+                            <h4 class="si-name" id="siName">-</h4>
+                            <div class="si-father" id="siFather"></div>
+
+                            <div class="si-tags">
+                                <span class="si-tag"><i class="ti ti-school"></i> <span id="siClass">-</span></span>
+                                <span class="si-tag si-tag-gold" id="siGenderTag"><i class="ti ti-gender-bigender"></i> <span id="siGender">-</span></span>
+                            </div>
+
+                            <div class="si-keys">
+                                <div class="si-key"><small>GR No.</small><strong id="siGr">-</strong></div>
+                                <div class="si-key"><small>Roll No.</small><strong id="siRoll">-</strong></div>
+                            </div>
+
+                            <div class="si-actions">
+                                <a href="#" id="siDrive" target="_blank" class="si-btn si-btn-light d-none"><i class="fab fa-google-drive"></i> Documents</a>
+                                @if ($modules['permission_edit'] ?? false)
+                                    <a href="#" id="siEdit" class="si-btn si-btn-primary"><i class="ti ti-edit"></i> Edit Student</a>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Details side --}}
+                        <div class="col-lg-8 si-main">
+                            <div class="si-main-head">
+                                <h5 class="mb-0" id="infoModalLabel">Student Information</h5>
+                                <small class="text-muted">All details of the student</small>
+                            </div>
+
+                            <ul class="nav si-tabs" role="tablist">
+                                @foreach ($infoSections as $key => [$title, $icon, $fields])
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab"
+                                            data-bs-target="#si-tab-{{ $key }}" type="button" role="tab">
+                                            <i class="ti {{ $icon }}"></i> {{ $title }}
+                                        </button>
+                                    </li>
                                 @endforeach
-                            </tbody>
-                        </table>
-                    @endforeach
+                            </ul>
+
+                            <div class="tab-content si-tab-content">
+                                @foreach ($infoSections as $key => [$title, $icon, $fields])
+                                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="si-tab-{{ $key }}" role="tabpanel">
+                                        <div class="row g-3">
+                                            @foreach ($fields as $field => $label)
+                                                <div class="{{ in_array($field, $wideFields) ? 'col-12' : 'col-md-6' }}">
+                                                    <div class="si-field">
+                                                        <small>{{ $label }}</small>
+                                                        <span class="student-info-field" data-field="{{ $field }}"
+                                                            @if (in_array($field, $dateFields)) data-type="date" @endif>-</span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-
-
             </div>
         </div>
     </div>
@@ -518,6 +809,53 @@
 @section('page_leavel_script')
     <script type="text/javascript">
         const canUpdateStatus = @json(auth()->check() && (auth()->user()->hasRole('super-admin') || auth()->user()->hasRole('developer')));
+
+        function fillStudentInfo(data) {
+            const clean = v => (v === null || v === undefined || String(v).trim() === '') ? '' : String(v).trim();
+            const fullName = [data.first_name, data.last_name, data.father_name].map(clean).filter(Boolean).join(' ');
+            const initials = [data.first_name, data.last_name].map(clean).filter(Boolean)
+                .map(w => w.charAt(0).toUpperCase()).join('') || 'S';
+
+            $('#profileInitials').text(initials).removeClass('d-none');
+            $('#profilePic').addClass('d-none').attr('src', '');
+            if (clean(data.profile_pic)) {
+                $('#profilePic')
+                    .off('load error')
+                    .on('load', function() {
+                        $(this).removeClass('d-none');
+                        $('#profileInitials').addClass('d-none');
+                    })
+                    .on('error', function() {
+                        $(this).addClass('d-none');
+                        $('#profileInitials').removeClass('d-none');
+                    })
+                    .attr('src', "{{ asset('') }}" + data.profile_pic);
+            }
+
+            $('#siName').text(fullName || '-');
+            $('#siFather').text(clean(data.mother_name) ? 'Mother: ' + clean(data.mother_name) : '');
+            const std = clean(data.current_std), div = clean(data.division);
+            $('#siClass').text(std ? (std + (div ? ' - ' + div : '')) : 'No class');
+            $('#siGender').text(clean(data.gender) || 'Gender not set');
+            $('#siGr').text(clean(data.gr_no) || '-');
+            $('#siRoll').text(clean(data.roll_no) || '-');
+            $('#siDrive').toggleClass('d-none', !clean(data.gdrivefolderurl)).attr('href', clean(data.gdrivefolderurl) || '#');
+            $('#siEdit').attr('href', "{{ route($route . '.edit', '__ID__') }}".replace('__ID__', data.id));
+
+            $('#infoModal .student-info-field').each(function() {
+                const value = clean(data[$(this).data('field')]);
+                const $el = $(this).toggleClass('is-empty', !value);
+                if (!value) {
+                    $el.text('Not added');
+                } else if ($el.data('type') === 'date') {
+                    $el.text(moment(value).format('DD-MM-YYYY'));
+                } else {
+                    $el.text(value);
+                }
+            });
+
+            $('#infoModal .si-tabs .nav-link').first().tab('show');
+        }
         // Show student details modal
         $(document).on('click', '.view-btn', function() {
             let id = $(this).data('id');
@@ -532,24 +870,7 @@
                     if (response.success) {
                         let data = response.student;
                         if (data) {
-                            // Profile picture handling
-                            let profileUrl = data.profile_pic ?
-                                "{{ asset('') }}" + data.profile_pic :
-                                '';
-                            $('#profilePic').attr('src', profileUrl);
-                            $('#profilePicWrap').toggle(!!profileUrl);
-
-                            $('#modalID').text(data.id);
-                            $('#infoModal .student-info-field').each(function() {
-                                const value = data[$(this).data('field')];
-                                if (value === null || value === undefined || value === '') {
-                                    $(this).text('-');
-                                } else if ($(this).data('type') === 'date') {
-                                    $(this).text(moment(value).format('DD-MM-YYYY'));
-                                } else {
-                                    $(this).text(value);
-                                }
-                            });
+                            fillStudentInfo(data);
 
 
 
@@ -816,6 +1137,12 @@
                 },
                 // dom:'lBfrtip',
                 // buttons: ["csv"],
+            });
+
+            $('#yajra-datatables').on('xhr.dt', function(e, settings, json) {
+                if (!json) return;
+                $('#admStatTotal').text(json.recordsTotal ?? '—');
+                $('#admStatFiltered').text(json.recordsFiltered ?? '—');
             });
         });
 

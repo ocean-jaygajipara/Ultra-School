@@ -156,6 +156,15 @@ class PermissionTableSeeder extends Seeder
                 'standard-edit',
                 'standard-delete',
             ],
+            'academic-year' => [
+                'academic-year-list',
+                'academic-year-create',
+                'academic-year-edit',
+                'academic-year-delete',
+            ],
+            'class-report' => [
+                'class-report-list',
+            ],
             'school' => [
                 'school-list',
                 'school-create',

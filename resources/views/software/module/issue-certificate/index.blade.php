@@ -53,24 +53,22 @@
                             <div class="col-md-3 col-sm-12 mb-3">
                                 <label class="form-label">Academic Year</label>
                                 @php
-                                    $defaultYear = $defaults['academic_year'] ?? '2026-2027';
+                                    $defaultYear = $defaults['academic_year'] ?? '';
                                     $yearList = $academicYears ?? [];
-                                    if (empty($yearList)) {
-                                        $currY = (int)date('Y');
-                                        $currStart = (date('n') >= 6) ? $currY : ($currY - 1);
-                                        for ($y = $currStart; $y >= $currStart - 15; $y--) {
-                                            $yearList[] = $y . '-' . ($y + 1);
-                                        }
-                                    }
                                 @endphp
                                 <select id="academic_year" name="academic_year" class="form-control select2-academic-year">
-                                    <option value="">Select or Type Academic Year</option>
+                                    <option value="">Select Academic Year</option>
                                     @foreach ($yearList as $yItem)
                                         <option value="{{ $yItem }}" {{ ($defaultYear == $yItem) ? 'selected' : '' }}>
                                             {{ $yItem }}
                                         </option>
                                     @endforeach
                                 </select>
+                                @if (empty($yearList))
+                                    <small class="text-danger d-block mt-1">
+                                        No academic year found. <a href="{{ route('academic-year.index') }}">Add in Academic Year Master</a>
+                                    </small>
+                                @endif
                             </div>
                             @endif
 
@@ -162,8 +160,7 @@
             });
 
             $('.select2-academic-year').select2({
-                placeholder: 'Select or Type Academic Year (Ex. 2021-2022)',
-                tags: true,
+                placeholder: 'Select Academic Year',
                 allowClear: true,
                 width: '100%'
             });
