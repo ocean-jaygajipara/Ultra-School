@@ -175,7 +175,6 @@ class AdmissionController extends Controller
                     'td_label' => 'Name'
                 ],
 
-                (object) ['data' => "course_button", 'name' => 'course_button', 'td_label' => 'Course'],
                 (object) ['data' => "view_button", 'name' => 'view_button', 'td_label' => 'Stu <i class="bx bx-info-circle"></i>'],
                 (object) ['data' => "attendance_button", 'name' => 'attendance_button', 'td_label' => 'Att.', 'className' => 'w-5 text-center'],
                 (object) ['data' => "test_button", 'name' => 'test_button', 'td_label' => 'Test', 'className' => 'w-5 text-center'],
