@@ -60,6 +60,26 @@
                             </datalist>
                         </div>
 
+                        <div class="col-md-3">
+                            <label for="filter_standard" class="form-label">Filter by Standard</label>
+                            <select id="filter_standard" class="form-select select2">
+                                <option value="">All Standards</option>
+                                @foreach ($standards ?? [] as $std)
+                                    <option value="{{ $std }}">{{ $std }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label for="filter_division" class="form-label">Filter by Division</label>
+                            <select id="filter_division" class="form-select select2">
+                                <option value="">All Divisions</option>
+                                @foreach ($divisions ?? [] as $div)
+                                    <option value="{{ $div }}">{{ $div }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <!-- Clear Filter Button -->
                         <div class="col-md-2">
                             <button type="button" title="Clear Filter" id="cilory_filter"
@@ -200,67 +220,89 @@
                             class="text-lowercase"></span>)</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="text-center my-3">
+                <div class="text-center my-3" id="profilePicWrap">
                     <img id="profilePic" src="" alt="Student Image" class="rounded-circle border border-2"
                         style="width: 120px; height: 120px; object-fit: cover;">
                 </div>
 
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th><b>Aadhaar Card No:</b> <span id="modalAadhar" class="text-lowercase"></span></th>
-                            <th><b>PEN No:</b> <span id="modalPen" class="text-uppercase"></span></th>
-                        </tr>
-                        <tr>
-                            <th><b>Surname:</b> <span id="modalSurname" class="text-uppercase"></span></th>
-                            <th><b>Name:</b> <span id="modalName" class="text-uppercase"></span></th>
-                            {{-- <th><b>Mother Name:</b> <span id="MotherName" class="text-uppercase"></span></th> --}}
-                        </tr>
+                @php
+                    $infoSections = [
+                        'School Details' => [
+                            'gr_no' => 'GR No.',
+                            'roll_no' => 'Roll No.',
+                            'admission_date' => 'Admission Date',
+                            'admission_std' => 'Admission Std',
+                            'current_std' => 'Current Std',
+                            'division' => 'Division',
+                            'stream' => 'Stream',
+                            'house' => 'House',
+                            'bus_route_village' => 'Bus Route Village',
+                        ],
+                        'Personal Details' => [
+                            'first_name' => 'Surname',
+                            'last_name' => 'Name',
+                            'father_name' => 'Father Name',
+                            'mother_name' => 'Mother Name',
+                            'date_of_birth' => 'Date of Birth',
+                            'birth_place' => 'Birth Place',
+                            'gender' => 'Gender',
+                            'religion' => 'Religion',
+                            'cast' => 'Cast',
+                            'category' => 'Category',
+                            'occupation' => 'Father Occupation',
+                            'mother_occupation' => 'Mother Occupation',
+                        ],
+                        'Contact Details' => [
+                            'mobile_no' => 'Mobile No.',
+                            'parent_mobile_no' => 'Parent Mobile No.',
+                            'other_mobile_no' => 'Other Mobile No.',
+                            'whatsapp_no' => 'WhatsApp No.',
+                            'temporary_address' => 'Temporary Address',
+                            'permanent_address' => 'Permanent Address',
+                        ],
+                        'Academic IDs' => [
+                            'aadhar_card_no' => 'Aadhaar Card No.',
+                            'pen_no' => 'PEN No.',
+                            'apaar_id_abc_id' => 'APAAR ID',
+                            'udise' => 'UDISE',
+                            'spid' => 'SPID',
+                        ],
+                        'Bank Details' => [
+                            'bank_name' => 'Bank Name',
+                            'bank_account_no' => 'Bank Account No.',
+                        ],
+                        'Previous / Last School Details' => [
+                            'last_school_name' => 'Last School Name',
+                            'old_gr_no' => 'Old GR No.',
+                            'passed_standard' => 'Passed Standard',
+                            'lc_no' => 'LC No.',
+                            'lc_date' => 'LC Date',
+                            'attendance' => 'Attendance',
+                        ],
+                    ];
+                    $dateFields = ['admission_date', 'date_of_birth', 'lc_date'];
+                @endphp
 
-                        <tr>
-                            <th><b>Father Name:</b> <span id="FatherName" class="text-uppercase"></span></th>
-                            <th colspan="2"><b>Mother Name:</b> <span id="MotherName" class="text-upercase"></span></th>
-                        </tr>
-                        <tr>
-                            <th><b>Date of Birth:</b> <span id="modalDOB" class="text-lowercase"></span></th>
-                            <th><b>Gender:</b> <span id="modalGender" class="text-lowercase"></span></th>
-                        </tr>
-                        <tr>
-                            <th><b>Cast:</b> <span id="modalcast" class="text-lowercase"></span></th>
-                            <th><b>Category:</b> <span id="modalCategory" class="text-lowercase"></span></th>
-                        </tr>
-                        <tr>
-                            <th><b>Father Occupation:</b> <span id="modalfatheroccupation" class="text-lowercase"></span></th>
-                            <th><b>Mother Occupation:</b> <span id="modalmotheroccupation" class="text-lowercase"></span></th>
-                        </tr>
-                        <tr>
-                            <th><b>Temporary Address:</b> <span id="modaltemporaryAddress" class="text-lowercase"></span>
-                            </th>
-                            <th><b>Permanent Address:</b> <span id="modalPermAddress" class="text-lowercase"></span></th>
-                        </tr>
-                        <tr>
-                            <th><b>Mobile No:</b> <span id="modalSelfMobile" class="text-lowercase"></span></th>
-                            <th><b>Parent Mobile No:</b> <span id="modalParentMobile" class="text-lowercase"></span></th>
-                        </tr>
-                        <tr>
-                            <th><b>Other Mobile No:</b> <span id="modalAddMobile" class="text-lowercase"></span></th>
-                            <th><b>Whatsapp No:</b> <span id="modalWpMobile" class="text-lowercase"></span></th>
-                        </tr>
-                        <tr>
-                            <th colspan="2"><b>Email Address:</b> <span id="modalEmail" class="text-lowercase"></span>
-                            </th>
-                        </tr>
-                        <tr>
-                            <th><b>APAAR ID:</b> <span id="ModalAPAARID" class="text-lowercase"></span></th>
-                            <th><b>UDISE No:</b> <span id="ModalUDISE" class="text-lowercase"></span></th>
-
-                        </tr>
-                        <tr>
-                            <th><b>Enrollment No:</b> <span id="ModalEnrollment" class="text-lowercase"></span></th>
-                            <th><b>SPID:</b> <span id="ModalSPID" class="text-lowercase"></span></th>
-                        </tr>
-                    </thead>
-                </table>
+                <div class="px-3 pb-3">
+                    @foreach ($infoSections as $sectionTitle => $fields)
+                        <h6 class="text-primary fw-bold mt-3 mb-2">{{ $sectionTitle }}</h6>
+                        <table class="table table-bordered mb-0">
+                            <tbody>
+                                @foreach (array_chunk($fields, 2, true) as $pair)
+                                    <tr>
+                                        @foreach ($pair as $field => $label)
+                                            <td class="w-50" @if (count($pair) === 1) colspan="2" @endif>
+                                                <b>{{ $label }}:</b>
+                                                <span class="student-info-field" data-field="{{ $field }}"
+                                                    @if (in_array($field, $dateFields)) data-type="date" @endif></span>
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endforeach
+                </div>
 
 
 
@@ -495,45 +537,19 @@
                                 "{{ asset('') }}" + data.profile_pic :
                                 '';
                             $('#profilePic').attr('src', profileUrl);
-
+                            $('#profilePicWrap').toggle(!!profileUrl);
 
                             $('#modalID').text(data.id);
-                            if (data.date_of_birth) {
-                                /*
-                                let date = new Date(data.date_of_birth);
-                                let day = ('0' + date.getDate()).slice(-2);
-                                let month = ('0' + (date.getMonth() + 1)).slice(-2);
-                                let year = date.getFullYear();
-                                $('#modalDOB').text(`${day} ${month} ${year}`);
-                                */
-
-                                $('#modalDOB').text(moment(data?.date_of_birth).format('DD-MM-YYYY'));
-                            } else {
-                                $('#modalDOB').text('-');
-                            }
-                            $('#modalAadhar').text(data.aadhar_card_no ?? '-');
-                            $('#modalPen').text(data.pen_no ?? '-');
-                            $('#modalSurname').text(data.first_name?.toUpperCase() ?? '-');
-                            $('#modalName').text(data.last_name?.toUpperCase() ?? '-');
-
-                            $('#FatherName').text(data.father_name ?? '-');
-                            $('#MotherName').text(data.mother_name ?? '-');
-                            $('#modalGender').text(data.gender ?? '-');
-                            $('#modalcast').text(data.cast ?? '-');
-                            $('#modalCategory').text(data.category ?? '-');
-                            $('#modalfatheroccupation').text(data.occupation ?? '-');
-                            $('#modalmotheroccupation').text(data.mother_occupation ?? '-');
-                            $('#modaltemporaryAddress').text(data.temporary_address ?? '-');
-                            $('#modalPermAddress').text(data.permanent_address ?? '-');
-                            $('#modalSelfMobile').text(data.mobile_no ?? '-');
-                            $('#modalParentMobile').text(data.parent_mobile_no ?? '-');
-                            $('#modalAddMobile').text(data.other_mobile_no ?? '-');
-                            $('#modalWpMobile').text(data.whatsapp_no ?? '-');
-                            $('#modalEmail').text(data.email_address ?? '-');
-                            $('#ModalAPAARID').text(data.apaar_id_abc_id ?? '-');
-                            $('#ModalEnrollment').text(data.enrolment_no ?? '-');
-                            $('#ModalSPID').text(data.spid ?? '-');
-                            $('#ModalUDISE').text(data.udise ?? '-');
+                            $('#infoModal .student-info-field').each(function() {
+                                const value = data[$(this).data('field')];
+                                if (value === null || value === undefined || value === '') {
+                                    $(this).text('-');
+                                } else if ($(this).data('type') === 'date') {
+                                    $(this).text(moment(value).format('DD-MM-YYYY'));
+                                } else {
+                                    $(this).text(value);
+                                }
+                            });
 
 
 
@@ -777,9 +793,7 @@
                 searching: false,
                 processing: true,
                 serverSide: true,
-                order: [
-                    [1, 'desc']
-                ],
+                order: [],
                 ajax: {
                     url: "{{ route($route . '.index') }}",
                     beforeSend: function(request) {
@@ -792,6 +806,8 @@
                             value: $('input[name="search"]').val(),
                             regex: false
                         };
+                        data.filter_standard = $('#filter_standard').val();
+                        data.filter_division = $('#filter_division').val();
                     },
                 },
                 columns: {!! json_encode($columns) !!},
@@ -819,6 +835,7 @@
 
         $("#cilory_filter").click(function() {
             $('.search').val('');
+            $('#filter_standard, #filter_division').val('').trigger('change.select2');
             dtable.draw();
         });
 
@@ -1206,6 +1223,12 @@
                     const searchValue = $('#yajra-datatables_filter input[type="search"]').val();
                     if (searchValue) {
                         params.append('search', searchValue);
+                    }
+                    if ($('#filter_standard').val()) {
+                        params.append('filter_standard', $('#filter_standard').val());
+                    }
+                    if ($('#filter_division').val()) {
+                        params.append('filter_division', $('#filter_division').val());
                     }
                 }
 

@@ -3,11 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Bonafide Certificate</title>
+    <title>Bonafide Certificate - Ultra English School</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
     <style>
         @page {
             size: A4 portrait;
-            margin: 12mm 15mm;
+            margin: 8mm 10mm;
         }
 
         * {
@@ -18,203 +21,257 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Times New Roman', Times, serif;
+            background: #eef2f6;
             color: #000;
-            background: #fff;
-            font-size: 15px;
-            line-height: 1.6;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .certificate {
+
+        /* Certificate Container */
+        .certificate-container {
             width: 100%;
-            max-width: 780px;
-            margin: 10px auto;
-            padding: 18px 24px 26px;
-            border: 1px solid #000;
-            min-height: 980px;
+            max-width: 820px;
+            margin: 24px auto 40px;
+            background: #fff;
+            padding: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border-radius: 4px;
         }
 
-        .report-header {
-            margin-bottom: 8px;
+        .certificate-inner {
+            border: 2.5px solid #000;
+            padding: 24px 34px 28px;
+            background: #fff;
         }
 
-        .report-header-top {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        /* Default Font Palette: Attractive Classic Serif (Cinzel + Lora) */
+        .certificate-container.font-attractive,
+        .certificate-container {
+            font-family: 'Lora', 'Merriweather', Georgia, 'Times New Roman', serif;
         }
 
-        .report-logo {
-            flex: 0 0 95px;
+        .certificate-container.font-attractive .brand-ultra,
+        .certificate-container.font-attractive .brand-school,
+        .certificate-container.font-attractive .header-place,
+        .certificate-container.font-attractive .title-box {
+            font-family: 'Cinzel', 'Playfair Display', 'Merriweather', Georgia, serif;
         }
 
-        .report-logo img {
-            width: 95px;
-            height: 95px;
-            object-fit: contain;
-            display: block;
+        .certificate-container.font-attractive .cert-body,
+        .certificate-container.font-attractive .student-name-line,
+        .certificate-container.font-attractive .dob-words-line,
+        .certificate-container.font-attractive .footer-section {
+            font-family: 'Lora', 'Merriweather', Georgia, 'Times New Roman', serif;
         }
 
-        .report-header-text {
-            flex: 1;
+
+        /* Top Header Box */
+        .header-box-wrap {
             text-align: center;
-            font-family: Arial, Helvetica, sans-serif;
-            line-height: 1.35;
+            margin: 2px 0 6px;
         }
 
-        .report-header-text .affiliation-line {
-            font-size: 12px;
-            font-weight: 700;
+        .header-box {
+            display: inline-block;
+            border: 2px solid #555;
+            box-shadow: 4px 4px 0px #888;
+            padding: 6px 30px 8px;
+            background: #fff;
         }
 
-        .report-header-text .college-name {
-            font-size: 24px;
+        .brand-ultra {
+            color: #002b7a;
+            font-size: 27px;
             font-weight: 800;
-            margin: 4px 0;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-right: 6px;
         }
 
-        .report-header-text .managed-line,
-        .report-header-text .address-line {
-            font-size: 13px;
-            font-weight: 700;
+        .brand-school {
+            color: #002b7a;
+            font-size: 27px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            display: inline-block;
         }
 
-        .report-contact-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin-top: 8px;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .report-contact-row a {
-            color: #1155cc;
-            text-decoration: underline;
-        }
-
-        .contact-separator {
-            color: #000;
-            font-weight: 400;
-        }
-
-        .header-center {
+        .header-place {
             text-align: center;
-            font-size: 13px;
-            line-height: 1.45;
+            color: #002b7a;
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 3.5px;
+            margin: 6px 0 12px;
         }
 
-        .header-center .college-name {
-            font-size: 21px;
-            font-weight: 700;
-            margin: 3px 0;
-        }
-
-        .header-contact-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .cert-divider {
+            border: none;
+            border-top: 2px solid #000;
+            margin: 0 0 24px;
             width: 100%;
-            font-size: 13px;
+        }
+
+        /* Title Box */
+        .title-box-wrap {
+            text-align: center;
+            margin-bottom: 26px;
+        }
+
+        .title-box {
+            display: inline-block;
+            border: 2px solid #555;
+            box-shadow: 4px 4px 0px #888;
+            padding: 7px 46px 8px;
+            color: #0033cc;
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: 2.5px;
+            background: #fff;
+        }
+
+        /* Certificate Body */
+        .cert-body {
+            font-size: 19.5px;
+            line-height: 2.38;
+            color: #111;
             margin-top: 4px;
         }
 
-        .header-divider {
-            border: none;
-            border-top: 3px solid #000;
-            margin: 8px 0 0;
-        }
-
-        .meta-row {
-            position: relative;
-            min-height: 46px;
-            margin-bottom: 6px;
-        }
-
-        .header-meta-box {
-            position: absolute;
-            top: 6px;
-            right: 0;
-            padding: 5px 14px 6px;
-            font-size: 13px;
-            line-height: 1.65;
-            min-width: 190px;
-        }
-
-        .cert-title {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 700;
-            margin: 40px 0 50px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .cert-body {
-            font-size: 18px;
-            line-height: 2;
-            text-align: justify;
-            margin: 30px 0 80px;
-            text-indent: 2.5em;
-        }
-
-        .dynamic-value {
-            display: inline;
-            border-bottom: 1px solid #000;
-            padding: 0 2px;
-            line-height: inherit;
-            vertical-align: baseline;
-        }
-
-        .footer-section {
-            margin-top: 60px;
-            font-size: 17px;
-        }
-
-        .footer-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .footer-signature-space {
-            min-height: 52px;
-            margin-top: 12px;
-        }
-
-        .footer-signatory-line {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 40px;
-            margin-top: 8px;
-        }
-
-        .principal-label {
-            font-weight: 700;
-            font-size: 17px;
-            white-space: nowrap;
-        }
-
-        .college-stamp-name {
-            font-size: 15px;
+        .certify-intro-text {
+            font-style: italic;
             font-weight: 600;
-            line-height: 1.4;
+            color: #222;
+            margin-right: 2px;
+        }
+
+        .student-name-val {
+            font-weight: 800;
+            font-size: 21.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            padding-bottom: 1px;
+            letter-spacing: 1px;
+            color: #000;
+            display: inline;
+            -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+        }
+
+        .cert-text-justified {
+            font-size: 19.5px;
+            line-height: 2.38;
+            text-align: justify;
+            text-justify: inter-word;
+            color: #111;
+            margin-bottom: 12px;
+            word-spacing: 0.5px;
+        }
+
+        .val-underline {
+            display: inline;
+            border-bottom: 2px solid #000;
+            padding: 0 4px 1px;
+            line-height: inherit;
+            font-weight: 700;
+            color: #000;
+            -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+        }
+
+        .text-blue {
+            color: #0033cc;
+            font-weight: 800;
+        }
+
+        .dob-words-val {
+            border-bottom: 2px solid #000;
+            padding-bottom: 1px;
+            font-weight: 700;
+            font-size: 19.5px;
+            color: #000;
+            display: inline;
+            -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+        }
+
+        /* Footer Section */
+        .footer-section {
+            margin-top: 45px;
+            width: 100%;
+        }
+
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .footer-table td {
+            vertical-align: bottom;
+            padding: 0;
+        }
+
+        .footer-left {
+            width: 36%;
+            font-size: 18px;
+            line-height: 2.1;
+            font-weight: 700;
+        }
+
+        .footer-photo-wrap {
+            width: 28%;
+            text-align: center;
+        }
+
+        .photo-box {
+            width: 120px;
+            height: 150px;
+            border: 2px solid #000;
+            margin: 0 auto;
+            background: #fff;
+            text-align: center;
+            overflow: hidden;
+            line-height: 150px;
+        }
+
+        .photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            vertical-align: middle;
+        }
+
+        .footer-right {
+            width: 36%;
             text-align: right;
+            font-size: 19.5px;
+            font-weight: 800;
+            padding-bottom: 6px;
         }
 
         @media print {
-            .no-print {
-                display: none;
+            html,
+            body {
+                background: #fff;
             }
 
-            .certificate {
+            .no-print {
+                display: none !important;
+            }
+
+            .certificate-container {
+                box-shadow: none;
                 margin: 0;
-                max-width: none;
+                padding: 0;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .certificate-inner {
+                border: 2.5px solid #000;
+                padding: 24px 30px 28px;
             }
         }
     </style>
@@ -223,79 +280,221 @@
 <body>
     @php
         $certificateData = $certificateData ?? [];
+
+        // 1. Student Name
         $studentName = trim(
             ($admission->first_name ?? '') . ' ' .
             ($admission->last_name ?? '') . ' ' .
             ($admission->father_name ?? '')
         );
-        $studentName = mb_strtoupper($studentName);
-        $isFemale = strtolower(trim($admission->gender ?? '')) === 'female';
-        $nameTitle = $isFemale ? 'Miss' : 'Mr.';
-        $issueDate = $certificateData['issue_date'] ?? now()->format('j-m-Y');
-        $courseName = trim($courseRegistration?->course?->course_name ?? '');
+        $studentName = mb_strtoupper($studentName ?: '________________________________________');
 
-        $dojRaw = $courseRegistration?->created_at ?? $courseRegistration?->date ?? null;
-        $dojDate = $dojRaw ? \Carbon\Carbon::parse($dojRaw)->startOfDay() : null;
-        $todayDate = now()->startOfDay();
+        // 2. Gender pronouns
+        $gender = strtolower(trim($admission->gender ?? ''));
+        $isFemale = in_array($gender, ['female', 'f', 'girl'], true);
+        $hisHer = $isFemale ? 'Her' : 'His';
+        $heShe = $isFemale ? 'she' : 'he';
 
-        $semester = 1;
-        if ($dojDate) {
-            $monthsFromDoj = $dojDate->diffInMonths($todayDate);
-            $semester = intdiv($monthsFromDoj, 6) + 1;
+        // 3. Issue Date
+        $issueDate = $certificateData['issue_date'] ?? now()->format('d-m-Y');
+
+        // 4. Standard with word formatting e.g. 6th (Sixth ), 1st (First )
+        $rawStd = trim($certificateData['standard'] ?? $admission->current_std ?? $admission->admission_std ?? $courseRegistration?->class?->class_name ?? $courseRegistration?->course?->course_name ?? '');
+
+        $formatStandardWithWords = function (?string $std) {
+            if (empty($std)) {
+                return '________';
+            }
+            $s = trim($std);
+            if (preg_match('/\(.*\)/', $s)) {
+                return $s;
+            }
+            $map = [
+                '1' => '1st (First )',
+                '1st' => '1st (First )',
+                'std 1' => '1st (First )',
+                '2' => '2nd (Second )',
+                '2nd' => '2nd (Second )',
+                'std 2' => '2nd (Second )',
+                '3' => '3rd (Third )',
+                '3rd' => '3rd (Third )',
+                'std 3' => '3rd (Third )',
+                '4' => '4th (Fourth )',
+                '4th' => '4th (Fourth )',
+                'std 4' => '4th (Fourth )',
+                '5' => '5th (Fifth )',
+                '5th' => '5th (Fifth )',
+                'std 5' => '5th (Fifth )',
+                '6' => '6th (Sixth )',
+                '6th' => '6th (Sixth )',
+                'std 6' => '6th (Sixth )',
+                '7' => '7th (Seventh )',
+                '7th' => '7th (Seventh )',
+                'std 7' => '7th (Seventh )',
+                '8' => '8th (Eighth )',
+                '8th' => '8th (Eighth )',
+                'std 8' => '8th (Eighth )',
+                '9' => '9th (Ninth )',
+                '9th' => '9th (Ninth )',
+                'std 9' => '9th (Ninth )',
+                '10' => '10th (Tenth )',
+                '10th' => '10th (Tenth )',
+                'std 10' => '10th (Tenth )',
+                '11' => '11th (Eleventh )',
+                '11th' => '11th (Eleventh )',
+                'std 11' => '11th (Eleventh )',
+                '12' => '12th (Twelfth )',
+                '12th' => '12th (Twelfth )',
+                'std 12' => '12th (Twelfth )',
+            ];
+            $lower = strtolower($s);
+            if (isset($map[$lower])) {
+                return $map[$lower];
+            }
+            if (preg_match('/(\d+)/', $s, $m) && isset($map[$m[1]])) {
+                return $map[$m[1]];
+            }
+            return $s;
+        };
+
+        $standardDisplay = $formatStandardWithWords($rawStd);
+
+        // 5. Academic Year (e.g. 2021-2022 or 2026-2027)
+        $academicYear = trim((string)($certificateData['academic_year'] ?? ''));
+        if (empty($academicYear)) {
+            $today = now();
+            $currY = (int)$today->format('Y');
+            $academicYear = ($today->month >= 6) ? $currY . '-' . ($currY + 1) : ($currY - 1) . '-' . $currY;
+        } elseif (preg_match('/^\d{4}$/', $academicYear)) {
+            $y = (int) $academicYear;
+            $academicYear = $y . '-' . ($y + 1);
         }
 
-        $academicYear = $certificateData['academic_year'] ?? ($dojDate ? $dojDate->format('Y') : ($courseRegistration?->date
-            ? \Carbon\Carbon::parse($courseRegistration->date)->format('Y')
-            : now()->format('Y')));
+        // 6. School General Register No. (e.g. 1,900 or 2,502)
+        $rawGrNo = trim((string)($admission->gr_no ?? $admission->old_gr_no ?? ''));
+        if (is_numeric($rawGrNo)) {
+            $grNoDisplay = number_format((float)$rawGrNo);
+        } else {
+            $grNoDisplay = $rawGrNo ?: '________';
+        }
 
-        $periodFrom = $certificateData['period_from'] ?? '';
-        $periodTo = $certificateData['period_to'] ?? '';
+        // 7. Date of birth formatting and words conversion
+        $dob = $admission->date_of_birth ?? null;
+        $dobFormatted = !empty($dob) ? \Carbon\Carbon::parse($dob)->format('d-m-Y') : '__________';
+
+        $numberToWords = function(int $n) use (&$numberToWords): string {
+            $ones = [
+                "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+                "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"
+            ];
+            $tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+            if ($n === 0) return "";
+            if ($n < 20) return $ones[$n];
+            if ($n < 100) return $tens[intdiv($n, 10)] . ($n % 10 !== 0 ? " " . $ones[$n % 10] : "");
+            if ($n < 1000) return $ones[intdiv($n, 100)] . " Hundred" . ($n % 100 !== 0 ? " " . $numberToWords($n % 100) : "");
+            if ($n < 100000) return $numberToWords(intdiv($n, 1000)) . " Thousand" . ($n % 1000 !== 0 ? " " . $numberToWords($n % 1000) : "");
+            return (string)$n;
+        };
+
+        $dobToWords = function(?string $dobDate) use ($numberToWords): string {
+            if (empty($dobDate)) {
+                return '________________________________________';
+            }
+            try {
+                $d = \Carbon\Carbon::parse($dobDate);
+            } catch (\Exception $e) {
+                return '________________________________________';
+            }
+
+            $dayWords = [
+                1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five',
+                6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten',
+                11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen', 15 => 'Fifteen',
+                16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen', 19 => 'Nineteen', 20 => 'Twenty',
+                21 => 'Twenty One', 22 => 'Twenty Two', 23 => 'Twenty Three', 24 => 'Twenty Four', 25 => 'Twenty Five',
+                26 => 'Twenty Six', 27 => 'Twenty Seven', 28 => 'Twenty Eight', 29 => 'Twenty Nine', 30 => 'Thirty',
+                31 => 'Thirty One'
+            ];
+
+            $dayText = $dayWords[$d->day] ?? $numberToWords($d->day);
+            $monthText = $d->format('F');
+            $yearText = $numberToWords($d->year);
+
+            return trim($dayText . '  ' . $monthText . ', ' . $yearText);
+        };
+
+        $dobInWords = $dobToWords($dob);
+
+        // 8. Caste & Religion (e.g. Hindu LOHANA, Hindu KOLI (GHEDIYA))
+        $religion = trim($admission->religion ?? '');
+        $caste = trim($admission->cast ?? '');
+        if ($religion && !str_contains(strtolower($caste), strtolower($religion))) {
+            $casteDisplay = trim($religion . ' ' . $caste);
+        } else {
+            $casteDisplay = $caste ?: ($religion ?: '________');
+        }
+
+        // 9. Photo path check
+        $photoPath = null;
+        if (!empty($admission->profile_pic) && file_exists(public_path($admission->profile_pic))) {
+            $photoPath = asset($admission->profile_pic);
+        }
     @endphp
 
-    <div class="certificate">
-        @include('software.module.admission.partials.certificate-report-header')
+    <div class="certificate-container font-attractive" id="certContainer">
+        <div class="certificate-inner">
+            <div class="top-section">
+                {{-- Header Box --}}
+                <div class="header-box-wrap">
+                    <div class="header-box">
+                        <span class="brand-ultra">ULTRA</span><span class="brand-school">ENGLISH SCHOOL-KESHOD</span>
+                    </div>
+                </div>
 
-        <div class="meta-row">
-            <div class="header-meta-box">
-                <div>College Code – 3109005</div>
-                <div>Date - <span class="dynamic-value">{{ $issueDate }}</span></div>
+                {{-- Location Sub-heading --}}
+                <div class="header-place">KESHOD</div>
+
+                {{-- Horizontal Divider --}}
+                <hr class="cert-divider">
+
+                {{-- Certificate Title Box --}}
+                <div class="title-box-wrap">
+                    <div class="title-box">BONAFIDE CERTIFICATE</div>
+                </div>
+
+                {{-- Certificate Body --}}
+                <div class="cert-body">
+                    <div class="cert-text-justified">
+                        <span class="certify-intro-text">This is to certify that,</span> &nbsp;<span class="student-name-val">{{ $studentName }}</span> &nbsp;was a bonafide student of this institution and was studying in Standard &nbsp;<span class="val-underline">{{ $standardDisplay }}</span>&nbsp;&nbsp; during year &nbsp;<span class="val-underline">{{ $academicYear }}</span>. According to School General Register No. &nbsp;<span class="val-underline text-blue">&nbsp;{{ $grNoDisplay }}&nbsp;</span> {{ $hisHer }} Birthdate is &nbsp;&nbsp;<span class="val-underline">{{ $dobFormatted }}</span>&nbsp;&nbsp; and In Words &nbsp;<span class="dob-words-val">{{ $dobInWords }}</span>.&nbsp; And {{ $hisHer }} Caste &nbsp;&nbsp;<span class="val-underline">{{ $casteDisplay }}</span>&nbsp;&nbsp; is registered. According to our knowledge and belief {{ $heShe }} bears good conduct and moral character.
+                    </div>
+                </div>
             </div>
-        </div>
-        <br>
-        <br>
-       
-      
 
-        <div class="cert-title">BONAFIED CERTIFICATE</div>
-
-        <div class="cert-body">
-            This is to certify that {{ $nameTitle }}.
-            <span class="dynamic-value">{{ $studentName ?: '____________________' }}</span>
-            is the student of our institute. He / She is studying in
-            <span class="dynamic-value">{{ $courseName ?: '________' }}</span>
-            Semester:
-            <span class="dynamic-value">{{ $semester ?: '________' }}</span>
-            for the academic year
-            <span class="dynamic-value">{{ $academicYear ?: '________' }}</span>
-            regarding this
-            <span class="dynamic-value">{{ $periodFrom ?: '________' }}</span>
-            to
-            <span class="dynamic-value">{{ $periodTo ?: '________' }}</span>
-            Period and is our bonafied student.
-        </div>
-
-        <div class="footer-section">
-            <div class="footer-row">
-                <div>Thanking you,</div>
-                <div>Your faithfully,</div>
-            </div>
-            <div class="footer-signature-space"></div>
-            <div class="footer-signatory-line">
-                <div class="principal-label">Principal</div>
-                <div class="college-stamp-name">Shree Patel Vidhya Mandir Science College</div>
+            {{-- Footer Section --}}
+            <div class="footer-section">
+                <table class="footer-table">
+                    <tr>
+                        <td class="footer-left">
+                            <div>Date &nbsp;: <span class="text-blue">{{ $issueDate }}</span></div>
+                            <div>Place : <span class="text-blue">KESHOD</span></div>
+                        </td>
+                        <td class="footer-photo-wrap">
+                            <div class="photo-box">
+                                @if($photoPath)
+                                    <img src="{{ $photoPath }}" alt="Student Photo">
+                                @endif
+                            </div>
+                        </td>
+                        <td class="footer-right">
+                            Principal
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>
+
 </body>
 
 </html>

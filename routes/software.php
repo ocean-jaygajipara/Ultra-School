@@ -38,6 +38,7 @@ use App\Http\Controllers\admin\GoogleDriveController;
 use App\Http\Controllers\admin\master\IssuedBookController;
 use App\Http\Controllers\admin\master\MasterBusRouteVillageController;
 use App\Http\Controllers\admin\master\MasterCategoryController;
+use App\Http\Controllers\admin\master\MasterStandardController;
 use App\Http\Controllers\admin\master\MasterClassController;
 use App\Http\Controllers\admin\master\MasterDepartmentController;
 use App\Http\Controllers\admin\master\MasterDivisionController;
@@ -160,6 +161,8 @@ Route::post('admission-education-detail-delete', [AdmissionController::class, 'e
 // Route::post('admission-create-google-drive-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-google-drive-folder');
 // Route::post('admission-google-drive-rename-folder', [AdmissionController::class, 'renameFolder'])->name('admission.google-drive-rename-folder');
 Route::post('admission/create-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-folder');
+Route::get('admission/{id}/roll-number', [AdmissionController::class, 'rollNumber'])->name('admission.roll-number');
+Route::post('admission/{id}/roll-number', [AdmissionController::class, 'rollNumberStore'])->name('admission.roll-number.store');
 Route::get('admission/import', [AdmissionController::class, 'import'])->name('admission.import');
 Route::post('admission/import-store', [AdmissionController::class, 'importStore'])->name('admission.import-store');
 
@@ -249,6 +252,14 @@ Route::resource('/category', MasterCategoryController::class);
 Route::match(['get', 'post'], 'category/restore/{id}', [MasterCategoryController::class, 'restore'])->name('category.restore');
 Route::match(['get', 'post'], 'category-update-status', [MasterCategoryController::class, 'status_update'])->name('category.status-update');
 Route::delete('/category/permanent-delete/{id}', [MasterCategoryController::class, 'permanentDelete'])->name('category.permanent-delete');
+
+/** Master Standard Modules */
+Route::get('standard/export-excel', [MasterStandardController::class, 'exportExcel'])->name('standard.export-excel');
+Route::get('standard/print', [MasterStandardController::class, 'printView'])->name('standard.print');
+Route::resource('/standard', MasterStandardController::class);
+Route::match(['get', 'post'], 'standard/restore/{id}', [MasterStandardController::class, 'restore'])->name('standard.restore');
+Route::match(['get', 'post'], 'standard-update-status', [MasterStandardController::class, 'status_update'])->name('standard.status-update');
+Route::delete('/standard/permanent-delete/{id}', [MasterStandardController::class, 'permanentDelete'])->name('standard.permanent-delete');
 
 
 /** Master House Modules */

@@ -341,10 +341,10 @@
         </div>
 
         <div class="info-section">
-            <label>Caste:</label>
-            @foreach (['Baxipanch', 'SC', 'ST', 'Handicaped', 'Vichar Vimukti jati', 'ex- serviceman', 'general', 'low-profession', 'minority'] as $castOption)
+            <label>Category:</label>
+            @foreach (['Baxipanch', 'SC', 'ST', 'Handicaped', 'Vichar Vimukti jati', 'ex- serviceman', 'general', 'low-profession', 'minority'] as $catOption)
                 <label class="checkbox-label"><input type="checkbox"
-                        {{ (strcasecmp($admission->cast ?? '', $castOption) === 0) ? 'checked' : '' }}>{{ $castOption }}</label>
+                        {{ (strcasecmp($admission->category ?? '', $catOption) === 0) ? 'checked' : '' }}>{{ $catOption }}</label>
             @endforeach
         </div>
 
@@ -355,20 +355,6 @@
             <span class="underline-input">{{ $admission->house ?? '-' }}</span>
             <label style="margin-left: 15px;">Stream :</label>
             <span class="underline-input">{{ $admission->stream ?? '-' }}</span>
-        </div>
-
-        <div class="info-section">
-            <label>Category:</label>
-            @php
-                $viewCategories = \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->pluck('name')->toArray();
-                if (!empty($admission->category) && !in_array($admission->category, $viewCategories)) {
-                    $viewCategories[] = $admission->category;
-                }
-            @endphp
-            @foreach ($viewCategories as $catOption)
-                <label class="checkbox-label"><input type="checkbox"
-                        {{ (strcasecmp($admission->category ?? '', $catOption) === 0) ? 'checked' : '' }}>{{ $catOption }}</label>
-            @endforeach
         </div>
 
         @if(!empty($admission->bank_name) || !empty($admission->bank_account_no))

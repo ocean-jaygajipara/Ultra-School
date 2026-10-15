@@ -91,8 +91,6 @@ class IssueCertificateController extends Controller
             'student_id' => 'required|exists:admission,id',
             'issue_date' => 'nullable|string',
             'academic_year' => 'nullable|string',
-            'semester_start' => 'nullable|string',
-            'semester_end' => 'nullable|string',
             'recommender_type' => 'nullable|string|in:principal,faculty',
             'faculty_id' => 'nullable|exists:users,id',
             'recommender_name' => 'nullable|string|max:255',
@@ -145,8 +143,6 @@ class IssueCertificateController extends Controller
                 'student_name' => $studentName,
                 'issue_date' => $validated['issue_date'] ?? null,
                 'academic_year' => $validated['academic_year'] ?? null,
-                'semester_start' => $validated['semester_start'] ?? null,
-                'semester_end' => $validated['semester_end'] ?? null,
                 'created_by' => optional(auth()->user())->id,
             ]);
         }
@@ -185,6 +181,7 @@ class IssueCertificateController extends Controller
         $students = $this->getStudentOptions();
         $defaults = $this->getCertificateDefaults();
         $histories = $this->getHistories($type);
+        $academicYears = $this->getAcademicYears();
         
         $faculties = [];
         if ($type === self::TYPE_LETTER_RECOMMENDATION) {
@@ -196,13 +193,19 @@ class IssueCertificateController extends Controller
                 ->get();
         }
 
-        return view($modules['folder_path'] . '.index', compact('modules', 'students', 'defaults', 'histories', 'faculties'));
+        return view($modules['folder_path'] . '.index', compact('modules', 'students', 'defaults', 'histories', 'faculties', 'academicYears'));
     }
 
     private function getStudentOptions()
     {
-        return Admission::whereHas('courses', function ($q) {
-                $q->whereNotIn('status', ['Cancel', 'cancel']);
+        return Admission::query()
+            ->when(Schema::hasTable('cource_registration') && \App\Models\CourceRegistration::exists(), function ($q) {
+                $q->whereHas('courses', function ($sq) {
+                    $sq->whereNotIn('status', ['Cancel', 'cancel']);
+                });
+            })
+            ->where(function ($q) {
+                $q->whereNull('status')->orWhereNotIn('status', ['Cancel', 'cancel', 'rejected']);
             })
             ->orderByDesc('id')
             ->get()
@@ -213,9 +216,18 @@ class IssueCertificateController extends Controller
                     ($admission->father_name ?? '')
                 );
 
+                $extra = [];
+                if (!empty($admission->gr_no)) {
+                    $extra[] = 'GR: ' . $admission->gr_no;
+                }
+                if (!empty($admission->current_std)) {
+                    $extra[] = 'Std: ' . $admission->current_std;
+                }
+                $extraInfo = !empty($extra) ? ' (' . implode(', ', $extra) . ')' : '';
+
                 return [
                     'id' => $admission->id,
-                    'label' => trim($admission->id . ' - ' . $name),
+                    'label' => trim($name . $extraInfo),
                 ];
             })
             ->values();
@@ -224,11 +236,26 @@ class IssueCertificateController extends Controller
     private function getCertificateDefaults(): array
     {
         $today = now();
+        $currYear = (int)$today->format('Y');
+        $academicYear = ($today->month >= 6) ? $currYear . '-' . ($currYear + 1) : ($currYear - 1) . '-' . $currYear;
 
         return [
             'issue_date' => $today->format('Y-m-d'),
-            'academic_year' => $today->format('Y'),
+            'academic_year' => $academicYear,
         ];
+    }
+
+    private function getAcademicYears(): array
+    {
+        $today = now();
+        $currYear = (int)$today->format('Y');
+        $currentAcademicStartYear = ($today->month >= 6) ? $currYear : ($currYear - 1);
+
+        $years = [];
+        for ($y = $currentAcademicStartYear; $y >= $currentAcademicStartYear - 15; $y--) {
+            $years[] = $y . '-' . ($y + 1);
+        }
+        return $years;
     }
 
     private function getHistories(string $type)
@@ -273,8 +300,6 @@ class IssueCertificateController extends Controller
         $params = http_build_query(array_filter([
             'issue_date' => $history->issue_date,
             'academic_year' => $history->academic_year ?? null,
-            'semester_start' => $history->semester_start ?? null,
-            'semester_end' => $history->semester_end ?? null,
             'recommender_name' => $history->recommender_name ?? null,
             'recommender_designation' => $history->recommender_designation ?? null,
             'recommender_type' => $history->recommender_type ?? null,
@@ -289,8 +314,6 @@ class IssueCertificateController extends Controller
             'student_name' => $history->student_name ?: '-',
             'issue_date' => $this->formatDisplayDate($history->issue_date),
             'academic_year' => $history->academic_year ?? '-',
-            'semester_start' => $history->semester_start ?? '-',
-            'semester_end' => $history->semester_end ?? '-',
             'generated_at' => $history->created_at
                 ? $history->created_at->format('d-m-Y h:i A')
                 : '-',

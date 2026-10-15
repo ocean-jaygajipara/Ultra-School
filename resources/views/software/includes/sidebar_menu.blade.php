@@ -498,13 +498,14 @@
             'department-list',
             'division-list',
             'category-list',
+            'standard-list',
             'school-list',
             'house-list',
             'religion-list',
             'bus-route-village-list'
         ])
         <li
-            class="menu-item {{ in_array($sidebar_active, ['course', 'shift', 'class', 'syllabus', 'batch', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'division', 'category', 'school', 'house', 'religion', 'bus-route-village']) ? 'active open' : '' }}">
+            class="menu-item {{ in_array($sidebar_active, ['course', 'shift', 'class', 'syllabus', 'batch', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'division', 'category', 'standard', 'school', 'house', 'religion', 'bus-route-village']) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-certificate me-2"></i>
                 <div data-i18n="Course Masters">Course Masters</div>
@@ -569,6 +570,14 @@
                 <li class="menu-item {{ $sidebar_active == 'category' ? 'active' : '' }}">
                     <a href="{{ route('category.index') }}" class="menu-link">
                         <div data-i18n="Category Master">Category Master</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
+                @directCanAny(['standard-list', 'standard-create', 'standard-edit', 'standard-delete'])
+                <li class="menu-item {{ $sidebar_active == 'standard' ? 'active' : '' }}">
+                    <a href="{{ route('standard.index') }}" class="menu-link">
+                        <div data-i18n="Standard Master">Standard Master</div>
                     </a>
                 </li>
                 @enddirectCanAny

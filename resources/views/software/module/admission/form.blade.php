@@ -143,10 +143,9 @@
                             </div>
 
                             @php
-                                $activeSchoolCode = \App\Services\SchoolDatabaseManager::getActiveSchoolCode();
-                                $classList = isset($schoolStandards) && !empty($schoolStandards) 
-                                    ? $schoolStandards 
-                                    : \App\Services\SchoolDatabaseManager::getSchoolStandards($activeSchoolCode);
+                                $classList = isset($schoolStandards)
+                                    ? $schoolStandards
+                                    : \App\Models\Master\MasterStandard::where('status', 'active')->orderBy('id')->pluck('name')->filter()->values()->all();
                                 $selectedAdmStd = old('admission_std', $edit->admission_std ?? '');
                                 $selectedCurrentStd = old('current_std', $edit->current_std ?? '');
                             @endphp
@@ -424,47 +423,47 @@
                                 </div>
                             </div>
 
-                            {{-- Category (Dropdown from Category Master) --}}
+                            {{-- Cast (Dropdown from Category Master) --}}
                             <div class="col-md-4 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <label class="form-label">Category <span class="text-danger">*</span></label>
+                                    <label class="form-label">Cast</label>
                                     @php
-                                        $categoryList = isset($categories)
+                                        $castList = isset($categories)
                                             ? $categories
                                             : \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->get();
-                                        $selectedCategory = old('category', $edit->category ?? '');
+                                        $selectedCast = old('cast', $edit->cast ?? '');
                                     @endphp
-                                    <select name="category" id="category" class="form-control select2 @error('category') is-invalid @enderror">
-                                        <option value="">Select Category</option>
-                                        @foreach ($categoryList as $catItem)
-                                            @php $catName = is_object($catItem) ? $catItem->name : $catItem; @endphp
-                                            <option value="{{ $catName }}" {{ ($selectedCategory == $catName) ? 'selected' : '' }}>
-                                                {{ $catName }}
+                                    <select name="cast" id="cast" class="form-control select2 @error('cast') is-invalid @enderror">
+                                        <option value="">Select Cast</option>
+                                        @foreach ($castList as $castItem)
+                                            @php $castName = is_object($castItem) ? $castItem->name : $castItem; @endphp
+                                            <option value="{{ $castName }}" {{ ($selectedCast == $castName) ? 'selected' : '' }}>
+                                                {{ $castName }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('category')
+                                    @error('cast')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
 
-                            {{-- Cast (Radio Buttons) --}}
+                            {{-- Category (Radio Buttons) --}}
                             <div class="col-md-8 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <small class="fw-medium d-block @error('cast') is-invalid @enderror">Cast</small>
+                                    <small class="fw-medium d-block @error('category') is-invalid @enderror">Category <span class="text-danger">*</span></small>
                                     <div class="d-flex flex-wrap gap-3 mt-1">
-                                        @foreach (['Baxipanch', 'SC', 'ST', 'Handicaped', 'Vichar Vimukti Jati', 'Ex-Serviceman', 'General', 'Low-Profession', 'Minority'] as $castItem)
+                                        @foreach (['Baxipanch', 'SC', 'ST', 'Handicaped', 'Vichar Vimukti Jati', 'Ex-Serviceman', 'General', 'Low-Profession', 'Minority'] as $categoryItem)
                                             <div class="form-check form-check-inline">
-                                                <input type="radio" name="cast" class="form-check-input"
-                                                    value="{{ $castItem }}" id="cast_{{ \Illuminate\Support\Str::slug($castItem) }}"
-                                                    {{ strtolower(trim((string)old('cast', $edit->cast ?? ''))) === strtolower(trim($castItem)) ? 'checked' : '' }}>
+                                                <input type="radio" name="category" class="form-check-input"
+                                                    value="{{ $categoryItem }}" id="category_{{ \Illuminate\Support\Str::slug($categoryItem) }}"
+                                                    {{ strtolower(trim((string)old('category', $edit->category ?? ''))) === strtolower(trim($categoryItem)) ? 'checked' : '' }}>
                                                 <label class="form-check-label"
-                                                    for="cast_{{ \Illuminate\Support\Str::slug($castItem) }}">{{ $castItem }}</label>
+                                                    for="category_{{ \Illuminate\Support\Str::slug($categoryItem) }}">{{ $categoryItem }}</label>
                                             </div>
                                         @endforeach
                                     </div>
-                                    @error('cast')
+                                    @error('category')
                                         <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
@@ -1289,7 +1288,7 @@
                                     '');
                                 $('#other_mobile_no').val(data.user.other_mobile_no || '');
                                 $('#whatsapp_no').val(data.user.whatsapp_no || '');
-                                $('#cast').val(data.user.cast || '');
+                                $('#cast').val(data.user.cast || '').trigger('change');
                                 $('#occupation').val(data.user.occupation || '');
                                 $('#gr_no').val(data.user.gr_no || '');
                                 $('#biometric_id').val(data.user.biometric_id || '');

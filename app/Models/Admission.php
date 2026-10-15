@@ -27,6 +27,7 @@ class Admission extends Authenticatable
         'admission_std',
         'current_std',
         'division',
+        'roll_no',
         'stream',
         'aadhar_card_no',
         'pen_no',

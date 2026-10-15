@@ -9,8 +9,6 @@
         <td>{{ $history['issue_date'] ?? '-' }}</td>
         @unless($hideExtraColumns)
             <td>{{ $history['academic_year'] ?? '-' }}</td>
-            <td>{{ $history['semester_start'] ?? '-' }}</td>
-            <td>{{ $history['semester_end'] ?? '-' }}</td>
             <td>{{ $history['generated_at'] ?? '-' }}</td>
         @endunless
         <td class="text-center">
@@ -21,6 +19,6 @@
     </tr>
 @empty
     <tr id="certificate-history-empty-row">
-        <td colspan="{{ $hideExtraColumns ? 4 : 8 }}" class="text-center text-muted">No certificate generated yet.</td>
+        <td colspan="{{ $hideExtraColumns ? 4 : 6 }}" class="text-center text-muted">No certificate generated yet.</td>
     </tr>
 @endforelse

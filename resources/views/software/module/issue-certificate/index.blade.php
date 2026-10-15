@@ -52,20 +52,25 @@
                             @if (!in_array(($modules['certificate_type'] ?? 'bonafide'), ['english-medium', 'letter-recommendation'], true))
                             <div class="col-md-3 col-sm-12 mb-3">
                                 <label class="form-label">Academic Year</label>
-                                <input type="text" id="academic_year" name="academic_year" class="form-control"
-                                    value="{{ $defaults['academic_year'] ?? '' }}" placeholder="Ex. {{ now()->format('Y') }}">
-                            </div>
-
-                            <div class="col-md-3 col-sm-12 mb-3">
-                                <label class="form-label">Semester Duration Start Date</label>
-                                <input type="text" id="semester_start" name="semester_start"
-                                    class="form-control semester-date-picker" placeholder="dd-mm-yyyy" autocomplete="off">
-                            </div>
-
-                            <div class="col-md-3 col-sm-12 mb-3">
-                                <label class="form-label">Semester Duration End Date</label>
-                                <input type="text" id="semester_end" name="semester_end"
-                                    class="form-control semester-date-picker" placeholder="dd-mm-yyyy" autocomplete="off">
+                                @php
+                                    $defaultYear = $defaults['academic_year'] ?? '2026-2027';
+                                    $yearList = $academicYears ?? [];
+                                    if (empty($yearList)) {
+                                        $currY = (int)date('Y');
+                                        $currStart = (date('n') >= 6) ? $currY : ($currY - 1);
+                                        for ($y = $currStart; $y >= $currStart - 15; $y--) {
+                                            $yearList[] = $y . '-' . ($y + 1);
+                                        }
+                                    }
+                                @endphp
+                                <select id="academic_year" name="academic_year" class="form-control select2-academic-year">
+                                    <option value="">Select or Type Academic Year</option>
+                                    @foreach ($yearList as $yItem)
+                                        <option value="{{ $yItem }}" {{ ($defaultYear == $yItem) ? 'selected' : '' }}>
+                                            {{ $yItem }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             @endif
 
@@ -95,8 +100,6 @@
                                     <th>Date</th>
                                     @unless($hideExtraColumns)
                                         <th>Academic Year</th>
-                                        <th>Semester Start</th>
-                                        <th>Semester End</th>
                                         <th>Generated At</th>
                                     @endunless
                                     <th class="text-center" style="width: 90px;">View</th>
@@ -135,8 +138,6 @@
                     <td>${row.issue_date || '-'}</td>
                     ${hideExtraColumns ? '' : `
                         <td>${row.academic_year || '-'}</td>
-                        <td>${row.semester_start || '-'}</td>
-                        <td>${row.semester_end || '-'}</td>
                         <td>${row.generated_at || '-'}</td>
                     `}
                     <td class="text-center">
@@ -160,12 +161,12 @@
                 width: '100%'
             });
 
-            if (typeof flatpickr !== 'undefined') {
-                flatpickr('.semester-date-picker', {
-                    dateFormat: 'd-m-Y',
-                    allowInput: true,
-                });
-            }
+            $('.select2-academic-year').select2({
+                placeholder: 'Select or Type Academic Year (Ex. 2021-2022)',
+                tags: true,
+                allowClear: true,
+                width: '100%'
+            });
 
             $('#generate_certificate').on('click', function() {
                 const studentId = $('#student_id').val();
@@ -184,9 +185,7 @@
 
                 const params = new URLSearchParams({
                     issue_date: $('#issue_date').val() || '',
-                    academic_year: $('#academic_year').val() || '',
-                    semester_start: $('#semester_start').val() || '',
-                    semester_end: $('#semester_end').val() || ''
+                    academic_year: $('#academic_year').val() || ''
                 });
 
                 const baseUrl = "{{ route($certificateRoute, ['id' => '__ID__']) }}".replace('__ID__', studentId);
@@ -200,9 +199,7 @@
                         certificate_type: certificateType,
                         student_id: studentId,
                         issue_date: $('#issue_date').val() || '',
-                        academic_year: $('#academic_year').val() || '',
-                        semester_start: $('#semester_start').val() || '',
-                        semester_end: $('#semester_end').val() || ''
+                        academic_year: $('#academic_year').val() || ''
                     },
                     success: function(response) {
                         if (response?.data) {

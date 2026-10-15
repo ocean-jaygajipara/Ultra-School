@@ -14,8 +14,6 @@ class IssueCertificateHistory extends Model
         'student_name',
         'issue_date',
         'academic_year',
-        'semester_start',
-        'semester_end',
         'created_by',
     ];
 

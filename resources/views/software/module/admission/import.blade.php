@@ -86,6 +86,54 @@
 
                     </div>
 
+                    <div class="alert alert-info mt-2 mb-0">
+                        <h6 class="alert-heading fw-bold mb-2"><i class="fa fa-info-circle"></i> How the Excel file is imported</h6>
+                        <ol class="mb-2 ps-3">
+                            <li>
+                                Each class must start with a <b>title row</b> that ends with
+                                <b>Standard-Division</b>, for example:
+                                <code>ULTRA ENGLISH SCHOOL&nbsp;&nbsp;1-A</code>,
+                                <code>ULTRA ENGLISH SCHOOL&nbsp;&nbsp;SKG-A</code>,
+                                <code>ULTRA ENGLISH SCHOOL&nbsp;&nbsp;BALVATIKA-B</code>.
+                            </li>
+                            <li>
+                                All students listed below that title are imported into the
+                                <b>Standard and Division mentioned in the title</b>
+                                (e.g. <code>2-A</code> goes to <b>2nd</b>, Division <b>A</b>).
+                                The same value is set as Admission Std and Current Std.
+                            </li>
+                            <li>
+                                The next row must be the column header:
+                                <code>NAME | GR No. | PHONE | BIRTHDATE | ADMDATE | MOTHERNAME | CAST | RELIGION</code>.
+                                A serial number column without a header is allowed.
+                            </li>
+                            <li>
+                                <b>NAME</b> is read as <i>Surname Name Father Name</i>
+                                (e.g. <code>DHADUK ANSHI SAMIRBHAI</code>).
+                                Dates can be <code>16-03-20</code> or <code>16-03-2020</code>.
+                            </li>
+                            <li>
+                                One file can contain many classes, either one below another on the same sheet or on separate sheets.
+                                Every class needs its own title row and header row.
+                            </li>
+                            <li>
+                                Students whose <b>GR No.</b> already exists are skipped. All skipped rows are listed with the reason after import.
+                            </li>
+                            <li>
+                                Students are imported into the school you are currently logged into.
+                            </li>
+                        </ol>
+                        <div>
+                            <b>Standards available in Standard Master:</b>
+                            @forelse ($standards ?? [] as $std)
+                                <span class="badge bg-primary me-1">{{ $std }}</span>
+                            @empty
+                                <span class="text-danger">No active standards found. Please add them in Standard Master first.</span>
+                            @endforelse
+                            <div class="small mt-1">If the standard in the title is not in this list, those students will be skipped.</div>
+                        </div>
+                    </div>
+
                     <div class="divider">
                         <hr />
                     </div>

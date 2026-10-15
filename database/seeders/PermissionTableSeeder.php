@@ -150,6 +150,12 @@ class PermissionTableSeeder extends Seeder
                 'category-edit',
                 'category-delete',
             ],
+            'standard' => [
+                'standard-list',
+                'standard-create',
+                'standard-edit',
+                'standard-delete',
+            ],
             'school' => [
                 'school-list',
                 'school-create',

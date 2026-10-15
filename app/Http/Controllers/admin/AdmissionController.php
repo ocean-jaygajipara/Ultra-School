@@ -167,7 +167,7 @@ class AdmissionController extends Controller
 
         try {
             $columns = [
-                (object) ['data' => "id", 'name' => 'id', 'td_label' => 'REG No.'],
+                (object) ['data' => "DT_RowIndex", 'name' => 'DT_RowIndex', 'td_label' => 'Sr No.', 'orderable' => false, 'searchable' => false],
                 // (object) ['data' => "admission_name", 'name' => 'first_name', 'td_label' => 'Name'],
                 (object) [
                     'data' => 'admission_name',
@@ -202,6 +202,18 @@ class AdmissionController extends Controller
                     $data->whereHas('courses', function ($q) use ($courseId) {
                         $q->where('course_id', $courseId);
                     });
+                }
+
+                if ($request->filled('filter_standard')) {
+                    $data->where('current_std', $request->input('filter_standard'));
+                }
+
+                if ($request->filled('filter_division')) {
+                    $data->where('division', $request->input('filter_division'));
+                }
+
+                if (empty($request->input('order'))) {
+                    $data->orderBy('id');
                 }
 
                 $editPermisstion = $modules['permission_edit'];
@@ -332,8 +344,10 @@ class AdmissionController extends Controller
             $defaultExportColumns = $this->defaultExportColumns;
             $courses = \App\Models\Master\MasterCourse::where('status', 'active')->orderBy('course_name')->get();
             $batches = \App\Models\Master\MasterBatch::where('status', 'active')->orderBy('batch_name')->get();
+            $standards = $this->getStandardList();
+            $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->pluck('name')->filter()->values()->all();
 
-            return view($modules['folder_path'] . '.index', compact('data', 'availableExportColumns', 'defaultExportColumns', 'courses', 'batches'));
+            return view($modules['folder_path'] . '.index', compact('data', 'availableExportColumns', 'defaultExportColumns', 'courses', 'batches', 'standards', 'divisions'));
         } catch (\Exception $e) {
             return Redirect::route('dashboard')->withErrors($e->getMessage());
         }
@@ -357,7 +371,7 @@ class AdmissionController extends Controller
         $villages = \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
         $classes = \App\Models\Master\MasterClass::where('status', 'active')->orderBy('class')->get();
         $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
-        $schoolStandards = \App\Services\SchoolDatabaseManager::getSchoolStandards();
+        $schoolStandards = $this->getStandardList();
         return view($modules['folder_path'] . '.form', compact('modules', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions', 'schoolStandards'));
     }
 
@@ -584,7 +598,7 @@ class AdmissionController extends Controller
             $villages = \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
             $classes = \App\Models\Master\MasterClass::where('status', 'active')->orderBy('class')->get();
             $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
-            $schoolStandards = \App\Services\SchoolDatabaseManager::getSchoolStandards();
+            $schoolStandards = $this->getStandardList();
             return view($modules['folder_path'] . '.form', compact('modules', 'edit', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions', 'schoolStandards'));
         } catch (\Exception $e) {
 
@@ -645,7 +659,16 @@ class AdmissionController extends Controller
                 $validated['profile_pic'] = 'uploads/profile_pics/' . $folderName . '/' . $filename;
             }
 
+            $classChanged = ($validated['current_std'] ?? $admission->current_std) !== $admission->current_std
+                || ($validated['division'] ?? $admission->division) !== $admission->division;
+            if ($classChanged) {
+                $validated['roll_no'] = null;
+            }
+
             $admission->update($validated);
+
+            return Redirect::route('admission.roll-number', $admission->id)
+                ->with('success', $modules['title'] . ' updated successfully. Please confirm the roll number.');
 
             /*
             if (!$admission?->biometric_id && false) {
@@ -757,33 +780,77 @@ class AdmissionController extends Controller
                 }
             }
                 */
-
-
-
-            $CourceRegistration = CourceRegistration::where('register_id', $admission_id)->first();
-            if (!$CourceRegistration) {
-
-                Session::put('admission_id', $admission_id);
-                if (Helper::directCan('course-register-create')) {
-                    return Redirect::route('cource-registration.create', [$admission_id])->with('success', $admission->first_name . ' has been successfully admitted.');
-                }
-                return Redirect::route($modules['route'] . '.index')->with('success', $modules['title'] . ' updated successfully');
-
-                return Redirect::back()->withErrors('Register id not found on course.');
-            }
-
-            if (Helper::directCan('course-register-edit')) {
-                return Redirect::route('cource-registration.edit', [
-                    'register_id' => $CourceRegistration->id
-                ])->withSuccess($modules['title'] . ' updated successfully');
-            }
-            return Redirect::route($modules['route'] . '.index')->with('success', $modules['title'] . ' updated successfully');
         } catch (\Exception $e) {
             return $e->getMessage();
             return Redirect::back()->withErrors($e->getMessage())->withInput();
         }
     }
 
+
+    public function rollNumber(string $id)
+    {
+        $modules = $this->modules;
+        if (!Helper::directCan($modules['permission_prefix'] . '-edit')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+        View::share('modules', $modules);
+
+        $admission = Admission::findOrFail($id);
+        $suggestedRollNo = $admission->roll_no ?: $this->nextRollNumber($admission);
+
+        return view($modules['folder_path'] . '.roll-number', compact('modules', 'admission', 'suggestedRollNo'));
+    }
+
+    public function rollNumberStore(Request $request, string $id)
+    {
+        $modules = $this->modules;
+        if (!Helper::directCan($modules['permission_prefix'] . '-edit')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
+        $admission = Admission::findOrFail($id);
+
+        if (empty($admission->current_std) || empty($admission->division)) {
+            return Redirect::back()->withErrors('Please set Current Std and Division for this student before generating a roll number.');
+        }
+
+        $request->validate([
+            'roll_no' => [
+                'required',
+                'integer',
+                'min:1',
+                Rule::unique($admission->getTable(), 'roll_no')
+                    ->where('current_std', $admission->current_std)
+                    ->where('division', $admission->division)
+                    ->whereNull('deleted_at')
+                    ->ignore($admission->id),
+            ],
+        ], [
+            'roll_no.unique' => 'This roll number is already given to another student of ' . $admission->current_std . ' - ' . $admission->division . '.',
+        ]);
+
+        $admission->update([
+            'roll_no' => (int) $request->roll_no,
+            'updated_by' => Auth::id(),
+        ]);
+
+        return Redirect::route($modules['route'] . '.index')
+            ->with('success', 'Roll No. ' . $admission->roll_no . ' saved for ' . trim($admission->first_name . ' ' . $admission->last_name) . ' (' . $admission->current_std . ' - ' . $admission->division . ').');
+    }
+
+    protected function nextRollNumber(Admission $admission): ?int
+    {
+        if (empty($admission->current_std) || empty($admission->division)) {
+            return null;
+        }
+
+        $max = Admission::where('current_std', $admission->current_std)
+            ->where('division', $admission->division)
+            ->where('id', '!=', $admission->id)
+            ->max('roll_no');
+
+        return ((int) $max) + 1;
+    }
 
     public function education_detail_delete(Request $request)
     {
@@ -1244,7 +1311,8 @@ class AdmissionController extends Controller
     {
         try {
             $modules = $this->modules;
-            return view($modules['folder_path'] . '.import');
+            $standards = $this->getStandardList();
+            return view($modules['folder_path'] . '.import', compact('standards'));
         } catch (\Exception $e) {
             return Redirect::route('software.dashboard')->withErrors($e->getMessage());
         }
@@ -1361,6 +1429,11 @@ class AdmissionController extends Controller
         }
     }
 
+    protected function getStandardList(): array
+    {
+        return \App\Models\Master\MasterStandard::where('status', 'active')->orderBy('id')->pluck('name')->filter()->values()->all();
+    }
+
     protected function resolveCertificateRequestData(Request $request): array
     {
         $today = now();
@@ -1434,6 +1507,14 @@ class AdmissionController extends Controller
 
         if ($scope === 'all') {
             return $query;
+        }
+
+        if ($request->filled('filter_standard')) {
+            $query->where('current_std', $request->input('filter_standard'));
+        }
+
+        if ($request->filled('filter_division')) {
+            $query->where('division', $request->input('filter_division'));
         }
 
         $search = trim((string) $request->get('search', ''));
