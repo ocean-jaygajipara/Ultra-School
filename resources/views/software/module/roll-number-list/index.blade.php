@@ -144,7 +144,7 @@
                     <button type="submit" name="clear" value="1" class="btn btn-outline-secondary" formnovalidate>
                         Clear
                     </button>
-                    @if ($standardId && (Helper::directCan('roll-number-list-print') || Helper::directCan('roll-number-list-list')))
+                    @if ($standardId && (!empty($modules['permission_print']) || \App\Helpers\Helper::directCan('roll-number-list-print') || \App\Helpers\Helper::directCan('roll-number-list-list')))
                         <a href="{{ route($route . '.print') }}" target="_blank" class="btn btn-outline-primary">
                             <i class="ti ti-printer me-1"></i> Print
                         </a>
