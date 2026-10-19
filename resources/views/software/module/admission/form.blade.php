@@ -845,7 +845,7 @@
                                     @php
                                         $castList = isset($categories)
                                             ? $categories
-                                            : \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->get();
+                                            : \App\Models\Master\MasterCast::where('status', 'active')->orderBy('id')->get();
                                         $selectedCast = old('cast', $edit->cast ?? '');
                                     @endphp
                                     <select name="cast" id="cast" class="form-control select2 @error('cast') is-invalid @enderror">

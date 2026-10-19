@@ -51,9 +51,9 @@
                 <div class="row">
                     <div class="col-md-4 col-sm-12">
                         <div class="form-group">
-                            <label class="form-label">Category Name <span class="text-danger">*</span></label>
+                            <label class="form-label">Cast Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                                value="{{ isset($edit?->name) ? $edit?->name : old('name') }}" placeholder="Enter category name"
+                                value="{{ isset($edit?->name) ? $edit?->name : old('name') }}" placeholder="Enter cast name"
                                 autocomplete="off">
 
                             @error('name')

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\admin\master;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\MasterCategoryRequest;
-use App\Models\Master\MasterCategory;
+use App\Http\Requests\MasterCastRequest;
+use App\Models\Master\MasterCast;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\Helper;
@@ -18,11 +18,11 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-class MasterCategoryController extends Controller
+class MasterCastController extends Controller
 {
     public $modules = [];
     protected array $exportableColumns = [
-        'name' => 'Category Name',
+        'name' => 'Cast Name',
         'status' => 'Status',
     ];
 
@@ -34,10 +34,10 @@ class MasterCategoryController extends Controller
     public function __construct()
     {
         $this->modules = [
-            'title' => 'Category',
-            'folder_path' => 'software.module.master.category',
-            'route' => 'category',
-            'table_name' => (new MasterCategory())->getTable(),
+            'title' => 'Cast Master',
+            'folder_path' => 'software.module.master.cast',
+            'route' => 'cast',
+            'table_name' => (new MasterCast())->getTable(),
             'permission_prefix' => 'category',
         ];
     }
@@ -62,14 +62,14 @@ class MasterCategoryController extends Controller
 
         try {
             $columns = [
-                (object)['data' => "name", 'name' => 'name', 'td_label' => 'Category Name'],
+                (object)['data' => "name", 'name' => 'name', 'td_label' => 'Cast Name'],
                 (object)['data' => "status", 'name' => 'status', 'td_label' => 'Status', 'className' => 'w-5 text-center', 'width' => '10%'],
                 (object)['data' => "action", 'name' => 'action', 'td_label' => 'Action', 'orderable' => false, 'searchable' => false, 'className' => 'w-10 text-center'],
             ];
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterCategory::withTrashed()->orderBy('id', 'desc');
+                $data = MasterCast::withTrashed()->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->filter(function ($query) use ($request) {
@@ -154,7 +154,7 @@ class MasterCategoryController extends Controller
         return view($modules['folder_path'] . '.form', compact('modules'));
     }
 
-    public function store(MasterCategoryRequest $request)
+    public function store(MasterCastRequest $request)
     {
         $modules = $this->modules;
         $modules['login_user_role'] = Helper::getLoginUserRole();
@@ -164,16 +164,16 @@ class MasterCategoryController extends Controller
 
         try {
             $validated['created_by'] = Auth::user()->id;
-            $category = MasterCategory::create($validated);
+            $cast = MasterCast::create($validated);
             if ($request->ajax()) {
                 return response()->json([
-                    'id' => $category->id,
-                    'name' => $category->name,
+                    'id' => $cast->id,
+                    'name' => $cast->name,
                 ]);
             }
             if ($request->action == "save_next") {
                 return redirect()->route($modules['route'] . '.create')
-                    ->withSuccess($modules['title'] . ' created successfully! Add next category.');
+                    ->withSuccess($modules['title'] . ' created successfully! Add next cast.');
             }
             return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' created successfully');
         } catch (\Exception $e) {
@@ -195,14 +195,14 @@ class MasterCategoryController extends Controller
             $modules['permission_delete'] = Helper::directCan($modules['permission_prefix'] . '-delete');
 
             View::share('modules', $modules);
-            $edit = MasterCategory::findOrFail($id);
+            $edit = MasterCast::findOrFail($id);
             return view($modules['folder_path'] . '.form', compact('modules', 'edit'));
         } catch (\Exception $e) {
             return Redirect::route('software.dashboard')->withErrors($e->getMessage());
         }
     }
 
-    public function update(MasterCategoryRequest $request, string $id)
+    public function update(MasterCastRequest $request, string $id)
     {
         $modules = $this->modules;
         $request['id'] = $id;
@@ -210,7 +210,7 @@ class MasterCategoryController extends Controller
         $validated = $request->validated();
         try {
             $validated['updated_by'] = Auth::user()->id;
-            $updateData = MasterCategory::findOrFail($id);
+            $updateData = MasterCast::findOrFail($id);
             if ($updateData) {
                 unset($validated['id']);
                 $updateData->update($validated);
@@ -238,13 +238,13 @@ class MasterCategoryController extends Controller
         }
 
         try {
-            $category = MasterCategory::withTrashed()->findOrFail($request?->id);
+            $cast = MasterCast::withTrashed()->findOrFail($request?->id);
 
-            if ($category) {
-                $category->status = $request->update_status;
-                $category->save();
+            if ($cast) {
+                $cast->status = $request->update_status;
+                $cast->save();
                 if ($isAjax) {
-                    return $this->sendResponse($category, $modules['title'] . ' status updated successfully.');
+                    return $this->sendResponse($cast, $modules['title'] . ' status updated successfully.');
                 }
                 return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' status updated successfully.');
             }
@@ -278,11 +278,11 @@ class MasterCategoryController extends Controller
         $isAjax = $request->ajax();
 
         try {
-            $category = MasterCategory::findOrFail($id);
+            $cast = MasterCast::findOrFail($id);
 
-            $category->deleted_by = Auth::id();
-            $category->save();
-            $category->delete();
+            $cast->deleted_by = Auth::id();
+            $cast->save();
+            $cast->delete();
 
             $successMsg = $modules['title'] . ' deleted successfully.';
 
@@ -309,12 +309,12 @@ class MasterCategoryController extends Controller
     public function restore($id)
     {
         try {
-            $category = MasterCategory::withTrashed()->findOrFail($id);
-            $category->restore();
+            $cast = MasterCast::withTrashed()->findOrFail($id);
+            $cast->restore();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Category restored successfully!'
+                'message' => 'Cast restored successfully!'
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -337,12 +337,12 @@ class MasterCategoryController extends Controller
         }
 
         try {
-            $category = MasterCategory::withTrashed()->findOrFail($id);
-            $category->forceDelete();
+            $cast = MasterCast::withTrashed()->findOrFail($id);
+            $cast->forceDelete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Category permanently deleted successfully!'
+                'message' => 'Cast permanently deleted successfully!'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -354,13 +354,13 @@ class MasterCategoryController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $this->authorizeCategoryList();
+        $this->authorizeCastList();
 
         $scope = strtolower($request->get('scope', 'filtered')) === 'all' ? 'all' : 'filtered';
         $selectedColumns = $this->resolveSelectedColumns($request->input('columns', []));
         $columnLabels = $this->mapColumnLabels($selectedColumns);
 
-        $categories = $this->buildCategoryExportQuery($request, $scope)->get();
+        $casts = $this->buildCastExportQuery($request, $scope)->get();
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -370,12 +370,12 @@ class MasterCategoryController extends Controller
         }
 
         $rowNumber = 2;
-        foreach ($categories as $category) {
+        foreach ($casts as $cast) {
             foreach ($selectedColumns as $columnIndex => $columnKey) {
                 $sheet->setCellValueByColumnAndRow(
                     $columnIndex + 1,
                     $rowNumber,
-                    $this->formatColumnValueForExcel($category, $columnKey)
+                    $this->formatColumnValueForExcel($cast, $columnKey)
                 );
             }
             $rowNumber++;
@@ -388,7 +388,7 @@ class MasterCategoryController extends Controller
             }
         }
 
-        $fileName = 'category-master-' . now()->format('Ymd_His') . '.xlsx';
+        $fileName = 'cast-master-' . now()->format('Ymd_His') . '.xlsx';
 
         return response()->streamDownload(function () use ($spreadsheet) {
             $writer = new Xlsx($spreadsheet);
@@ -400,17 +400,18 @@ class MasterCategoryController extends Controller
 
     public function printView(Request $request)
     {
-        $this->authorizeCategoryList();
+        $this->authorizeCastList();
 
         $scope = strtolower($request->get('scope', 'filtered')) === 'all' ? 'all' : 'filtered';
         $selectedColumns = $this->resolveSelectedColumns($request->input('columns', []));
         $columnLabels = $this->mapColumnLabels($selectedColumns);
         $searchTerm = $scope === 'filtered' ? trim((string) $request->get('search', '')) : null;
 
-        $categories = $this->buildCategoryExportQuery($request, $scope)->get();
+        $casts = $this->buildCastExportQuery($request, $scope)->get();
 
         return view($this->modules['folder_path'] . '.print', [
-            'categories' => $categories,
+            'casts' => $casts,
+            'categories' => $casts,
             'columnLabels' => $columnLabels,
             'columnKeys' => $selectedColumns,
             'scope' => $scope,
@@ -419,7 +420,7 @@ class MasterCategoryController extends Controller
         ]);
     }
 
-    protected function authorizeCategoryList(): void
+    protected function authorizeCastList(): void
     {
         $canList = Helper::directCan($this->modules['permission_prefix'] . '-list');
         if (!$canList) {
@@ -441,9 +442,9 @@ class MasterCategoryController extends Controller
         return !empty($filtered) ? $filtered : $this->defaultExportColumns;
     }
 
-    protected function buildCategoryExportQuery(Request $request, string $scope): Builder
+    protected function buildCastExportQuery(Request $request, string $scope): Builder
     {
-        $query = MasterCategory::query()
+        $query = MasterCast::query()
             ->withTrashed()
             ->orderByDesc('id');
 
@@ -475,15 +476,15 @@ class MasterCategoryController extends Controller
         return $labels;
     }
 
-    protected function formatColumnValueForExcel(MasterCategory $category, string $columnKey)
+    protected function formatColumnValueForExcel(MasterCast $cast, string $columnKey)
     {
         switch ($columnKey) {
             case 'name':
-                return $category->name ?? '-';
+                return $cast->name ?? '-';
             case 'status':
-                return $category->status ? ucfirst($category->status) : '-';
+                return $cast->status ? ucfirst($cast->status) : '-';
             default:
-                return data_get($category, $columnKey, '-');
+                return data_get($cast, $columnKey, '-');
         }
     }
 }

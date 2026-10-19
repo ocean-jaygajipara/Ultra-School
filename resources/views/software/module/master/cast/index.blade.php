@@ -54,7 +54,7 @@
                 <div class="mst-hero-icon"><i class="ti ti-tags"></i></div>
                 <div>
                     <h4>{{ $page_title }}</h4>
-                    <p>Manage cast / category master list.</p>
+                    <p>Manage cast master list.</p>
                 </div>
             </div>
         </div>

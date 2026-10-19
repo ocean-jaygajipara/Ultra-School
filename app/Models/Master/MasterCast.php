@@ -5,11 +5,11 @@ namespace App\Models\Master;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MasterCategory extends Model
+class MasterCast extends Model
 {
     use SoftDeletes;
 
-    public $table = 'master_categories';
+    public $table = 'master_casts';
 
     protected $fillable = [
         'name',

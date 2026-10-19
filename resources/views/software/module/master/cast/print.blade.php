@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Category Master Report</title>
+    <title>Cast Master Report</title>
     <style>
         body {
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -63,7 +63,7 @@
         <button onclick="window.close()">Close</button>
     </div>
 
-    <h1>Category Master Report</h1>
+    <h1>Cast Master Report</h1>
     <div class="meta">
         <div><strong>Generated On:</strong> {{ optional($generatedAt)->format('d-m-Y h:i A') }}</div>
     </div>
@@ -77,21 +77,22 @@
             </tr>
         </thead>
         <tbody>
-            @forelse ($categories as $category)
+            @php $records = $casts ?? $categories ?? []; @endphp
+            @forelse ($records as $cast)
                 <tr>
                     @foreach ($columnKeys as $columnKey)
                         <td>
                             @switch($columnKey)
                                 @case('name')
-                                    {{ $category->name ?? '-' }}
+                                    {{ $cast->name ?? '-' }}
                                 @break
 
                                 @case('status')
-                                    {{ $category->status ? ucfirst($category->status) : '-' }}
+                                    {{ $cast->status ? ucfirst($cast->status) : '-' }}
                                 @break
 
                                 @default
-                                    {{ data_get($category, $columnKey, '-') }}
+                                    {{ data_get($cast, $columnKey, '-') }}
                             @endswitch
                         </td>
                     @endforeach

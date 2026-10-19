@@ -51,7 +51,7 @@ class SyncSchoolsDatabaseCommand extends Command
             'users',
             'master_classes',
             'master_religions',
-            'master_categories',
+            'master_casts',
             'master_houses',
             'master_schools',
             'master_courses',

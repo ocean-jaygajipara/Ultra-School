@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Master\MasterCategory;
+use App\Models\Master\MasterCast;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 
-class MasterCategoryRequest extends FormRequest
+class MasterCastRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,13 +24,13 @@ class MasterCategoryRequest extends FormRequest
      */
     public function rules(Request $request)
     {
-        $id = $request->route('category') ?? 0;
+        $id = $request->route('category') ?? $request->route('cast') ?? 0;
 
         return [
             'name' => [
                 'required',
                 'max:255',
-                Rule::unique((new MasterCategory())->getTable(), 'name')
+                Rule::unique((new MasterCast())->getTable(), 'name')
                     ->whereNull('deleted_at')
                     ->ignore($id),
             ],

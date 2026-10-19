@@ -40,7 +40,7 @@ use App\Http\Controllers\admin\SupplierController;
 use App\Http\Controllers\admin\GoogleDriveController;
 use App\Http\Controllers\admin\master\IssuedBookController;
 use App\Http\Controllers\admin\master\MasterBusRouteVillageController;
-use App\Http\Controllers\admin\master\MasterCategoryController;
+use App\Http\Controllers\admin\master\MasterCastController;
 use App\Http\Controllers\admin\master\MasterStandardController;
 use App\Http\Controllers\admin\master\MasterClassController;
 use App\Http\Controllers\admin\master\MasterDepartmentController;
@@ -256,13 +256,13 @@ Route::match(['get', 'post'], 'division/restore/{id}', [MasterDivisionController
 Route::match(['get', 'post'], 'division-update-status', [MasterDivisionController::class, 'status_update'])->name('division.status-update');
 Route::delete('/division/permanent-delete/{id}', [MasterDivisionController::class, 'permanentDelete'])->name('division.permanent-delete');
 
-/** Master Category Modules */
-Route::get('category/export-excel', [MasterCategoryController::class, 'exportExcel'])->name('category.export-excel');
-Route::get('category/print', [MasterCategoryController::class, 'printView'])->name('category.print');
-Route::resource('/category', MasterCategoryController::class);
-Route::match(['get', 'post'], 'category/restore/{id}', [MasterCategoryController::class, 'restore'])->name('category.restore');
-Route::match(['get', 'post'], 'category-update-status', [MasterCategoryController::class, 'status_update'])->name('category.status-update');
-Route::delete('/category/permanent-delete/{id}', [MasterCategoryController::class, 'permanentDelete'])->name('category.permanent-delete');
+/** Master Cast Modules */
+Route::get('cast/export-excel', [MasterCastController::class, 'exportExcel'])->name('cast.export-excel');
+Route::get('cast/print', [MasterCastController::class, 'printView'])->name('cast.print');
+Route::resource('/cast', MasterCastController::class);
+Route::match(['get', 'post'], 'cast/restore/{id}', [MasterCastController::class, 'restore'])->name('cast.restore');
+Route::match(['get', 'post'], 'cast-update-status', [MasterCastController::class, 'status_update'])->name('cast.status-update');
+Route::delete('/cast/permanent-delete/{id}', [MasterCastController::class, 'permanentDelete'])->name('cast.permanent-delete');
 
 /** Master Standard Modules */
 Route::get('standard/export-excel', [MasterStandardController::class, 'exportExcel'])->name('standard.export-excel');

@@ -367,7 +367,7 @@ class AdmissionController extends Controller
             abort(403, 'User does not have the right permissions.');
         }
         View::share('modules', $modules);
-        $categories = \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->get();
+        $categories = \App\Models\Master\MasterCast::where('status', 'active')->orderBy('id')->get();
         $religions = \App\Models\Master\MasterReligion::where('status', 'active')->orderBy('id')->get();
         $houses = \App\Models\Master\MasterHouse::where('status', 'active')->orderBy('id')->get();
         $villages = \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
@@ -624,7 +624,7 @@ class AdmissionController extends Controller
 
             $edit = Admission::findOrFail($id);
 
-            $categories = \App\Models\Master\MasterCategory::where('status', 'active')->orderBy('id')->get();
+            $categories = \App\Models\Master\MasterCast::where('status', 'active')->orderBy('id')->get();
             $religions = \App\Models\Master\MasterReligion::where('status', 'active')->orderBy('id')->get();
             $houses = \App\Models\Master\MasterHouse::where('status', 'active')->orderBy('id')->get();
             $villages = \App\Models\Master\MasterBusRouteVillage::where('status', 'active')->orderBy('name')->get();
@@ -1521,7 +1521,7 @@ class AdmissionController extends Controller
     {
         $masters = [
             'bus_route_village' => [\App\Models\Master\MasterBusRouteVillage::class, false],
-            'cast'              => [\App\Models\Master\MasterCategory::class, true],
+            'cast'              => [\App\Models\Master\MasterCast::class, true],
             'house'             => [\App\Models\Master\MasterHouse::class, false],
             'division'          => [\App\Models\Master\MasterDivision::class, true],
         ];

@@ -552,10 +552,10 @@
             'bus-route-village-list'
         ])
         <li
-            class="menu-item {{ in_array($sidebar_active, ['syllabus', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'division', 'category', 'standard', 'academic-year', 'school', 'house', 'religion', 'bus-route-village']) ? 'active open' : '' }}">
+            class="menu-item {{ in_array($sidebar_active, ['syllabus', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'division', 'category', 'cast', 'standard', 'academic-year', 'school', 'house', 'religion', 'bus-route-village']) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-certificate me-2"></i>
-                <div data-i18n="Course Masters">Course Masters</div>
+                <div data-i18n="Masters">Masters</div>
             </a>
             <ul class="menu-sub">
 
@@ -579,9 +579,9 @@
                 @enddirectCanAny
 
                 @directCanAny(['category-list', 'category-create', 'category-edit', 'category-delete'])
-                <li class="menu-item {{ $sidebar_active == 'category' ? 'active' : '' }}">
-                    <a href="{{ route('category.index') }}" class="menu-link">
-                        <div data-i18n="Category Master">Category Master</div>
+                <li class="menu-item {{ in_array($sidebar_active, ['cast', 'category']) ? 'active' : '' }}">
+                    <a href="{{ route('cast.index') }}" class="menu-link">
+                        <div data-i18n="Cast Master">Cast Master</div>
                     </a>
                 </li>
                 @enddirectCanAny
