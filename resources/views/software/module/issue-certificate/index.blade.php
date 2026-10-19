@@ -312,6 +312,26 @@
             color: #fff;
         }
 
+        .icx-delete {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 9px;
+            font-size: .8rem;
+            font-weight: 600;
+            background: #fde8e8;
+            color: var(--red);
+            border: 0;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+
+        .icx-delete:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
         .icx-empty td {
             padding: 34px 14px !important;
             text-align: center;
@@ -373,12 +393,34 @@
             <div class="icx-card-body">
                 <form id="certificateForm" onsubmit="return false;">
                     <div class="row g-3 align-items-start">
-                        <div class="{{ $showAcademicYear ? 'col-lg-6' : 'col-lg-8' }} col-md-12">
+                        <div class="col-lg-3 col-md-6">
+                            <label class="form-label" for="filter_standard_id">Standard</label>
+                            <select id="filter_standard_id" class="form-control select2-standard">
+                                <option value="">All Standards</option>
+                                @foreach ($standards ?? [] as $std)
+                                    <option value="{{ $std->id }}">{{ $std->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="icx-hint">Filter students by standard</div>
+                        </div>
+
+                        <div class="{{ $showAcademicYear ? 'col-lg-4' : 'col-lg-5' }} col-md-6">
                             <label class="form-label" for="student_id">Student <span class="text-danger">*</span></label>
-                            <select id="student_id" name="student_id" class="form-control select2" required>
+                            <select id="student_id" name="student_id" class="form-control select2-student" required>
                                 <option value="">Select Student</option>
-                                @foreach ($students as $student)
-                                    <option value="{{ $student['id'] }}">{{ $student['label'] }}</option>
+                                @php
+                                    $groupedStudents = collect($students)->groupBy('standard_name');
+                                @endphp
+                                @foreach ($groupedStudents as $stdGroup => $stdStudents)
+                                    <optgroup label="{{ $stdGroup }}">
+                                        @foreach ($stdStudents as $student)
+                                            <option value="{{ $student['id'] }}" 
+                                                    data-standard="{{ $student['standard_id'] ?? '' }}"
+                                                    data-standard-name="{{ $student['standard_name'] ?? '' }}">
+                                                {{ $student['label'] }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
                                 @endforeach
                             </select>
                             <div class="icx-hint">Search by name or GR No.</div>
@@ -441,7 +483,7 @@
                                 <th>Academic Year</th>
                                 <th>Generated At</th>
                             @endunless
-                            <th class="text-center" style="width: 110px;">View</th>
+                            <th class="text-center" style="width: 175px;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="certificate-history-body">
@@ -489,9 +531,14 @@
                         <td class="icx-muted">${escapeHtml(row.generated_at || '-')}</td>
                     `}
                     <td class="text-center">
-                        <a href="${row.certificate_url}" target="_blank" class="icx-view" title="View Certificate">
-                            <i class="ti ti-eye"></i> View
-                        </a>
+                        <div class="d-inline-flex align-items-center gap-1">
+                            <a href="${row.certificate_url}" target="_blank" class="icx-view" title="View Certificate">
+                                <i class="ti ti-eye"></i> View
+                            </a>
+                            <button type="button" class="icx-delete delete-history-btn" data-id="${row.id}" title="Delete History">
+                                <i class="ti ti-trash"></i> Delete
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -501,7 +548,15 @@
         }
 
         $(document).ready(function() {
-            $('.select2').select2({
+            const rawStudents = @json($students ?? []);
+
+            $('.select2-standard').select2({
+                placeholder: 'All Standards',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('#student_id').select2({
                 placeholder: 'Select Student',
                 allowClear: true,
                 width: '100%'
@@ -511,6 +566,41 @@
                 placeholder: 'Select Academic Year',
                 allowClear: true,
                 width: '100%'
+            });
+
+            function renderStudentsByStandard(selectedStdId) {
+                const $studentSelect = $('#student_id');
+                $studentSelect.empty().append(new Option('Select Student', '', true, true));
+
+                const filtered = selectedStdId
+                    ? rawStudents.filter(s => String(s.standard_id) === String(selectedStdId))
+                    : rawStudents;
+
+                const groups = {};
+                filtered.forEach(s => {
+                    const group = s.standard_name || 'Other';
+                    if (!groups[group]) groups[group] = [];
+                    groups[group].push(s);
+                });
+
+                Object.keys(groups).forEach(groupName => {
+                    const $group = $('<optgroup>').attr('label', groupName);
+                    groups[groupName].forEach(s => {
+                        const $opt = $('<option>')
+                            .val(s.id)
+                            .text(s.label)
+                            .attr('data-standard', s.standard_id || '')
+                            .attr('data-standard-name', s.standard_name || '');
+                        $group.append($opt);
+                    });
+                    $studentSelect.append($group);
+                });
+
+                $studentSelect.val(null).trigger('change');
+            }
+
+            $('#filter_standard_id').on('change', function() {
+                renderStudentsByStandard($(this).val());
             });
 
             $('#icxHistorySearch').on('input', function() {
@@ -568,6 +658,87 @@
                         $btn.prop('disabled', false);
                     }
                 });
+            });
+
+            $(document).on('click', '.delete-history-btn', function() {
+                const $btn = $(this);
+                const id = $btn.data('id');
+                const $row = $btn.closest('tr');
+
+                const doDelete = function() {
+                    $btn.prop('disabled', true);
+                    $.ajax({
+                        url: "{{ url('issue-certificate/history') }}/" + id,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            _method: 'DELETE',
+                            certificate_type: certificateType
+                        },
+                        success: function(response) {
+                            if (response.status) {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.success(response.message || 'Record deleted successfully.');
+                                }
+                                $row.fadeOut(200, function() {
+                                    $(this).remove();
+                                    renumberHistory();
+                                    if ($('#certificate-history-body tr').length === 0) {
+                                        $('#certificate-history-body').html(`
+                                            <tr id="certificate-history-empty-row" class="icx-empty">
+                                                <td colspan="${hideExtraColumns ? 4 : 6}">
+                                                    <i class="ti ti-file-off"></i>
+                                                    No certificate generated yet.
+                                                </td>
+                                            </tr>
+                                        `);
+                                    }
+                                });
+                            } else {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.error(response.message || 'Failed to delete record.');
+                                } else {
+                                    alert(response.message || 'Failed to delete record.');
+                                }
+                                $btn.prop('disabled', false);
+                            }
+                        },
+                        error: function(xhr) {
+                            const message = xhr.responseJSON?.message || 'Could not delete record. Please try again.';
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(message);
+                            } else {
+                                alert(message);
+                            }
+                            $btn.prop('disabled', false);
+                        }
+                    });
+                };
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "This certificate history record will be deleted!",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes, delete it!",
+                        cancelButtonText: "No, cancel!",
+                        reverseButtons: true,
+                        customClass: {
+                            confirmButton: 'btn btn-danger',
+                            cancelButton: 'btn btn-secondary'
+                        },
+                        buttonsStyling: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            doDelete();
+                        }
+                    });
+                } else {
+                    if (confirm("Are you sure you want to delete this certificate history?")) {
+                        doDelete();
+                    }
+                }
             });
         });
     </script>

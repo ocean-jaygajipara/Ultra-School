@@ -74,6 +74,7 @@ class IssueCertificateController extends Controller
         $students = $this->getStudentOptions();
         $defaults = $this->getCertificateDefaults();
         $histories = $this->getHistoriesLetterRecommendation();
+        $standards = \App\Models\Master\MasterStandard::where('status', 'active')->orderBy('id')->get();
         
         $faculties = \App\Models\User::where('status', 'active')
             ->whereHas('roles', function ($q) {
@@ -82,7 +83,7 @@ class IssueCertificateController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        return view('software.module.issue-certificate.letter-recommendation.index', compact('modules', 'students', 'defaults', 'histories', 'faculties'));
+        return view('software.module.issue-certificate.letter-recommendation.index', compact('modules', 'students', 'defaults', 'histories', 'faculties', 'standards'));
     }
 
     public function storeHistory(Request $request)
@@ -155,6 +156,45 @@ class IssueCertificateController extends Controller
         ]);
     }
 
+    public function deleteHistory(Request $request, $id)
+    {
+        $type = $request->input('certificate_type', 'bonafide');
+
+        $permission = match ($type) {
+            self::TYPE_TC => 'issue-certificate-tc-list',
+            self::TYPE_ENGLISH_MEDIUM => 'issue-certificate-english-medium-list',
+            self::TYPE_LETTER_RECOMMENDATION => 'issue-certificate-letter-recommendation-list',
+            default => 'issue-certificate-bonafide-list',
+        };
+
+        if (!Helper::directCan($permission)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User does not have the right permissions.',
+            ], 403);
+        }
+
+        if ($type === self::TYPE_LETTER_RECOMMENDATION) {
+            $history = IssueCertificateLetterRecommendation::find($id);
+        } else {
+            $history = IssueCertificateHistory::find($id);
+        }
+
+        if (!$history) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Record not found.',
+            ], 404);
+        }
+
+        $history->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Certificate history deleted successfully.',
+        ]);
+    }
+
     protected function certificateIndex(Request $request, string $type)
     {
         $typeLabel = match ($type) {
@@ -183,6 +223,7 @@ class IssueCertificateController extends Controller
         $defaults = $this->getCertificateDefaults();
         $histories = $this->getHistories($type);
         $academicYears = $this->getAcademicYears();
+        $standards = \App\Models\Master\MasterStandard::where('status', 'active')->orderBy('id')->get();
         
         $faculties = [];
         if ($type === self::TYPE_LETTER_RECOMMENDATION) {
@@ -194,7 +235,7 @@ class IssueCertificateController extends Controller
                 ->get();
         }
 
-        return view($modules['folder_path'] . '.index', compact('modules', 'students', 'defaults', 'histories', 'faculties', 'academicYears'));
+        return view($modules['folder_path'] . '.index', compact('modules', 'students', 'defaults', 'histories', 'faculties', 'academicYears', 'standards'));
     }
 
     private function getStudentOptions()
@@ -208,7 +249,11 @@ class IssueCertificateController extends Controller
             ->where(function ($q) {
                 $q->whereNull('status')->orWhereNotIn('status', ['Cancel', 'cancel', 'rejected']);
             })
-            ->orderByDesc('id')
+            ->with('currentStandard')
+            ->orderBy('current_std_id')
+            ->orderBy('division')
+            ->orderBy('roll_no')
+            ->orderBy('first_name')
             ->get()
             ->map(function ($admission) {
                 $name = trim(
@@ -217,18 +262,24 @@ class IssueCertificateController extends Controller
                     ($admission->father_name ?? '')
                 );
 
+                $stdName = $admission->current_std;
                 $extra = [];
                 if (!empty($admission->gr_no)) {
                     $extra[] = 'GR: ' . $admission->gr_no;
                 }
-                if (!empty($admission->current_std)) {
-                    $extra[] = 'Std: ' . $admission->current_std;
+                if (!empty($admission->division)) {
+                    $extra[] = 'Div: ' . $admission->division;
+                }
+                if (!empty($stdName)) {
+                    $extra[] = 'Std: ' . $stdName;
                 }
                 $extraInfo = !empty($extra) ? ' (' . implode(', ', $extra) . ')' : '';
 
                 return [
                     'id' => $admission->id,
                     'label' => trim($name . $extraInfo),
+                    'standard_id' => $admission->current_std_id,
+                    'standard_name' => $stdName ?: 'Other',
                 ];
             })
             ->values();

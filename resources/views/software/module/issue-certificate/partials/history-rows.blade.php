@@ -18,9 +18,14 @@
             <td class="icx-muted">{{ $history['generated_at'] ?? '-' }}</td>
         @endunless
         <td class="text-center">
-            <a href="{{ $history['certificate_url'] ?? '#' }}" target="_blank" class="icx-view" title="View Certificate">
-                <i class="ti ti-eye"></i> View
-            </a>
+            <div class="d-inline-flex align-items-center gap-1">
+                <a href="{{ $history['certificate_url'] ?? '#' }}" target="_blank" class="icx-view" title="View Certificate">
+                    <i class="ti ti-eye"></i> View
+                </a>
+                <button type="button" class="icx-delete delete-history-btn" data-id="{{ $history['id'] }}" title="Delete History">
+                    <i class="ti ti-trash"></i> Delete
+                </button>
+            </div>
         </td>
     </tr>
 @empty

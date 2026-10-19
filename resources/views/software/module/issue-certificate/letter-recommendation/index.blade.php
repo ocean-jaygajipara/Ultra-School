@@ -33,21 +33,44 @@
                         @csrf
                         <input type="hidden" name="certificate_type" value="letter-recommendation">
 
-                        <!-- Row 1: Student, Date, Recommender Type -->
+                        <!-- Row 1: Standard, Student, Date, Recommender Type -->
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="mb-4">
-                                    <label class="form-label">Student <span class="text-danger">*</span></label>
-                                    <select class="form-select select2" id="student" name="student_id" required>
-                                        <option value="">-- Select Student --</option>
-                                        @foreach ($students as $student)
-                                            <option value="{{ $student['id'] }}">{{ $student['label'] }}</option>
+                                    <label class="form-label">Standard</label>
+                                    <select class="form-select select2-standard" id="filter_standard_id">
+                                        <option value="">All Standards</option>
+                                        @foreach ($standards ?? [] as $std)
+                                            <option value="{{ $std->id }}">{{ $std->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <div class="mb-4">
+                                    <label class="form-label">Student <span class="text-danger">*</span></label>
+                                    <select class="form-select select2-student" id="student" name="student_id" required>
+                                        <option value="">-- Select Student --</option>
+                                        @php
+                                            $groupedStudents = collect($students)->groupBy('standard_name');
+                                        @endphp
+                                        @foreach ($groupedStudents as $stdGroup => $stdStudents)
+                                            <optgroup label="{{ $stdGroup }}">
+                                                @foreach ($stdStudents as $student)
+                                                    <option value="{{ $student['id'] }}"
+                                                            data-standard="{{ $student['standard_id'] ?? '' }}"
+                                                            data-standard-name="{{ $student['standard_name'] ?? '' }}">
+                                                        {{ $student['label'] }}
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
                                 <div class="mb-4">
                                     <label class="form-label">Date</label>
                                     <input type="date" class="form-control" id="date" name="issue_date"
@@ -55,7 +78,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="mb-4">
                                     <label class="form-label">Recommender Type</label>
 
@@ -139,7 +162,7 @@
                                     <th>Student Name</th>
                                     <th>Date</th>
                                     <th>Recommender</th>
-                                    <th class="text-center" style="width: 90px;">View</th>
+                                    <th class="text-center" style="width: 140px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="certificate-history-body">
@@ -150,9 +173,14 @@
                                         <td>{{ $history['issue_date'] ?? '-' }}</td>
                                         <td>{{ $history['recommender_name'] ?? '-' }}</td>
                                         <td class="text-center">
-                                            <a href="{{ $history['certificate_url'] }}" target="_blank" class="btn btn-sm btn-secondary" title="View Certificate">
-                                                <i class="ti ti-eye"></i>
-                                            </a>
+                                            <div class="d-inline-flex align-items-center gap-1">
+                                                <a href="{{ $history['certificate_url'] }}" target="_blank" class="btn btn-sm btn-secondary" title="View Certificate">
+                                                    <i class="ti ti-eye"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-danger delete-history-btn" data-id="{{ $history['id'] }}" title="Delete History">
+                                                    <i class="ti ti-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -207,11 +235,56 @@
 
         toggleSection();
 
-        // Initialize Select2
+        const rawStudents = @json($students ?? []);
+
+        $('.select2-standard').select2({
+            placeholder: 'All Standards',
+            allowClear: true,
+            width: '100%'
+        });
+
+        $('#student').select2({
+            placeholder: '-- Select Student --',
+            allowClear: true,
+            width: '100%'
+        });
+
         $('.select2').select2({
             placeholder: 'Select an option',
             allowClear: true,
             width: '100%'
+        });
+
+        $('#filter_standard_id').on('change', function() {
+            const selectedStdId = $(this).val();
+            const $studentSelect = $('#student');
+            $studentSelect.empty().append(new Option('-- Select Student --', '', true, true));
+
+            const filtered = selectedStdId
+                ? rawStudents.filter(s => String(s.standard_id) === String(selectedStdId))
+                : rawStudents;
+
+            const groups = {};
+            filtered.forEach(s => {
+                const group = s.standard_name || 'Other';
+                if (!groups[group]) groups[group] = [];
+                groups[group].push(s);
+            });
+
+            Object.keys(groups).forEach(groupName => {
+                const $group = $('<optgroup>').attr('label', groupName);
+                groups[groupName].forEach(s => {
+                    const $opt = $('<option>')
+                        .val(s.id)
+                        .text(s.label)
+                        .attr('data-standard', s.standard_id || '')
+                        .attr('data-standard-name', s.standard_name || '');
+                    $group.append($opt);
+                });
+                $studentSelect.append($group);
+            });
+
+            $studentSelect.val(null).trigger('change');
         });
 
         // Form submission
@@ -258,9 +331,14 @@
                                 <td>${response.data.issue_date || '-'}</td>
                                 <td>${response.data.recommender_name || '-'}</td>
                                 <td class="text-center">
-                                    <a href="${response.data.certificate_url}" target="_blank" class="btn btn-sm btn-secondary" title="View Certificate">
-                                        <i class="ti ti-eye"></i>
-                                    </a>
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <a href="${response.data.certificate_url}" target="_blank" class="btn btn-sm btn-secondary" title="View Certificate">
+                                            <i class="ti ti-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger delete-history-btn" data-id="${response.data.id}" title="Delete History">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `;
@@ -303,6 +381,86 @@
                     }
                 }
             });
+        });
+
+        $(document).on('click', '.delete-history-btn', function() {
+            const $btn = $(this);
+            const id = $btn.data('id');
+            const $row = $btn.closest('tr');
+
+            const doDelete = function() {
+                $btn.prop('disabled', true);
+                $.ajax({
+                    url: "{{ url('issue-certificate/history') }}/" + id,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        _method: 'DELETE',
+                        certificate_type: 'letter-recommendation'
+                    },
+                    success: function(response) {
+                        if (response.status) {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success(response.message || 'Record deleted successfully.');
+                            }
+                            $row.fadeOut(200, function() {
+                                $(this).remove();
+                                $('#certificate-history-body tr').each(function(index) {
+                                    $(this).find('td:first').text(index + 1);
+                                });
+                                if ($('#certificate-history-body tr').length === 0) {
+                                    $('#certificate-history-body').html(`
+                                        <tr id="certificate-history-empty-row">
+                                            <td colspan="5" class="text-center text-muted py-3">No history found</td>
+                                        </tr>
+                                    `);
+                                }
+                            });
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(response.message || 'Failed to delete record.');
+                            } else {
+                                alert(response.message || 'Failed to delete record.');
+                            }
+                            $btn.prop('disabled', false);
+                        }
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || 'Could not delete record. Please try again.';
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(message);
+                        } else {
+                            alert(message);
+                        }
+                        $btn.prop('disabled', false);
+                    }
+                });
+            };
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "This certificate history record will be deleted!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, delete it!",
+                    cancelButtonText: "No, cancel!",
+                    reverseButtons: true,
+                    customClass: {
+                        confirmButton: 'btn btn-danger',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        doDelete();
+                    }
+                });
+            } else {
+                if (confirm("Are you sure you want to delete this certificate history?")) {
+                    doDelete();
+                }
+            }
         });
     });
     </script>
