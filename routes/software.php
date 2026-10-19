@@ -174,6 +174,7 @@ Route::get('class-promotion', [ClassPromotionController::class, 'index'])->name(
 Route::post('class-promotion', [ClassPromotionController::class, 'filter'])->name('class-promotion.filter');
 Route::post('class-promotion/promote', [ClassPromotionController::class, 'promote'])->name('class-promotion.promote');
 Route::get('admission/import', [AdmissionController::class, 'import'])->name('admission.import');
+Route::get('admission/import-sample-download', [AdmissionController::class, 'downloadSample'])->name('admission.import-sample-download');
 Route::post('admission/import-store', [AdmissionController::class, 'importStore'])->name('admission.import-store');
 
 

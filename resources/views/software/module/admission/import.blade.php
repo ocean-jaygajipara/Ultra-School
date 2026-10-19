@@ -548,7 +548,7 @@
                                 <b>Need the format?</b>
                                 Download the sample file, fill in your students and upload it here.
                             </div>
-                            <a href="{{ asset('uploads/import_student/import_student_sample.xlsx') }}" download>
+                            <a href="{{ route('admission.import-sample-download') }}">
                                 <i class="ti ti-download"></i> Sample File
                             </a>
                         </div>

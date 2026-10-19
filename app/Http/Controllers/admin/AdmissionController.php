@@ -1370,6 +1370,23 @@ class AdmissionController extends Controller
         }
     }
 
+    public function downloadSample()
+    {
+        $filePath = public_path('samples/import_student_sample.xlsx');
+
+        if (!file_exists($filePath)) {
+            $filePath = public_path('uploads/import_student/import_student_sample.xlsx');
+        }
+
+        if (file_exists($filePath)) {
+            return response()->download($filePath, 'import_student_sample.xlsx', [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ]);
+        }
+
+        return redirect()->back()->with('error', 'Sample file not found.');
+    }
+
     public function importStore(Request $request)
     {
         $request->validate([
