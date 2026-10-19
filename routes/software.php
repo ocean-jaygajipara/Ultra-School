@@ -12,6 +12,9 @@ use App\Http\Controllers\admin\master\MasterEventController;
 use App\Http\Controllers\admin\master\MasterHolidayController;
 use App\Http\Controllers\admin\DocumentTypeController;
 use App\Http\Controllers\admin\FeesCollectionController;
+use App\Http\Controllers\admin\BusFeeCollectionController;
+use App\Http\Controllers\admin\RollNumberListController;
+use App\Http\Controllers\admin\ClassPromotionController;
 use App\Http\Controllers\admin\master\MasterCityController;
 use App\Http\Controllers\admin\master\MasterCountryController;
 use App\Http\Controllers\admin\master\MasterPincodeController;
@@ -163,6 +166,13 @@ Route::post('admission-education-detail-delete', [AdmissionController::class, 'e
 Route::post('admission/create-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-folder');
 Route::get('admission/{id}/roll-number', [AdmissionController::class, 'rollNumber'])->name('admission.roll-number');
 Route::post('admission/{id}/roll-number', [AdmissionController::class, 'rollNumberStore'])->name('admission.roll-number.store');
+Route::get('roll-number-list', [RollNumberListController::class, 'index'])->name('roll-number-list.index');
+Route::post('roll-number-list', [RollNumberListController::class, 'filter'])->name('roll-number-list.filter');
+Route::get('roll-number-list/print', [RollNumberListController::class, 'print'])->name('roll-number-list.print');
+
+Route::get('class-promotion', [ClassPromotionController::class, 'index'])->name('class-promotion.index');
+Route::post('class-promotion', [ClassPromotionController::class, 'filter'])->name('class-promotion.filter');
+Route::post('class-promotion/promote', [ClassPromotionController::class, 'promote'])->name('class-promotion.promote');
 Route::get('admission/import', [AdmissionController::class, 'import'])->name('admission.import');
 Route::post('admission/import-store', [AdmissionController::class, 'importStore'])->name('admission.import-store');
 
@@ -185,10 +195,10 @@ Route::match(['get', 'post'], 'course-fees-update', [AdmissionController::class,
 
 Route::get('admission/attendance/{id}', [AdmissionController::class, 'viewAttendance'])->name('admission.view-attendance');
 Route::get('admission/test-marks/{id}', [AdmissionController::class, 'viewTestMarks'])->name('admission.view-test-marks');
-Route::get('bonafide-certificate/{id}', [AdmissionController::class, 'bonafideCertificate'])->name('bonafide-certificate');
-Route::get('english-medium-certificate/{id}', [AdmissionController::class, 'englishMediumCertificate'])->name('english-medium-certificate');
-Route::get('letter-of-recommendation/{id}', [AdmissionController::class, 'letterOfRecommendation'])->name('letter-of-recommendation');
-Route::get('transfer-certificate/{id}', [AdmissionController::class, 'transferCertificate'])->name('transfer-certificate');
+Route::get('bonafide-certificate/{history}', [AdmissionController::class, 'bonafideCertificate'])->whereNumber('history')->name('bonafide-certificate');
+Route::get('english-medium-certificate/{history}', [AdmissionController::class, 'englishMediumCertificate'])->whereNumber('history')->name('english-medium-certificate');
+Route::get('letter-of-recommendation/{history}', [AdmissionController::class, 'letterOfRecommendation'])->whereNumber('history')->name('letter-of-recommendation');
+Route::get('transfer-certificate/{history}', [AdmissionController::class, 'transferCertificate'])->whereNumber('history')->name('transfer-certificate');
 
 
 /** Master Course Modules */
@@ -378,6 +388,15 @@ Route::match(['get', 'post'], 'check-master-password', [FeesCollectionController
 Route::get('/fees-collection/get-details/{id}', [FeesCollectionController::class, 'getDetails'])->name('fees-collection.getDetails');
 Route::get('/fees-collection/print/{id}', [FeesCollectionController::class, 'print'])->name('software.fees-collection.print');
 Route::get('fees-collection/{register_id}/semester-report', [FeesCollectionController::class, 'semesterReport'])->name('fees-collection.semester-report');
+
+// Bus Transport Fee (separate receipt)
+Route::get('bus-fee-collection', [BusFeeCollectionController::class, 'index'])->name('bus-fee-collection.index');
+Route::get('bus-fee-collection/create', [BusFeeCollectionController::class, 'create'])->name('bus-fee-collection.create');
+Route::post('bus-fee-collection', [BusFeeCollectionController::class, 'store'])->name('bus-fee-collection.store');
+Route::get('bus-fee-collection/students-by-standard', [BusFeeCollectionController::class, 'studentsByStandard'])->name('bus-fee-collection.students-by-standard');
+Route::get('bus-fee-collection/student/{id}', [BusFeeCollectionController::class, 'studentDetails'])->whereNumber('id')->name('bus-fee-collection.student');
+Route::get('bus-fee-collection/print/{id}', [BusFeeCollectionController::class, 'print'])->whereNumber('id')->name('bus-fee-collection.print');
+Route::get('bus-fee-collection/{id}', [BusFeeCollectionController::class, 'show'])->whereNumber('id')->name('bus-fee-collection.show');
 
 // Fees Pending Report (Menu 1)
 Route::get('fees-pending-report', [\App\Http\Controllers\admin\FeesPendingReportController::class, 'index'])->name('fees-pending-report.index');

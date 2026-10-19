@@ -13,6 +13,7 @@ class MasterFeeDetail extends Model
     public $table = 'fee_details';
 
     protected $fillable = [
+        'standard_id',
         'fee_name',
         'amount',
         'status',
@@ -20,4 +21,9 @@ class MasterFeeDetail extends Model
         'updated_by',
         'deleted_by',
     ];
+
+    public function standard()
+    {
+        return $this->belongsTo(MasterStandard::class, 'standard_id');
+    }
 }

@@ -21,24 +21,35 @@
 @endsection
 
 @section('breadcrumb')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('software.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route($route . '.index') }}">View {{ $page_title }}</a></li>
-                        <li class="breadcrumb-item active">{{ $isEdit ? 'Edit' : 'Add' }} {{ $page_title }}</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
+    <div class="d-flex justify-content-lg-between px-1">
+        @include('software.includes.breadcrumb', [
+            'breadcrumbArray' => [
+                ['title' => $page_title, 'url' => route($route . '.index')],
+                ['title' => (isset($edit) && $edit?->id ? 'Edit' : 'Add') . ' ' . $page_title, 'url' => ''],
+            ],
+            'page_title' => $page_title,
+            'show_page_title' => false,
+            'route' => $route,
+            'show_add_btn' => false,
+            'show_back_btn' => true,
+        ])
     </div>
 @endsection
 
 @section('content')
-    <div class="card shadow my-4">
-        <div class="card-body my-2">
+    <div class="mst my-2">
+        <div class="mst-hero">
+            <div class="mst-hero-l">
+                <div class="mst-hero-icon"><i class="ti ti-calendar"></i></div>
+                <div>
+                    <h4>{{ isset($edit) && $edit?->id ? 'Edit' : 'Add' }} {{ $page_title }}</h4>
+                    <p>{{ isset($edit) && $edit?->id ? 'Update master record details.' : 'Create a new master record.' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mst-form-card">
+            <div class="card-body p-4">
             @if ($errors->any() && !$errors->hasAny(['name', 'start_date', 'end_date', 'status']))
                 <div class="alert alert-danger">{{ $errors->first() }}</div>
             @endif
@@ -53,7 +64,7 @@
                     <div class="col-md-3 col-sm-12 mb-3">
                         <label class="form-label">Academic Year <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                            value="{{ old('name', $edit->name ?? '') }}" placeholder="e.g. 2026-27" autocomplete="off">
+                            value="{{ old('name', $edit->name ?? '') }}" placeholder="e.g. YYYY-YY" autocomplete="off">
                         @error('name')
                             <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
                         @enderror
@@ -108,6 +119,7 @@
                     </div>
                 </div>
             </form>
+                    </div>
         </div>
     </div>
 @endsection

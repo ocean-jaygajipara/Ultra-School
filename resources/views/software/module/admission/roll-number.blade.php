@@ -174,13 +174,9 @@
                                 <label class="form-label">Division</label>
                                 <input type="text" class="form-control" value="{{ $admission->division }}" readonly>
                             </div>
-                            <div class="col-md-6 col-sm-12 mb-3">
-                                <label class="form-label">Surname</label>
-                                <input type="text" class="form-control" value="{{ $admission->first_name }}" readonly>
-                            </div>
-                            <div class="col-md-6 col-sm-12 mb-3">
-                                <label class="form-label">Name</label>
-                                <input type="text" class="form-control" value="{{ $admission->last_name }}" readonly>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" value="{{ $admission->full_name }}" readonly>
                             </div>
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <label class="form-label">GR No.</label>

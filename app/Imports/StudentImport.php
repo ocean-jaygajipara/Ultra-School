@@ -3,6 +3,8 @@
 namespace App\Imports;
 
 use App\Models\Admission;
+use App\Models\AdmissionClassHistory;
+use App\Models\Master\MasterAcademicYear;
 use App\Models\Master\MasterStandard;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -60,6 +62,7 @@ class StudentImport implements ToCollection
         $standard = null;
         $division = null;
         $titleStandardRaw = null;
+        $defaultAcademicYear = $this->resolveAcademicYear();
 
         foreach ($rows as $index => $row) {
             $excelRow = $index + 1;
@@ -124,9 +127,16 @@ class StudentImport implements ToCollection
             $nameParts = preg_split('/\s+/', mb_strtoupper($fullName));
             $fatherName = $this->cleanText($get('father_name'));
             $rowStandardId = Admission::standardIdByName($rowStandard);
+            $admissionDate = $this->parseDate($get('admission'));
+            $academicYear = $this->resolveAcademicYear($admissionDate, $defaultAcademicYear);
+
+            if (!$academicYear) {
+                $this->skip($excelRow, $grNo, 'Academic Year not set in Academic Year Master (set Current year first)');
+                continue;
+            }
 
             try {
-                Admission::create([
+                $admission = Admission::create([
                     'gr_no'             => $grNo,
                     'first_name'        => $nameParts[0],
                     'last_name'         => $nameParts[1] ?? null,
@@ -134,9 +144,10 @@ class StudentImport implements ToCollection
                     'mother_name'       => $this->upperOrNull($get('mother_name')),
                     'mobile_no'         => $this->cleanNumberText($get('mobile_no')),
                     'date_of_birth'     => $this->parseDate($get('dob')),
-                    'admission_date'    => $this->parseDate($get('admission')),
+                    'admission_date'    => $admissionDate,
                     'admission_std_id'  => $rowStandardId,
                     'current_std_id'    => $rowStandardId,
+                    'academic_year_id'  => $academicYear->id,
                     'division'          => $rowDivision !== null ? mb_strtoupper($rowDivision) : null,
                     'cast'              => $this->upperOrNull($get('cast')),
                     'religion'          => $this->cleanText($get('religion')),
@@ -146,6 +157,8 @@ class StudentImport implements ToCollection
                     'permanent_address' => $this->cleanText($get('address')),
                     'created_by'        => Auth::id(),
                 ]);
+
+                AdmissionClassHistory::record($admission, Auth::id(), $academicYear);
 
                 $this->seenGrNos[$grNo] = true;
                 $this->report['inserted'][] = ['row' => $excelRow, 'id' => $grNo];
@@ -162,6 +175,33 @@ class StudentImport implements ToCollection
     protected function skip(int $row, $grNo, string $reason): void
     {
         $this->report['skipped'][] = ['row' => $row, 'id' => $grNo, 'reason' => $reason];
+    }
+
+    /**
+     * Resolve academic year dynamically from Master (never hardcode year names).
+     * Priority: Current → year covering admission date → latest active year.
+     */
+    protected function resolveAcademicYear($admissionDate = null, ?MasterAcademicYear $fallback = null): ?MasterAcademicYear
+    {
+        $year = MasterAcademicYear::current();
+        if ($year) {
+            return $year;
+        }
+
+        if (!empty($admissionDate)) {
+            $year = MasterAcademicYear::forDate($admissionDate);
+            if ($year) {
+                return $year;
+            }
+        }
+
+        if ($fallback) {
+            return $fallback;
+        }
+
+        return MasterAcademicYear::where('status', 'active')
+            ->orderByDesc('start_date')
+            ->first();
     }
 
     protected function normalizeHeader($value): string

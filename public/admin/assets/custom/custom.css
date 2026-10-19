@@ -175,3 +175,108 @@ div.dataTables_scrollFoot {
 }
 
 
+
+/* ===== Course Masters UI ===== */
+.mst {
+    --navy: #1f2580;
+    --navy-2: #2e3a9e;
+    --gold: #f5b400;
+    --red: #e1141c;
+    --sky: #eef7fd;
+    --line: #e1e4f2;
+    --muted: #5f6488;
+}
+.mst-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: linear-gradient(120deg, var(--navy), var(--navy-2));
+    color: #fff;
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 10px 24px rgba(31, 37, 128, .2);
+}
+.mst-hero-l { display: flex; align-items: center; gap: 14px; }
+.mst-hero-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: rgba(255,255,255,.14); color: var(--gold);
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    flex-shrink: 0;
+}
+.mst-hero h4 { margin: 0; font-weight: 800; color: #fff !important; font-size: 1.2rem; }
+.mst-hero p { margin: 2px 0 0; color: rgba(255, 255, 255, 0.9) !important; font-size: .88rem; }
+.mst-note {
+    background: var(--sky);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--navy);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    color: var(--navy);
+    font-size: .9rem;
+}
+.mst-card {
+    border: 1px solid var(--line) !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+    box-shadow: 0 8px 22px rgba(31, 37, 128, .08);
+}
+.mst-card > .card-body { padding: 18px 20px; }
+.mst-table thead th {
+    background: var(--navy) !important;
+    color: #fff !important;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border: 0 !important;
+    padding: 12px 14px !important;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+.mst-table tbody td {
+    padding: 12px 14px !important;
+    vertical-align: middle;
+    border-color: #eef0f8 !important;
+    color: var(--navy);
+    font-weight: 600;
+}
+.mst-table tbody tr:hover td { background: var(--sky) !important; }
+.mst-table .btn-icon {
+    width: 34px; height: 34px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+}
+.mst-table .btn-sm.dropdown-toggle { border-radius: 50rem; padding: .35rem .9rem; }
+.mst-form-card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(31, 37, 128, .08);
+}
+.mst-form-card .form-label { color: var(--navy); font-weight: 700; }
+.mst-form-card .form-control,
+.mst-form-card .form-select,
+.mst-form-card .input-group-text {
+    border-radius: 10px;
+    border-color: var(--line);
+}
+.mst-form-card .input-group-text {
+    background: var(--sky);
+    color: var(--navy);
+    font-weight: 700;
+}
+.mst .dataTables_wrapper .dataTables_filter input {
+    border-radius: 10px; border: 1px solid var(--line); padding: 6px 12px;
+}
+.mst .dataTables_wrapper .dataTables_length select {
+    border-radius: 10px; border: 1px solid var(--line);
+}
+.mst .card .table-responsive,
+.mst .card-body .table-responsive {
+    overflow: visible !important;
+    overflow-x: clip !important;
+}
+.mst .dataTables_wrapper { overflow-x: hidden !important; }

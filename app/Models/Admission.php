@@ -24,6 +24,7 @@ class Admission extends Authenticatable
         'gr_no',
         'bus_route_village',
         'admission_date',
+        'academic_year_id',
         'admission_std_id',
         'current_std_id',
         'division',
@@ -84,6 +85,11 @@ class Admission extends Authenticatable
     public function currentStandard()
     {
         return $this->belongsTo(\App\Models\Master\MasterStandard::class, 'current_std_id')->withTrashed();
+    }
+
+    public function academicYear()
+    {
+        return $this->belongsTo(\App\Models\Master\MasterAcademicYear::class, 'academic_year_id')->withTrashed();
     }
 
     /**

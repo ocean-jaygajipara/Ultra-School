@@ -8,7 +8,7 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title> {{ config('app.name') ?? 'Ocean Infotech' }}</title>
+    <title>@hasSection('title')@yield('title') | @endif{{ config('app.name') ?? 'Ultra School' }}</title>
 
     <meta name="description" content="" />
 

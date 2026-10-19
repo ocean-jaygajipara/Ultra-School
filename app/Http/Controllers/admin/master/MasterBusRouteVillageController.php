@@ -84,17 +84,21 @@ class MasterBusRouteVillageController extends Controller
                             });
                         }
                     })
+                    ->editColumn('name', function ($row) {
+                        $name = e($row->name ?? '-');
+                        return '<span class="brv-village"><i class="ti ti-map-pin"></i><span>' . $name . '</span></span>';
+                    })
                     ->editColumn('charge', function ($row) {
-                        return '₹' . number_format((float)($row->charge ?? 0), 2);
+                        return '<span class="brv-charge">₹' . number_format((float) ($row->charge ?? 0), 2) . '</span>';
                     })
                     ->editColumn('status', function ($row) use ($modules) {
                         if ($row->status === "active") {
-                            return '<button class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">' . ucfirst($row->status) . '</button>
+                            return '<button class="btn btn-success btn-sm dropdown-toggle rounded-pill px-3" data-bs-toggle="dropdown">' . ucfirst($row->status) . '</button>
                                 <ul class="dropdown-menu">
                                     <li><a href="javascript:void(0)" class="dropdown-item update-status" data-url="' . route($modules["route"] . '.status-update') . '" data-id="' . $row->id . '" data-update_status="inactive">Inactive</a></li>
                                 </ul>';
                         } elseif ($row->status === "inactive") {
-                            return '<button class="btn btn-danger btn-sm dropdown-toggle" data-bs-toggle="dropdown">' . ucfirst($row->status) . '</button>
+                            return '<button class="btn btn-danger btn-sm dropdown-toggle rounded-pill px-3" data-bs-toggle="dropdown">' . ucfirst($row->status) . '</button>
                                 <ul class="dropdown-menu">
                                     <li><a href="javascript:void(0)" class="dropdown-item update-status" data-url="' . route($modules["route"] . '.status-update') . '" data-id="' . $row->id . '" data-update_status="active">Active</a></li>
                                 </ul>';
@@ -102,23 +106,24 @@ class MasterBusRouteVillageController extends Controller
                         return '';
                     })
                     ->addColumn('action', function ($row) use ($modules) {
-                        $btn = '';
+                        $btn = '<div class="brv-actions">';
 
                         if (!$row->deleted_at) {
                             if ($modules['permission_edit']) {
-                                $btn .= '<a href="' . route($modules["route"] . ".edit", [$row->id]) . '" class="btn btn-primary btn-icon"><i class="fa-solid fa-pen-to-square"></i></a>';
+                                $btn .= '<a href="' . route($modules["route"] . ".edit", [$row->id]) . '" class="btn btn-primary btn-icon" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>';
                             }
                             if ($modules['permission_delete']) {
-                                $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".destroy", [$row->id]) . '" class="btn btn-danger btn-icon deletebutton mx-1"><i class="fa-solid fa-trash"></i></a>';
+                                $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".destroy", [$row->id]) . '" class="btn btn-danger btn-icon deletebutton" title="Delete"><i class="fa-solid fa-trash"></i></a>';
                             }
                         } else {
-                            $btn .= '<a href="javascript:void(0)" data-restore="' . route($modules["route"] . ".restore", ['id' => $row->id]) . '" class="btn btn-light mx-1 record-restore"><i class="ti ti-history"></i> Restore</a>';
-                            $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".permanent-delete", [$row->id]) . '" class="btn btn-danger btn-icon permanent-delete mx-1"><i class="fa-solid fa-trash"></i></a>';
+                            $btn .= '<a href="javascript:void(0)" data-restore="' . route($modules["route"] . ".restore", ['id' => $row->id]) . '" class="btn btn-light record-restore" title="Restore"><i class="ti ti-history"></i></a>';
+                            $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".permanent-delete", [$row->id]) . '" class="btn btn-danger btn-icon permanent-delete" title="Permanent Delete"><i class="fa-solid fa-trash"></i></a>';
                         }
 
-                        return $btn ?: '-';
+                        $btn .= '</div>';
+                        return $btn !== '<div class="brv-actions"></div>' ? $btn : '-';
                     })
-                    ->rawColumns(['status', 'action'])
+                    ->rawColumns(['name', 'charge', 'status', 'action'])
                     ->make(true);
             }
 
@@ -171,8 +176,7 @@ class MasterBusRouteVillageController extends Controller
                 return $this->sendResponse([], 'Record Created Successfully');
             }
 
-            flash()->success('Record Created Successfully');
-            return redirect()->route($modules['route'] . '.index');
+            return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' created successfully');
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return $this->sendError($e->getMessage(), [], [], 500);
@@ -228,8 +232,7 @@ class MasterBusRouteVillageController extends Controller
                 return $this->sendResponse([], 'Record Updated Successfully');
             }
 
-            flash()->success('Record Updated Successfully');
-            return redirect()->route($modules['route'] . '.index');
+            return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' updated successfully');
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return $this->sendError($e->getMessage(), [], [], 500);
@@ -305,8 +308,7 @@ class MasterBusRouteVillageController extends Controller
                 ]);
             }
 
-            flash()->success('Record moved to trash successfully');
-            return redirect()->route($modules['route'] . '.index');
+            return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' moved to trash successfully');
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json([
@@ -341,8 +343,7 @@ class MasterBusRouteVillageController extends Controller
                 ]);
             }
 
-            flash()->success('Record Restored Successfully');
-            return redirect()->route($modules['route'] . '.index');
+            return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' restored successfully');
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json([
@@ -376,8 +377,7 @@ class MasterBusRouteVillageController extends Controller
                 ]);
             }
 
-            flash()->success('Record Permanently Deleted');
-            return redirect()->route($modules['route'] . '.index');
+            return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' permanently deleted');
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json([

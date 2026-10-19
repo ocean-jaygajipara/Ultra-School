@@ -30,12 +30,10 @@
                             if (courceregistration_id == item.id) {
                                 options += "<option value='" + item.id +
                                     "' selected >" +
-                                    item.name +" - "+
-                                    item?.course_name + "</option>";
+                                    item.name + "</option>";
                             } else {
                                 options += "<option value='" + item.id + "'>" +
-                                    item.name +" - "+
-                                    item?.course_name + "</option>";
+                                    item.name + "</option>";
                             }
                         });
                     }

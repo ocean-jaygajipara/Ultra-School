@@ -5,27 +5,30 @@
     $folder_path = isset($modules['folder_path']) ? $modules['folder_path'] : null;
     $route = isset($modules['route']) ? $modules['route'] : null;
     $permission_prefix = isset($modules['permission_prefix']) ? $modules['permission_prefix'] : null;
-    $i = 0;
     $exportColumns = $availableExportColumns ?? [];
     $defaultColumns = $defaultExportColumns ?? array_keys($exportColumns);
 @endphp
 @section('title', $page_title)
 
 @section('page_style_file')
-    <!--datatable css-->
     <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css') }}">
-    <!--datatable responsive css-->
-    <link rel="stylesheet"
-        href="{{ asset('admin/assets/cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css') }}">
     <style>
-        .card .table-responsive,
-        .card-body .table-responsive {
-            overflow: visible !important;
-            overflow-x: clip !important;
+        .brv-village { display: inline-flex; align-items: center; gap: 8px; }
+        .brv-village i {
+            width: 32px; height: 32px; border-radius: 10px;
+            background: #eef7fd; color: #1f2580;
+            display: inline-flex; align-items: center; justify-content: center;
         }
-        .dataTables_wrapper {
-            overflow-x: hidden !important;
+        .brv-charge {
+            display: inline-block; background: #fff8e6; color: #9a6b00;
+            border: 1px solid #f5d98a; border-radius: 8px; padding: 4px 10px; font-weight: 700;
+        }
+        .brv-actions { display: inline-flex; gap: 6px; }
+        .brv-actions .btn {
+            width: 34px; height: 34px; padding: 0;
+            display: inline-flex; align-items: center; justify-content: center; border-radius: 10px;
         }
     </style>
 @endsection
@@ -35,6 +38,7 @@
         @include('software.includes.breadcrumb', [
             'breadcrumbArray' => [['title' => $page_title, 'url' => '']],
             'page_title' => $page_title,
+            'show_page_title' => false,
             'route' => $route,
             'show_add_btn' => isset($modules) && isset($modules['permission_add']) ? $modules['permission_add'] : false,
             'show_filter_btn' => false,
@@ -47,17 +51,28 @@
 @endsection
 
 @section('content')
-    <div class="row my-2">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <table id="yajra-datatables" class="table table-hover w-100">
+    <div class="mst my-2">
+        <div class="mst-hero">
+            <div class="mst-hero-l">
+                <div class="mst-hero-icon"><i class="ti ti-bus"></i></div>
+                <div>
+                    <h4>{{ $page_title }}</h4>
+                    <p>Manage bus stop villages and transport charges for fee collection.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mst-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="yajra-datatables" class="table table-hover w-100 mst-table mb-0">
                         @if (isset($columns))
                             <thead>
                                 <tr>
                                     @foreach ($columns as $item)
                                         <th class="{{ $item?->className ?? '' }}">
-                                            {{ ucfirst($item?->td_label ?? $item?->name) ?? '' }}</th>
+                                            {{ ucfirst($item?->td_label ?? $item?->name) ?? '' }}
+                                        </th>
                                     @endforeach
                                 </tr>
                             </thead>
@@ -83,31 +98,20 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="export_scope" id="scopeFiltered"
                                     value="filtered" checked>
-                                <label class="form-check-label" for="scopeFiltered">
-                                    Use current filters / search
-                                </label>
+                                <label class="form-check-label" for="scopeFiltered">Use current filters / search</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="export_scope" id="scopeAll"
-                                    value="all">
-                                <label class="form-check-label" for="scopeAll">
-                                    Export complete {{ $page_title }} list
-                                </label>
+                                <input class="form-check-input" type="radio" name="export_scope" id="scopeAll" value="all">
+                                <label class="form-check-label" for="scopeAll">Export complete {{ $page_title }} list</label>
                             </div>
                         </div>
                         <div>
                             <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
                                 <label class="form-label fw-bold mb-0">Columns</label>
                                 <div class="ms-auto d-flex flex-wrap gap-2">
-                                    <button type="button" class="btn btn-sm btn-light border" id="selectAllColumns">
-                                        Select all
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-light border" id="clearAllColumns">
-                                        Clear all
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-primary" id="resetDefaultColumns">
-                                        Reset to default
-                                    </button>
+                                    <button type="button" class="btn btn-sm btn-light border" id="selectAllColumns">Select all</button>
+                                    <button type="button" class="btn btn-sm btn-light border" id="clearAllColumns">Clear all</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="resetDefaultColumns">Reset to default</button>
                                 </div>
                             </div>
                             <p class="text-muted mb-2">Choose the columns that should appear in the export/print output.</p>
@@ -124,9 +128,7 @@
                                         </div>
                                     </div>
                                 @empty
-                                    <div class="col-12">
-                                        <p class="text-muted mb-0">No exportable columns configured.</p>
-                                    </div>
+                                    <div class="col-12"><p class="text-muted mb-0">No exportable columns configured.</p></div>
                                 @endforelse
                             </div>
                         </div>
@@ -142,7 +144,6 @@
 @endsection
 
 @section('page_script_file')
-    <!--datatable js-->
     <script src="{{ asset('admin/assets/cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('admin/assets/cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js') }}"></script>
     <script src="{{ asset('admin/assets/cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js') }}"></script>
@@ -151,9 +152,7 @@
 @section('page_leavel_script')
     <script type="text/javascript">
         $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
         });
 
         var dtable = null;
@@ -162,12 +161,11 @@
                 searching: true,
                 processing: true,
                 serverSide: true,
-                order: [
-                    [0, 'asc']
-                ],
+                autoWidth: false,
+                order: [[0, 'asc']],
                 ajax: {
-                    "url": "{{ route($route . '.index') }}",
-                    'beforeSend': function(request) {
+                    url: "{{ route($route . '.index') }}",
+                    beforeSend: function(request) {
                         request.setRequestHeader("X-CSRF-TOKEN", $('meta[name="csrf-token"]').attr('content'));
                     },
                     type: "GET",
@@ -176,15 +174,17 @@
                     },
                 },
                 columns: {!! json_encode($columns) !!},
-                language: {
-                    searchPlaceholder: 'Search...',
-                },
+                columnDefs: [
+                    { targets: 0, width: '40%' },
+                    { targets: 1, width: '20%', className: 'text-end' },
+                    { targets: 2, width: '20%', className: 'text-center' },
+                    { targets: 3, width: '20%', className: 'text-center', orderable: false, searchable: false },
+                ],
+                language: { searchPlaceholder: 'Search village...' },
             });
         });
 
-        $('input[name="search"]').keyup(function() {
-            dtable.draw();
-        });
+        $('input[name="search"]').keyup(function() { dtable.draw(); });
         jQuery(document).on('change', 'select', function(event) {
             event.preventDefault();
             dtable.draw();
@@ -200,21 +200,8 @@
                 exportModalInstance = new bootstrap.Modal(exportModalElement);
             }
 
-            const showExportModal = () => {
-                if (exportModalInstance) {
-                    exportModalInstance.show();
-                } else {
-                    $('#exportModal').modal('show');
-                }
-            };
-
-            const hideExportModal = () => {
-                if (exportModalInstance) {
-                    exportModalInstance.hide();
-                } else {
-                    $('#exportModal').modal('hide');
-                }
-            };
+            const showExportModal = () => exportModalInstance ? exportModalInstance.show() : $('#exportModal').modal('show');
+            const hideExportModal = () => exportModalInstance ? exportModalInstance.hide() : $('#exportModal').modal('hide');
 
             function openExportModal(actionType) {
                 $('#export_action').val(actionType);
@@ -222,24 +209,10 @@
                 showExportModal();
             }
 
-            $('#exportExcelBtn').on('click', function(e) {
-                e.preventDefault();
-                openExportModal('excel');
-            });
-
-            $('#print_btn').on('click', function(e) {
-                e.preventDefault();
-                openExportModal('print');
-            });
-
-            $('#selectAllColumns').on('click', function() {
-                $('.export-column').prop('checked', true);
-            });
-
-            $('#clearAllColumns').on('click', function() {
-                $('.export-column').prop('checked', false);
-            });
-
+            $('#exportExcelBtn').on('click', function(e) { e.preventDefault(); openExportModal('excel'); });
+            $('#print_btn').on('click', function(e) { e.preventDefault(); openExportModal('print'); });
+            $('#selectAllColumns').on('click', function() { $('.export-column').prop('checked', true); });
+            $('#clearAllColumns').on('click', function() { $('.export-column').prop('checked', false); });
             $('#resetDefaultColumns').on('click', function() {
                 $('.export-column').each(function() {
                     $(this).prop('checked', defaultColumns.includes($(this).val()));
@@ -248,11 +221,7 @@
 
             $('#exportOptionsForm').on('submit', function(e) {
                 e.preventDefault();
-
-                const selectedColumns = $('.export-column:checked').map(function() {
-                    return $(this).val();
-                }).get();
-
+                const selectedColumns = $('.export-column:checked').map(function() { return $(this).val(); }).get();
                 if (!selectedColumns.length) {
                     toastr.warning('Please select at least one column to continue.');
                     return;
@@ -261,28 +230,20 @@
                 const scope = $('input[name="export_scope"]:checked').val() || 'filtered';
                 const params = new URLSearchParams();
                 params.append('scope', scope);
-
                 if (scope === 'filtered') {
                     const searchValue = $('#yajra-datatables_filter input[type="search"]').val();
-                    if (searchValue) {
-                        params.append('search', searchValue);
-                    }
+                    if (searchValue) params.append('search', searchValue);
                 }
-
                 selectedColumns.forEach(column => params.append('columns[]', column));
 
                 const actionType = $('#export_action').val();
                 const baseUrl = actionType === 'print'
                     ? "{{ route($route . '.print') }}"
                     : "{{ route($route . '.export-excel') }}";
-
                 const finalUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
 
-                if (actionType === 'print') {
-                    window.open(finalUrl, '_blank');
-                } else {
-                    window.location.href = finalUrl;
-                }
+                if (actionType === 'print') window.open(finalUrl, '_blank');
+                else window.location.href = finalUrl;
 
                 hideExportModal();
             });

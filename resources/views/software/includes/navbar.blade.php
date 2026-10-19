@@ -5,21 +5,7 @@
     $loginUser = Auth::user();
     $navBarProfilePhoto = asset('admin/assets/images/favicon/favicon.ico');
     $navBarProfilePhoto = asset('admin/assets/img/default/profile.png');
-    $navBarInitials = collect(preg_split('/\s+/', trim($loginUser?->name ?? '')))
-        ->filter()
-        ->take(2)
-        ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))
-        ->implode('') ?: 'U';
 @endphp
-<style>
-    .nav-initial-avatar {
-        background: linear-gradient(135deg, #190e80, #2e3a9e) !important;
-        color: #fff !important;
-        font-weight: 700;
-        letter-spacing: .5px;
-        box-shadow: 0 0 0 2px #fff, 0 0 0 4px #f5b400;
-    }
-</style>
 <nav class="layout-navbar container-fuild navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
     id="layout-navbar">
     <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
@@ -60,7 +46,7 @@
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        <span class="avatar-initial rounded-circle nav-initial-avatar">{{ $navBarInitials }}</span>
+                        <img src="{{ $navBarProfilePhoto }}" alt class="h-auto rounded-circle" />
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -69,7 +55,7 @@
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        <span class="avatar-initial rounded-circle nav-initial-avatar">{{ $navBarInitials }}</span>
+                                        <img src="{{ $navBarProfilePhoto }}" alt class="h-auto rounded-circle" />
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">

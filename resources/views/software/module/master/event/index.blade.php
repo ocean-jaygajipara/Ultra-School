@@ -22,6 +22,7 @@
         @include('software.includes.breadcrumb', [
             'breadcrumbArray' => [['title' => $page_title, 'url' => '']],
             'page_title' => $page_title,
+            'show_page_title' => false,
             'route' => $route,
             'show_add_btn' => isset($modules) && isset($modules['permission_add']) ? $modules['permission_add'] : false,
             'show_filter_btn' => false,
@@ -31,12 +32,21 @@
 @endsection
 
 @section('content')
-    <div class="row my-2">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="yajra-datatables" class="table table-hover dt-responsive nowrap" style="width: 100%">
+    <div class="mst my-2">
+        <div class="mst-hero">
+            <div class="mst-hero-l">
+                <div class="mst-hero-icon"><i class="ti ti-calendar-event"></i></div>
+                <div>
+                    <h4>{{ $page_title }}</h4>
+                    <p>Manage school events.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mst-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="yajra-datatables" class="table table-hover w-100 mst-table mb-0">
                             @if (isset($columns))
                                 <thead>
                                     <tr>
@@ -48,7 +58,6 @@
                                 </thead>
                             @endif
                         </table>
-                    </div>
                 </div>
             </div>
         </div>

@@ -374,7 +374,8 @@ class AdmissionController extends Controller
         $classes = \App\Models\Master\MasterClass::where('status', 'active')->orderBy('class')->get();
         $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
         $schoolStandards = $this->getStandardList();
-        return view($modules['folder_path'] . '.form', compact('modules', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions', 'schoolStandards'));
+        $academicYears = MasterAcademicYear::where('status', 'active')->orderByDesc('start_date')->get();
+        return view($modules['folder_path'] . '.form', compact('modules', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions', 'schoolStandards', 'academicYears'));
     }
 
 
@@ -393,11 +394,14 @@ class AdmissionController extends Controller
         View::share('modules', $modules);
         $validated = $request->validated();
 
-        $academicYear = MasterAcademicYear::forDate($validated['admission_date'] ?? null) ?? MasterAcademicYear::current();
+        $academicYear = !empty($validated['academic_year_id'])
+            ? MasterAcademicYear::find($validated['academic_year_id'])
+            : (MasterAcademicYear::forDate($validated['admission_date'] ?? null) ?? MasterAcademicYear::current());
         if (!$academicYear) {
             return Redirect::back()->withInput()
-                ->withErrors('No academic year found for this admission date. Please add it in Academic Year Master first.');
+                ->withErrors('No academic year found. Please select Academic Year or add it in Academic Year Master first.');
         }
+        $validated['academic_year_id'] = $academicYear->id;
 
         if ($request->hasFile('profile_pic')) {
             $file = $request->file('profile_pic');
@@ -562,7 +566,7 @@ class AdmissionController extends Controller
 
     public function show(Request $request)
     {
-        $student = Admission::withTrashed()->find($request->id);
+        $student = Admission::with(['academicYear'])->withTrashed()->find($request->id);
         $student?->append(['admission_std', 'current_std']);
 
         $studentCourses = CourceRegistration::with(['course', 'class', 'shift', 'batch'])
@@ -574,10 +578,32 @@ class AdmissionController extends Controller
             return response()->json(['success' => false, 'message' => 'Student and Course not found.']);
         }
 
+        $classHistory = [];
+        if ($student) {
+            // Always keep Class History filled (current class + previous std if promoted)
+            AdmissionClassHistory::ensureForStudent($student);
+
+            $classHistory = AdmissionClassHistory::with(['academicYear', 'standard'])
+                ->where('admission_id', $student->id)
+                ->get()
+                ->sortBy(fn ($row) => $row->academicYear?->start_date?->timestamp ?? PHP_INT_MAX)
+                ->values()
+                ->map(function ($row) {
+                    return [
+                        'academic_year' => $row->academicYear?->name ?? '-',
+                        'standard' => $row->standard?->name ?? '-',
+                        'division' => $row->division ?: '-',
+                        'roll_no' => $row->roll_no ?: '-',
+                    ];
+                })
+                ->all();
+        }
+
         return response()->json([
             'success' => true,
             'student' => $student,
             'courses' => $studentCourses,
+            'class_history' => $classHistory,
         ]);
     }
 
@@ -605,7 +631,8 @@ class AdmissionController extends Controller
             $classes = \App\Models\Master\MasterClass::where('status', 'active')->orderBy('class')->get();
             $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->get();
             $schoolStandards = $this->getStandardList();
-            return view($modules['folder_path'] . '.form', compact('modules', 'edit', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions', 'schoolStandards'));
+            $academicYears = MasterAcademicYear::where('status', 'active')->orderByDesc('start_date')->get();
+            return view($modules['folder_path'] . '.form', compact('modules', 'edit', 'categories', 'religions', 'houses', 'villages', 'classes', 'divisions', 'schoolStandards', 'academicYears'));
         } catch (\Exception $e) {
 
             return Redirect::route('dashboard')->withErrors($e->getMessage());
@@ -629,11 +656,14 @@ class AdmissionController extends Controller
         $validated['father_name'] = strtoupper($validated['father_name']);
         $validated['mother_name'] = strtoupper($validated['mother_name']);
 
-        $academicYear = MasterAcademicYear::current();
+        $academicYear = !empty($validated['academic_year_id'])
+            ? MasterAcademicYear::find($validated['academic_year_id'])
+            : MasterAcademicYear::current();
         if (!$academicYear) {
             return Redirect::back()->withInput()
-                ->withErrors('No current academic year is set. Please add it in Academic Year Master first.');
+                ->withErrors('Please select Academic Year, or set Current in Academic Year Master first.');
         }
+        $validated['academic_year_id'] = $academicYear->id;
 
         // dd($validated,$request->all());
         $token = Session::get('external_api_token');
@@ -672,11 +702,27 @@ class AdmissionController extends Controller
                 $validated['roll_no'] = null;
             }
 
+            // Roll for this academic year already saved? Then normal update goes to list.
+            $yearHistory = AdmissionClassHistory::where('admission_id', $admission->id)
+                ->where('academic_year_id', $academicYear->id)
+                ->first();
+
             $admission->update($validated);
+            $admission->refresh();
             AdmissionClassHistory::record($admission, $loginUserId, $academicYear);
 
-            return Redirect::route('admission.roll-number', $admission->id)
-                ->with('success', $modules['title'] . ' updated successfully. Please confirm the roll number.');
+            $needsRollPage = $classChanged
+                || empty($admission->roll_no)
+                || !$yearHistory
+                || empty($yearHistory->roll_no);
+
+            if ($needsRollPage) {
+                return Redirect::route('admission.roll-number', $admission->id)
+                    ->with('success', $modules['title'] . ' updated successfully. Please confirm the roll number.');
+            }
+
+            return Redirect::route($modules['route'] . '.index')
+                ->withSuccess($modules['title'] . ' updated successfully');
 
             /*
             if (!$admission?->biometric_id && false) {
@@ -1205,56 +1251,46 @@ class AdmissionController extends Controller
 
         return $this->sendResponse($course, 'Status updated successfully.');
     }
-    public function bonafideCertificate(Request $request, $id)
+    public function bonafideCertificate($history)
     {
-        $admission = Admission::findOrFail($id);
-        $courseRegistration = CourceRegistration::where('register_id', $id)
-            ->with('course')
-            ->latest('id')
-            ->first();
-
-        $certificateData = $this->resolveCertificateRequestData($request);
-
-        return view($this->modules['folder_path'] . '.bonafide-certificate', compact('admission', 'courseRegistration', 'certificateData'));
+        return $this->showCertificate('bonafide', 'bonafide-certificate', $history, ['course']);
     }
 
-    public function transferCertificate(Request $request, $id)
+    public function transferCertificate($history)
     {
-        $admission = Admission::findOrFail($id);
-        $courseRegistration = CourceRegistration::where('register_id', $id)
-            ->with(['course', 'class'])
-            ->latest('id')
-            ->first();
-
-        $certificateData = $this->resolveCertificateRequestData($request);
-
-        return view($this->modules['folder_path'] . '.transfer-certificate', compact('admission', 'courseRegistration', 'certificateData'));
+        return $this->showCertificate('tc', 'transfer-certificate', $history, ['course', 'class']);
     }
 
-    public function englishMediumCertificate(Request $request, $id)
+    public function englishMediumCertificate($history)
     {
-        $admission = Admission::findOrFail($id);
-        $courseRegistration = CourceRegistration::where('register_id', $id)
-            ->with('course')
-            ->latest('id')
-            ->first();
-
-        $certificateData = $this->resolveCertificateRequestData($request);
-
-        return view($this->modules['folder_path'] . '.english-medium-certificate', compact('admission', 'courseRegistration', 'certificateData'));
+        return $this->showCertificate('english-medium', 'english-medium-certificate', $history, ['course']);
     }
 
-    public function letterOfRecommendation(Request $request, $id)
+    public function letterOfRecommendation($history)
     {
+        return $this->showCertificate('letter-recommendation', 'letter-of-recommendation', $history, ['course']);
+    }
+
+    /**
+     * Certificates open only from a generated history row; the student and the
+     * details printed on the certificate come from that row.
+     */
+    protected function showCertificate(string $type, string $view, $historyId, array $courseWith)
+    {
+        $history = $type === 'letter-recommendation'
+            ? \App\Models\IssueCertificateLetterRecommendation::findOrFail($historyId)
+            : \App\Models\IssueCertificateHistory::where('certificate_type', $type)->findOrFail($historyId);
+
+        $id = $history->admission_id ?? $history->register_id;
         $admission = Admission::findOrFail($id);
         $courseRegistration = CourceRegistration::where('register_id', $id)
-            ->with('course')
+            ->with($courseWith)
             ->latest('id')
             ->first();
 
-        $certificateData = $this->resolveCertificateRequestData($request);
+        $certificateData = $this->resolveCertificateRequestData($history);
 
-        return view($this->modules['folder_path'] . '.letter-of-recommendation', compact('admission', 'courseRegistration', 'certificateData'));
+        return view($this->modules['folder_path'] . '.' . $view, compact('admission', 'courseRegistration', 'certificateData'));
     }
 
     public function view($register_id, $course_id)
@@ -1340,9 +1376,19 @@ class AdmissionController extends Controller
             'import_file' => 'required|mimes:xlsx,xls,csv'
         ]);
 
+        $currentYear = MasterAcademicYear::current()
+            ?? MasterAcademicYear::where('status', 'active')->orderByDesc('start_date')->first();
+
+        if (!$currentYear) {
+            return back()->withErrors('Please set Current Academic Year in Academic Year Master before importing students.');
+        }
+
         try {
             $import = new StudentImport();
             Excel::import($import, $request->file('import_file'));
+
+            // Fix any older rows still missing academic_year_id
+            Admission::whereNull('academic_year_id')->update(['academic_year_id' => $currentYear->id]);
 
             // Get report from import class
             $report = $import->report;
@@ -1485,21 +1531,21 @@ class AdmissionController extends Controller
         return $validated;
     }
 
-    protected function resolveCertificateRequestData(Request $request): array
+    protected function resolveCertificateRequestData($history): array
     {
         $today = now();
 
         return [
-            'issue_date' => $this->formatCertificateDate($request->issue_date, $today->format('j-m-Y')),
-            'academic_year' => trim((string) $request->academic_year) !== ''
-                ? trim((string) $request->academic_year)
+            'issue_date' => $this->formatCertificateDate($history->issue_date ?? null, $today->format('j-m-Y')),
+            'academic_year' => trim((string) ($history->academic_year ?? '')) !== ''
+                ? trim((string) $history->academic_year)
                 : $today->format('Y'),
-            'period_from' => $this->formatCertificateDate($request->semester_start, ''),
-            'period_to' => $this->formatCertificateDate($request->semester_end, ''),
-            'recommender_name' => $request->recommender_name ?? 'Hitesh Vadalia',
-            'recommender_designation' => $request->recommender_designation ?? 'I/C. Principal',
-            'recommender_type' => $request->recommender_type ?? 'principal',
-            'faculty_id' => $request->faculty_id ?? null,
+            'period_from' => '',
+            'period_to' => '',
+            'recommender_name' => $history->recommender_name ?? 'Hitesh Vadalia',
+            'recommender_designation' => $history->recommender_designation ?? 'I/C. Principal',
+            'recommender_type' => $history->recommender_type ?? 'principal',
+            'faculty_id' => $history->faculty_id ?? null,
         ];
     }
 

@@ -34,6 +34,54 @@ class MasterAcademicYear extends Model
         return static::where('is_current', true)->where('status', 'active')->first();
     }
 
+    /**
+     * Active year immediately before $relativeTo (by start_date).
+     * Uses Master list only — no hardcoded year names.
+     */
+    public static function previous(?self $relativeTo = null): ?self
+    {
+        $relativeTo ??= static::current();
+        if (!$relativeTo?->start_date) {
+            return null;
+        }
+
+        return static::where('status', 'active')
+            ->whereDate('start_date', '<', $relativeTo->start_date->toDateString())
+            ->orderByDesc('start_date')
+            ->first();
+    }
+
+    /**
+     * Active year immediately after $relativeTo (by start_date).
+     */
+    public static function next(?self $relativeTo = null): ?self
+    {
+        $relativeTo ??= static::current();
+        if (!$relativeTo?->start_date) {
+            return null;
+        }
+
+        return static::where('status', 'active')
+            ->whereDate('start_date', '>', $relativeTo->start_date->toDateString())
+            ->orderBy('start_date')
+            ->first();
+    }
+
+    /**
+     * Resolve a year by id, falling back to current when missing.
+     */
+    public static function resolve(?int $id = null): ?self
+    {
+        if ($id) {
+            $year = static::withTrashed()->find($id);
+            if ($year) {
+                return $year;
+            }
+        }
+
+        return static::current();
+    }
+
     public static function forDate($date): ?self
     {
         if (empty($date)) {

@@ -9,27 +9,37 @@
 
 @section('title', $page_title)
 
+
 @section('breadcrumb')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('software.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route($route . '.index') }}">View {{ $page_title }}</a>
-                        </li>
-                        <li class="breadcrumb-item active">{{ isset($edit) && $edit?->id ? 'Edit' : 'Add' }}
-                            {{ $page_title }}</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
+    <div class="d-flex justify-content-lg-between px-1">
+        @include('software.includes.breadcrumb', [
+            'breadcrumbArray' => [
+                ['title' => $page_title, 'url' => route($route . '.index')],
+                ['title' => (isset($edit) && $edit?->id ? 'Edit' : 'Add') . ' ' . $page_title, 'url' => ''],
+            ],
+            'page_title' => $page_title,
+            'show_page_title' => false,
+            'route' => $route,
+            'show_add_btn' => false,
+            'show_back_btn' => true,
+        ])
     </div>
 @endsection
 
 @section('content')
-    <div class="card shadow my-4">
-        <div class="card-body my-4">
+    <div class="mst my-2">
+        <div class="mst-hero">
+            <div class="mst-hero-l">
+                <div class="mst-hero-icon"><i class="ti ti-layout-grid"></i></div>
+                <div>
+                    <h4>{{ isset($edit) && $edit?->id ? 'Edit' : 'Add' }} {{ $page_title }}</h4>
+                    <p>{{ isset($edit) && $edit?->id ? 'Update master record details.' : 'Create a new master record.' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mst-form-card">
+            <div class="card-body p-4">
             <form
                 action="{{ isset($edit) && $edit?->id ? route($route . '.update', [$edit?->id]) : route($route . '.store') }}"
                 method="POST" enctype="multipart/form-data">
@@ -69,6 +79,7 @@
                     </div>
                 </div>
             </form>
+                    </div>
         </div>
     </div>
 @endsection

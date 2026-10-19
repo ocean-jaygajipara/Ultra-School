@@ -4,6 +4,7 @@ namespace App\Http\Controllers\admin\master;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\MasterFeeDetail;
+use App\Models\Master\MasterStandard;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
@@ -27,33 +28,37 @@ class MasterFeeDetailController extends Controller
     public function index()
     {
         $modules = $this->modules;
-        $fees = MasterFeeDetail::all();
+        $fees = MasterFeeDetail::with('standard')->orderBy('standard_id')->orderBy('id', 'desc')->get();
+        $standards = MasterStandard::where('status', 'active')->orderBy('id')->get(['id', 'name']);
         View::share('modules', $modules);
 
-        return view($this->modules['folder_path'] . '.index', compact('fees'));
+        return view($this->modules['folder_path'] . '.index', compact('fees', 'standards'));
     }
 
     // Store new fee
     public function store(Request $request)
     {
         $request->validate([
-            'fee_name' => 'required|string',
-            'amount'   => 'required|numeric',
+            'standard_id' => 'nullable',
+            'fee_name'   => 'required|string|max:255',
+            'amount'     => 'required|numeric|min:0',
         ]);
+
+        $standardId = $request->filled('standard_id') && $request->standard_id !== 'all' ? (int) $request->standard_id : null;
 
         try {
             MasterFeeDetail::create([
+                'standard_id' => $standardId,
                 'fee_name'   => $request->fee_name,
                 'amount'     => $request->amount,
                 'created_by' => Auth::id(),
                 'status'     => 'active',
             ]);
 
-            $fees = MasterFeeDetail::orderBy('id', 'desc')->get();
-
+            $fees = MasterFeeDetail::with('standard')->orderBy('standard_id')->orderBy('id', 'desc')->get();
 
             if ($request->ajax()) {
-                return response()->json(['success' => true, 'fees' => $fees]);
+                return response()->json(['success' => true, 'message' => 'Fee created successfully', 'fees' => $fees]);
             }
 
             return Redirect::route('fees.index')->withSuccess('Fee created successfully');
@@ -69,36 +74,43 @@ class MasterFeeDetailController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'fee_name' => 'required|string',
-            'amount'   => 'required|numeric',
+            'standard_id' => 'nullable',
+            'fee_name'   => 'required|string|max:255',
+            'amount'     => 'required|numeric|min:0',
         ]);
+
+        $standardId = $request->filled('standard_id') && $request->standard_id !== 'all' ? (int) $request->standard_id : null;
 
         try {
             $fee = MasterFeeDetail::findOrFail($id);
             $fee->update([
-                'fee_name' => $request->fee_name,
-                'amount'   => $request->amount,
+                'standard_id' => $standardId,
+                'fee_name'   => $request->fee_name,
+                'amount'     => $request->amount,
+                'updated_by' => Auth::id(),
             ]);
 
-            $fees = MasterFeeDetail::orderBy('id', 'desc')->get();
+            $fees = MasterFeeDetail::with('standard')->orderBy('standard_id')->orderBy('id', 'desc')->get();
 
-
-            return response()->json(['success' => true, 'fees' => $fees]);
+            return response()->json(['success' => true, 'message' => 'Fee updated successfully', 'fees' => $fees]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
     // Delete fee
     public function destroy($id, Request $request)
     {
         try {
             $fee = MasterFeeDetail::findOrFail($id);
+            $fee->deleted_by = Auth::id();
+            $fee->save();
             $fee->delete();
 
-            $fees = MasterFeeDetail::orderBy('id', 'desc')->get();
+            $fees = MasterFeeDetail::with('standard')->orderBy('standard_id')->orderBy('id', 'desc')->get();
 
             if ($request->ajax()) {
-                return response()->json(['success' => true, 'fees' => $fees]);
+                return response()->json(['success' => true, 'message' => 'Fee deleted successfully', 'fees' => $fees]);
             }
 
             return redirect()->route('fees.index')->withSuccess('Fee deleted successfully');

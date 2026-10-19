@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
     <style>
         @page {
-            size: A4 portrait;
             margin: 8mm 10mm;
         }
 
@@ -44,6 +43,28 @@
             border: 2.5px solid #000;
             padding: 24px 34px 28px;
             background: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .certificate-inner > *:not(.cert-watermark) {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cert-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 62%;
+            max-width: 480px;
+            transform: translate(-50%, -45%);
+            opacity: 0.08;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         /* Default Font Palette: Attractive Classic Serif (Cinzel + Lora) */
@@ -67,51 +88,57 @@
         }
 
 
-        /* Top Header Box */
-        .header-box-wrap {
+        /* Letterhead */
+        .letterhead {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding-bottom: 12px;
+        }
+
+        .letterhead-logo {
+            width: 92px;
+            height: 92px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+
+        .letterhead-text {
+            flex: 1;
             text-align: center;
-            margin: 2px 0 6px;
-        }
-
-        .header-box {
-            display: inline-block;
-            border: 2px solid #555;
-            box-shadow: 4px 4px 0px #888;
-            padding: 6px 30px 8px;
-            background: #fff;
-        }
-
-        .brand-ultra {
-            color: #002b7a;
-            font-size: 27px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            display: inline-block;
-            margin-right: 6px;
         }
 
         .brand-school {
-            color: #002b7a;
-            font-size: 27px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            display: inline-block;
+            color: #1f2580;
+            font-size: 31px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            line-height: 1.15;
+            text-transform: uppercase;
         }
 
         .header-place {
-            text-align: center;
-            color: #002b7a;
-            font-weight: 800;
-            font-size: 16px;
-            letter-spacing: 3.5px;
-            margin: 6px 0 12px;
+            display: inline-block;
+            margin-top: 7px;
+            padding: 3px 18px;
+            border-radius: 20px;
+            background: #e1141c;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 4px;
+        }
+
+        .letterhead-meta {
+            width: 92px;
+            flex-shrink: 0;
         }
 
         .cert-divider {
-            border: none;
-            border-top: 2px solid #000;
+            height: 6px;
             margin: 0 0 24px;
-            width: 100%;
+            border-top: 3px solid #1f2580;
+            border-bottom: 1px solid #1f2580;
         }
 
         /* Title Box */
@@ -251,6 +278,34 @@
             padding-bottom: 6px;
         }
 
+        .print-bar {
+            max-width: 820px;
+            margin: 20px auto 0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .print-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border: 0;
+            border-radius: 10px;
+            background: #1f2580;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(31, 37, 128, .25);
+        }
+
+        .print-btn:hover {
+            background: #e1141c;
+        }
+
         @media print {
             html,
             body {
@@ -267,11 +322,45 @@
                 padding: 0;
                 max-width: 100%;
                 width: 100%;
+                height: calc(100vh - 2px);
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
 
             .certificate-inner {
                 border: 2.5px solid #000;
-                padding: 24px 30px 28px;
+                padding: 34px 36px 40px;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .letterhead-logo {
+                width: 100px;
+                height: 100px;
+            }
+
+            .brand-school {
+                font-size: 30px;
+                white-space: nowrap;
+            }
+
+            .cert-divider {
+                margin-bottom: 40px;
+            }
+
+            .title-box-wrap {
+                margin-bottom: 44px;
+            }
+
+            .cert-body,
+            .cert-text-justified {
+                font-size: 20px;
+                line-height: 2.75;
+            }
+
+            .footer-section {
+                margin-top: auto;
             }
         }
     </style>
@@ -280,6 +369,7 @@
 <body>
     @php
         $certificateData = $certificateData ?? [];
+        $schoolName = \App\Services\SchoolDatabaseManager::getActiveSchool()['name'] ?? 'Ultra English School';
 
         // 1. Student Name
         $studentName = trim(
@@ -442,21 +532,26 @@
         }
     @endphp
 
+    <div class="print-bar no-print">
+        <button type="button" class="print-btn" onclick="window.print()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print
+        </button>
+    </div>
+
     <div class="certificate-container font-attractive" id="certContainer">
         <div class="certificate-inner">
+            <img src="{{ asset('admin/assets/images/logo-light.png') }}" alt="" class="cert-watermark">
             <div class="top-section">
-                {{-- Header Box --}}
-                <div class="header-box-wrap">
-                    <div class="header-box">
-                        <span class="brand-ultra">ULTRA</span><span class="brand-school">ENGLISH SCHOOL-KESHOD</span>
+                <div class="letterhead">
+                    <img src="{{ asset('admin/assets/images/logo-light.png') }}" alt="School Logo" class="letterhead-logo">
+                    <div class="letterhead-text">
+                        <div class="brand-school">{{ $schoolName }}</div>
+                        <div class="header-place">KESHOD</div>
                     </div>
+                    <div class="letterhead-meta"></div>
                 </div>
-
-                {{-- Location Sub-heading --}}
-                <div class="header-place">KESHOD</div>
-
-                {{-- Horizontal Divider --}}
-                <hr class="cert-divider">
+                <div class="cert-divider"></div>
 
                 {{-- Certificate Title Box --}}
                 <div class="title-box-wrap">

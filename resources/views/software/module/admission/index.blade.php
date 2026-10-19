@@ -74,9 +74,6 @@
         }
         .adm-stat small { display: block; color: var(--adm-sky); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
         .adm-stat strong { color: #fff; font-size: 1.15rem; }
-        .adm-stat.is-red { background: var(--adm-red); border-color: var(--adm-red); }
-        .adm-stat.is-red small { color: #ffd9db; }
-
         .adm-ui .adm-label {
             display: block; font-size: .72rem; font-weight: 700;
             text-transform: uppercase; letter-spacing: .08em;
@@ -260,6 +257,34 @@
         .si-field span { color: #1f2580; font-weight: 600; font-size: .95rem; word-break: break-word; }
         .si-field span.is-empty { color: #b0b4cf; font-weight: 500; font-style: italic; font-size: .85rem; }
 
+        .si-history-wrap {
+            border: 1px solid #e1e4f2; border-radius: 14px; overflow: hidden; background: #fff;
+        }
+        .si-history-table { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; }
+        .si-history-table thead th {
+            background: #1f2580; color: #fff !important;
+            font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+            padding: 12px 14px; border: 0; white-space: nowrap; vertical-align: middle;
+        }
+        .si-history-table tbody td {
+            padding: 12px 14px; vertical-align: middle; border-top: 1px solid #eef0f8;
+            color: #1f2580; font-size: .92rem; font-weight: 600; background: #fff;
+        }
+        .si-history-table tbody tr:nth-child(even) td { background: #f7f8fd; }
+        .si-history-table tbody tr:hover td { background: #eef7fd; }
+        .si-history-table .col-sr { width: 56px; text-align: center; color: #5f6488; font-weight: 700; }
+        .si-history-table .col-div,
+        .si-history-table .col-roll { text-align: center; width: 90px; }
+        .si-history-table .col-std { font-weight: 800; }
+        .si-history-table .si-empty {
+            text-align: center; color: #b0b4cf; font-weight: 500; font-style: italic; padding: 28px 14px;
+        }
+        .si-history-badge {
+            display: inline-flex; align-items: center; justify-content: center; min-width: 36px;
+            padding: 4px 10px; border-radius: 8px; background: #eef7fd; color: #1f2580;
+            font-weight: 700; border: 1px solid #d5eaf6;
+        }
+
         @media (max-width: 991.98px) {
             .si-main { padding: 22px 18px; }
         }
@@ -275,6 +300,8 @@
     <div class="d-flex justify-content-lg-between px-1">
         @include('software.includes.breadcrumb', [
             'breadcrumbArray' => [['title' => $page_title, 'url' => '']],
+            'page_title' => $page_title,
+            'show_page_title' => false,
             'route' => $route,
             'show_add_btn' => false,
             'show_filter_btn' => true,
@@ -298,7 +325,6 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <div class="adm-stat"><small>Total Students</small><strong id="admStatTotal">—</strong></div>
-                    <div class="adm-stat is-red"><small>Showing</small><strong id="admStatFiltered">—</strong></div>
                 </div>
             </div>
         </div>
@@ -524,6 +550,7 @@
                             'lc_date' => 'LC Date',
                             'attendance' => 'Attendance',
                         ]],
+                        'class_history' => ['Class History', 'ti-list-details', []],
                     ];
                     $dateFields = ['admission_date', 'date_of_birth', 'lc_date'];
                     $wideFields = ['temporary_address', 'permanent_address', 'last_school_name', 'bus_route_village'];
@@ -549,6 +576,8 @@
                             <div class="si-keys">
                                 <div class="si-key"><small>GR No.</small><strong id="siGr">-</strong></div>
                                 <div class="si-key"><small>Roll No.</small><strong id="siRoll">-</strong></div>
+                                <div class="si-key"><small>Standard</small><strong id="siStd">-</strong></div>
+                                <div class="si-key"><small>Division</small><strong id="siDiv">-</strong></div>
                             </div>
 
                             <div class="si-actions">
@@ -580,17 +609,38 @@
                             <div class="tab-content si-tab-content">
                                 @foreach ($infoSections as $key => [$title, $icon, $fields])
                                     <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="si-tab-{{ $key }}" role="tabpanel">
-                                        <div class="row g-3">
-                                            @foreach ($fields as $field => $label)
-                                                <div class="{{ in_array($field, $wideFields) ? 'col-12' : 'col-md-6' }}">
-                                                    <div class="si-field">
-                                                        <small>{{ $label }}</small>
-                                                        <span class="student-info-field" data-field="{{ $field }}"
-                                                            @if (in_array($field, $dateFields)) data-type="date" @endif>-</span>
+                                        @if ($key === 'class_history')
+                                            <div class="si-history-wrap table-responsive">
+                                                <table class="si-history-table" id="siClassHistoryTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="col-sr">Sr</th>
+                                                            <th>Academic Year</th>
+                                                            <th>Standard</th>
+                                                            <th class="col-div">Division</th>
+                                                            <th class="col-roll">Roll No</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="siClassHistoryBody">
+                                                        <tr>
+                                                            <td colspan="5" class="si-empty">No class history.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @else
+                                            <div class="row g-3">
+                                                @foreach ($fields as $field => $label)
+                                                    <div class="{{ in_array($field, $wideFields) ? 'col-12' : 'col-md-6' }}">
+                                                        <div class="si-field">
+                                                            <small>{{ $label }}</small>
+                                                            <span class="student-info-field" data-field="{{ $field }}"
+                                                                @if (in_array($field, $dateFields)) data-type="date" @endif>-</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -839,6 +889,8 @@
             $('#siGender').text(clean(data.gender) || 'Gender not set');
             $('#siGr').text(clean(data.gr_no) || '-');
             $('#siRoll').text(clean(data.roll_no) || '-');
+            $('#siStd').text(std || '-');
+            $('#siDiv').text(div || '-');
             $('#siDrive').toggleClass('d-none', !clean(data.gdrivefolderurl)).attr('href', clean(data.gdrivefolderurl) || '#');
             $('#siEdit').attr('href', "{{ route($route . '.edit', '__ID__') }}".replace('__ID__', data.id));
 
@@ -856,6 +908,26 @@
 
             $('#infoModal .si-tabs .nav-link').first().tab('show');
         }
+
+        function fillClassHistory(rows) {
+            const $body = $('#siClassHistoryBody').empty();
+            if (!rows || !rows.length) {
+                $body.append('<tr><td colspan="5" class="si-empty">No class history.</td></tr>');
+                return;
+            }
+            rows.forEach(function(row, i) {
+                $body.append(
+                    '<tr>' +
+                    '<td class="col-sr">' + (i + 1) + '</td>' +
+                    '<td>' + (row.academic_year || '-') + '</td>' +
+                    '<td class="col-std">' + (row.standard || '-') + '</td>' +
+                    '<td class="col-div"><span class="si-history-badge">' + (row.division || '-') + '</span></td>' +
+                    '<td class="col-roll"><span class="si-history-badge">' + (row.roll_no || '-') + '</span></td>' +
+                    '</tr>'
+                );
+            });
+        }
+
         // Show student details modal
         $(document).on('click', '.view-btn', function() {
             let id = $(this).data('id');
@@ -871,9 +943,7 @@
                         let data = response.student;
                         if (data) {
                             fillStudentInfo(data);
-
-
-
+                            fillClassHistory(response.class_history || []);
                             $('#infoModal').modal('show');
                         } else {
                             toastr.error('Student data not found');
@@ -1142,7 +1212,6 @@
             $('#yajra-datatables').on('xhr.dt', function(e, settings, json) {
                 if (!json) return;
                 $('#admStatTotal').text(json.recordsTotal ?? '—');
-                $('#admStatFiltered').text(json.recordsFiltered ?? '—');
             });
         });
 

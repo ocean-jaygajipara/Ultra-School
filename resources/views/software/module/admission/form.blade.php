@@ -394,12 +394,17 @@
                 @endif
             </p>
         </div>
-        @php $afxYear = \App\Models\Master\MasterAcademicYear::current(); @endphp
+        @php
+            $afxYearId = old('academic_year_id', $edit->academic_year_id ?? null);
+            $afxYear = $afxYearId
+                ? \App\Models\Master\MasterAcademicYear::withTrashed()->find($afxYearId)
+                : \App\Models\Master\MasterAcademicYear::current();
+        @endphp
         <div class="afx-year {{ $afxYear ? '' : 'is-missing' }}">
             @if ($afxYear)
                 <small>Academic Year</small>
-                <strong>{{ $afxYear->name }}</strong>
-                <span>{{ $afxYear->start_date->format('d-m-Y') }} to {{ $afxYear->end_date->format('d-m-Y') }}</span>
+                <strong id="afxYearName">{{ $afxYear->name }}</strong>
+                <span id="afxYearRange">{{ $afxYear->start_date->format('d-m-Y') }} to {{ $afxYear->end_date->format('d-m-Y') }}</span>
             @else
                 <small>Academic Year</small>
                 <strong>Not set</strong>
@@ -430,7 +435,6 @@
                             <i class="ti ti-chevron-down afx-sec-chev"></i>
                         </h6>
                     </div>
-
                     <div class="collapse show" id="aadharSection">
                         <div class="row">
                             {{-- GR No. --}}
@@ -511,6 +515,38 @@
                                         <span class="invalid-feedback d-block">
                                             <strong>{{ $message }}</strong>
                                         </span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Academic Year --}}
+                            <div class="col-md-4 col-sm-12 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Academic Year <span class="text-danger">*</span></label>
+                                    @php
+                                        $academicYearList = isset($academicYears)
+                                            ? $academicYears
+                                            : \App\Models\Master\MasterAcademicYear::where('status', 'active')->orderByDesc('start_date')->get();
+                                        $selectedAcademicYear = old(
+                                            'academic_year_id',
+                                            $edit->academic_year_id
+                                                ?? \App\Models\Master\MasterAcademicYear::current()?->id
+                                        );
+                                    @endphp
+                                    <select name="academic_year_id" id="academic_year_id"
+                                        class="form-control select2 @error('academic_year_id') is-invalid @enderror" required>
+                                        <option value="">Select Academic Year</option>
+                                        @foreach ($academicYearList as $yearItem)
+                                            <option value="{{ $yearItem->id }}"
+                                                data-name="{{ $yearItem->name }}"
+                                                data-range="{{ $yearItem->start_date->format('d-m-Y') }} to {{ $yearItem->end_date->format('d-m-Y') }}"
+                                                {{ (string) $selectedAcademicYear === (string) $yearItem->id ? 'selected' : '' }}>
+                                                {{ $yearItem->name }}{{ $yearItem->is_current ? ' (Current)' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('academic_year_id')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
                             </div>
@@ -1309,14 +1345,18 @@
                                 </div>
                             </div>
 
-                            {{-- Passed Standard --}}
+                            {{-- Passed Standard (from Standard Master) --}}
                             <div class="col-md-3 col-sm-12 mb-3">
                                 <div class="form-group">
                                     <label class="form-label">Passed Standard</label>
                                     @php
-                                        $activeSchoolCode = \App\Services\SchoolDatabaseManager::getActiveSchoolCode();
-                                        $passedStdList = \App\Services\SchoolDatabaseManager::getSchoolPassedStandards($activeSchoolCode);
                                         $selectedPassedStd = old('passed_standard', $edit->passed_standard ?? '');
+                                        $passedStdList = \App\Models\Master\MasterStandard::where('status', 'active')
+                                            ->orderBy('id')
+                                            ->pluck('name')
+                                            ->filter()
+                                            ->values()
+                                            ->all();
                                     @endphp
                                     <select name="passed_standard" id="passed_standard" class="form-control select2 @error('passed_standard') is-invalid @enderror">
                                         <option value="">Select Passed Std</option>
@@ -1449,6 +1489,17 @@
             resetScrollToTop();
             setTimeout(resetScrollToTop, 50);
             setTimeout(resetScrollToTop, 200);
+
+            if ($('#academic_year_id').length && $.fn.select2) {
+                $('#academic_year_id').select2({ width: '100%', placeholder: 'Select Academic Year' });
+                $('#academic_year_id').on('change', function() {
+                    var opt = $(this).find('option:selected');
+                    if (opt.val()) {
+                        $('#afxYearName').text(opt.data('name') || opt.text());
+                        $('#afxYearRange').text(opt.data('range') || '');
+                    }
+                });
+            }
 
             // Bus Route Village select2 with custom tag/typing support
             if ($('#bus_route_village').length) {

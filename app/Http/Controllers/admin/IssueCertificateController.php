@@ -292,16 +292,7 @@ class IssueCertificateController extends Controller
 
         $studentId = $history->admission_id ?? $history->register_id;
 
-        $params = http_build_query(array_filter([
-            'issue_date' => $history->issue_date,
-            'academic_year' => $history->academic_year ?? null,
-            'recommender_name' => $history->recommender_name ?? null,
-            'recommender_designation' => $history->recommender_designation ?? null,
-            'recommender_type' => $history->recommender_type ?? null,
-            'faculty_id' => $history->faculty_id ?? null,
-        ]));
-
-        $certificateUrl = route($certificateRoute, $studentId) . ($params ? '?' . $params : '');
+        $certificateUrl = route($certificateRoute, ['history' => $history->id]);
 
         return [
             'id' => $history->id,
@@ -339,15 +330,7 @@ class IssueCertificateController extends Controller
             ->limit(100)
             ->get()
             ->map(function ($history) {
-                $params = http_build_query(array_filter([
-                    'issue_date' => $history->issue_date,
-                    'recommender_name' => $history->recommender_name,
-                    'recommender_designation' => $history->recommender_designation,
-                    'recommender_type' => $history->recommender_type,
-                    'faculty_id' => $history->faculty_id,
-                ]));
-
-                $certificateUrl = route('letter-of-recommendation', $history->admission_id) . ($params ? '?' . $params : '');
+                $certificateUrl = route('letter-of-recommendation', ['history' => $history->id]);
 
                 return [
                     'id' => $history->id,

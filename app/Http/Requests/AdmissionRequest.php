@@ -102,6 +102,12 @@ class AdmissionRequest extends FormRequest
                 'date',
             ],
 
+            'academic_year_id' => [
+                'required',
+                'integer',
+                'exists:master_academic_years,id',
+            ],
+
             'admission_std_id' => [
                 'nullable',
                 'integer',

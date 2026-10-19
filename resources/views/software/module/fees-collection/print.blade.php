@@ -169,18 +169,12 @@
                 </tr>
 
                 <tr>
-                    <td>Class - Batch</td>
+                    <td>Standard</td>
                     <td>
-                        {{ $feesData->course->course_name ?? '-' }}
-                        -
-                        {{ $feesData->registration->batch->batch_name ?? '-' }}
+                        {{ $feesData->admission?->currentStandard?->name ?? ($feesData->admission?->admissionStandard?->name ?? ($feesData->course->course_name ?? '-')) }}
                     </td>
                 </tr>
 
-                <tr>
-                    <td>Semester</td>
-                    <td>{{ $feesData->year_semester ?? '-' }}</td>
-                </tr>
             </table>
 
             <div class="section-title">
@@ -243,7 +237,7 @@
             </div>
 
             <div class="footer">
-                Note: Submitted Fees For Above Course Is Not Refundable Even If You Cancel Your Admission.
+                Note: Submitted Fees Is Not Refundable Even If You Cancel Your Admission.
             </div>
         </div>
     @endfor

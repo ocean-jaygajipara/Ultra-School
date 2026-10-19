@@ -267,6 +267,15 @@ class PermissionTableSeeder extends Seeder
                 'bus-route-village-create',
                 'bus-route-village-edit',
                 'bus-route-village-delete',
+            ],
+            'roll-number-list' => [
+                'roll-number-list-list',
+                'roll-number-list-print',
+            ],
+            'class-promotion' => [
+                'class-promotion-list',
+                'class-promotion-create',
+                'class-promotion-edit',
             ]
         ];
 

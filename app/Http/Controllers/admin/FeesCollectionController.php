@@ -62,11 +62,10 @@ class FeesCollectionController extends Controller
             $columns = [
                 (object)['data' => "student_id", 'name' => 'student_id', 'td_label' => 'Student Id'],
                 (object)['data' => "admission_id", 'name' => 'admission_id', 'td_label' => 'Admission Id'],
-                (object)['data' => 'course.course_name', 'name' => 'course_id', 'td_label' => 'Course Name'],
-                (object)['data' => "student_name", 'name' => 'student_name', 'td_label' => 'Student  Name'],
-                (object)['data' => "year_semester", 'name' => 'year_semester', 'td_label' => 'Year / Semester'],
+                (object)['data' => 'standard', 'name' => 'standard', 'td_label' => 'Standard'],
+                (object)['data' => "student_name", 'name' => 'student_name', 'td_label' => 'Student Name'],
                 (object)['data' => "date", 'name' => 'date', 'td_label' => 'Date'],
-                (object)['data' => "fees", 'name' => 'fees', 'td_label' => 'Course Fees'],
+                (object)['data' => "fees", 'name' => 'fees', 'td_label' => 'Fees'],
                 (object)['data' => "mode", 'name' => 'mode', 'td_label' => 'Mode'],
                 // (object)['data' => "status", 'name' => 'status', 'td_label' => 'Status', 'className' => 'w-5 text-center'],
                 // (object)['data' => "action", 'name' => 'action', 'td_label' => 'Action', 'orderable' => false, 'searchable' => false, 'className' => 'w-10 text-center'],
@@ -82,7 +81,7 @@ class FeesCollectionController extends Controller
     $search = trim($request->search);
 
     $data = FeesCollection::query()
-        ->with(['course','admission','batch'])
+        ->with(['course', 'admission.currentStandard', 'admission.admissionStandard', 'batch'])
         ->withTrashed();
 
     if ($search != '') {
@@ -107,6 +106,9 @@ class FeesCollectionController extends Controller
 
     return DataTables::of($data)
         ->addIndexColumn()
+        ->addColumn('standard', function ($row) {
+            return $row->admission?->currentStandard?->name ?? ($row->admission?->admissionStandard?->name ?? '-');
+        })
         ->editColumn('student_name', function ($row) {
             return trim(($row->admission->last_name ?? '') . ' ' .
                         ($row->admission->first_name ?? '') . ' ' .
@@ -119,7 +121,7 @@ class FeesCollectionController extends Controller
 }
 
                 $data = $data->withTrashed();
-                $data = $data->with(['course','admission']);
+                $data = $data->with(['course', 'admission.currentStandard', 'admission.admissionStandard']);
                 // dd("L-75", $data->get());
                 $returnData = Datatables::of($data)
                     ->addIndexColumn()
@@ -269,8 +271,8 @@ class FeesCollectionController extends Controller
 
         try {
             // Get course registration with related course, admission, batch
-            $getcource = CourceRegistration::where('register_id', $id)->with(['course', 'admission', 'batch'])->get();
-            $getcourceSingle = CourceRegistration::where('register_id', $id)->with(['course', 'admission', 'batch'])->first();
+            $getcource = CourceRegistration::where('register_id', $id)->with(['course', 'admission.currentStandard', 'admission.admissionStandard', 'batch'])->get();
+            $getcourceSingle = CourceRegistration::where('register_id', $id)->with(['course', 'admission.currentStandard', 'admission.admissionStandard', 'batch'])->first();
 
             if (!$getcourceSingle || !$getcourceSingle->course) {
                 return response()->json([
@@ -543,7 +545,7 @@ class FeesCollectionController extends Controller
         $modules['route'] = 'fees-collection';
         View::share('modules', $modules);
 
-     $feesData = FeesCollection::with(['course','registration.batch'])
+     $feesData = FeesCollection::with(['course', 'admission.currentStandard', 'admission.admissionStandard', 'registration.batch'])
     ->find($id);
 
 

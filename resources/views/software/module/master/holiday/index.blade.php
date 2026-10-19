@@ -31,12 +31,21 @@
 @endsection
 
 @section('content')
-    <div class="row my-2">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="yajra-datatables" class="table table-hover dt-responsive nowrap" style="width: 100%">
+    <div class="mst my-2">
+        <div class="mst-hero">
+            <div class="mst-hero-l">
+                <div class="mst-hero-icon"><i class="ti ti-beach"></i></div>
+                <div>
+                    <h4>{{ $page_title }}</h4>
+                    <p>Manage school holidays.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mst-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="yajra-datatables" class="table table-hover w-100 mst-table mb-0">
                             @if (isset($columns))
                                 <thead>
                                     <tr>
@@ -48,7 +57,6 @@
                                 </thead>
                             @endif
                         </table>
-                    </div>
                 </div>
             </div>
         </div>

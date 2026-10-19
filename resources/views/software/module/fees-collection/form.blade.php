@@ -118,11 +118,10 @@
                         </div>
 
 
-                        <!-- Course Name (Shown as Text) -->
+                        <!-- Standard Name (Shown as Text) -->
                         <div class="col-md-12 mb-3">
-                            <label class="form-label"><strong>Course Name:</strong> <span id="course_id"
-                                    class="">{{ isset($edit) && $edit?->course && $edit?->course?->course_name ? $edit?->course?->course_name : '---' }}</span></label>
-                            {{-- <p id="course_id" class="form-control-plaintext mb-0">--</p> --}}
+                            <label class="form-label"><strong>Standard:</strong> <span id="standard_name"
+                                    class="">{{ isset($edit) && $edit?->admission && $edit?->admission?->currentStandard ? $edit?->admission?->currentStandard?->name : (isset($edit) && $edit?->admission && $edit?->admission?->admissionStandard ? $edit?->admission?->admissionStandard?->name : '---') }}</span></label>
                         </div>
 
                         <!-- Hidden field for course ID (for submission) -->
@@ -131,32 +130,8 @@
                         <input type="hidden" id="admission_id" name="admission_id">
                         <input type="hidden" id="student_name" name="student_name">
 
-                        {{-- Year / Semester --}}
-                        <div class="col-md-12 mb-3">
-                            <div class="form-group">
-                                <label for="year_semester">Year / Semester <span class="text-danger">*</span></label>
-                                <select name="year_semester" id="year_semester"
-                                    class="form-control required select2 @error('year_semester') is-invalid @enderror"
-                                    data-semester="{{ old('year_semester', $selectedSemester ?? '') }}"
-                                    placeholder="Semester">
-                                    <option value="">Select Semester</option>
-                                    @if (isset($edit))
-                                        @for ($semester = 1; $semester <= $edit->course->semester; $semester++)
-                                            <option value="{{ $semester }}"
-                                                {{ (int) old('year_semester', $selectedSemester ?? ($edit->year_semester ?? '')) === $semester ? 'selected' : '' }}
-                                                {{ in_array($semester, $paid_semesters ?? []) ? 'disabled' : '' }}>
-                                                {{ $semester }}
-                                            </option>
-                                        @endfor
-                                    @endif
-                                </select>
-
-
-                                @error('year_semester')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
+                        <!-- Hidden field for year_semester -->
+                        <input type="hidden" name="year_semester" id="year_semester" value="{{ $edit->year_semester ?? '' }}">
 
 
                         {{-- Date --}}
@@ -174,13 +149,13 @@
                         </div>
 
 
-                        {{-- Course Fees (Auto-filled) --}}
+                        {{-- Fees (Auto-filled) --}}
                         <div class="col-md-12 mb-3">
                             <label for="fees" class="form-label">
-                                Course Fees <span class="text-danger">*</span>
+                                Fees <span class="text-danger">*</span>
                             </label>
                             <input type="number" name="fees" id="fees"
-                                class="form-control required @error('fees') is-invalid @enderror" placeholder="Course Fee"
+                                class="form-control required @error('fees') is-invalid @enderror" placeholder="Fee Amount"
                                 value="{{ old('fees', $edit->fees ?? '') }}"
                                 data-editValue="{{ isset($edit) && $edit?->fees ? $edit?->fees : 0.0 }}">
                             @error('fees')
@@ -260,7 +235,6 @@
                         <thead>
                             <tr>
                                 <th>Receipt ID</th>
-                                <th>Semester Name</th>
                                 <th>Fees</th>
                                 <th>Pay Fee Date</th>
                                 <th>Print Receipt</th>
@@ -271,7 +245,6 @@
                                 @foreach ($getfeescollection as $row)
                                     <tr>
                                         <td>{{ $row->id }}</td>
-                                        <th>{{ $row->year_semester }}</th>
                                         <td>{{ $row->fees }}</td>
                                         <td>{{ \Carbon\Carbon::parse($row->date)->format('d-m-Y') }}</td>
                                         <td>
@@ -287,7 +260,7 @@
                     </table>
                     <div class="row mt-2">
                         <div class="col-md-4">
-                            <h5 style="color: rgb(0, 0, 255);">Course Fees : <span id="CourseFees">00</span></h5>
+                            <h5 style="color: rgb(0, 0, 255);">Total Fees : <span id="CourseFees">00</span></h5>
                         </div>
                         <div class="col-md-4">
                             <h5 style="color: rgb(0, 128, 0);">Deposit Fees : <span id="DepositeFees">00</span></h5>
@@ -299,7 +272,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-4">
+                    <div class="mt-4 d-none">
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
@@ -414,7 +387,7 @@
 
                 $('#FeesCollectionDetails').hide();
                 $('#search_id').val('');
-                $('span#student_name, span#student_id, span#admission_id, span#course_id').text('---');
+                $('span#student_name, span#student_id, span#admission_id, span#standard_name, span#course_id').text('---');
                 $('input[name="student_name"], input[name="student_id"], input[name="admission_id"], input[name="course_id"]').val('');
                 $('#year_semester').html('<option value="">Select Semester</option>').val('').removeClass('is-invalid');
                 $('#date').val('{{ \Carbon\Carbon::now()->format('Y-m-d') }}');
@@ -596,10 +569,9 @@
 
                             $('#student_id').text(studentdetails.admission.id);
                             $('#admission_id').text(studentdetails.id);
-                            let batchname = studentdetails.batch ? studentdetails.batch.batch_name : "";
-                            let coursename = studentdetails.course.course_name;
-
-                            $('#course_id').text(coursename + (batchname ? ' - ' + batchname : ''));
+                            let standardName = (studentdetails.admission && studentdetails.admission.current_standard) ? studentdetails.admission.current_standard.name : ((studentdetails.admission && studentdetails.admission.admission_standard) ? studentdetails.admission.admission_standard.name : '');
+                            $('#standard_name').text(standardName || '---');
+                            $('#course_id').text('');
 
                             $('#student_name').text(studentname);
 
@@ -645,7 +617,6 @@
                                     if (parseFloat(item.fees) <= 0) return; // Skip placeholder/unpaid records
                                     rows += '<tr>';
                                     rows += '<td>' + item.id + '</td>';
-                                    rows += '<td>' + item.year_semester + '</td>';
                                     rows += '<td>' + item.fees + '</td>';
                                     rows += '<td>' + moment(item.date).format('DD-MM-YYYY') +
                                         '</td>';
@@ -658,7 +629,7 @@
                                 });
                             } else {
                                 rows =
-                                    '<tr><td class="text-center" colspan="5">No data available</td></tr>';
+                                    '<tr><td class="text-center" colspan="4">No data available</td></tr>';
                             }
 
                             $('#ReceiptTable tbody').html(rows);
