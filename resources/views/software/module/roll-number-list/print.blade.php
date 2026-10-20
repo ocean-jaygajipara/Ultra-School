@@ -11,8 +11,7 @@
             padding: 8px 16px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block;
         }
         .header { text-align: center; border-bottom: 2px solid #1f2580; padding-bottom: 10px; margin-bottom: 14px; }
-        .school { font-size: 20px; font-weight: 800; color: #1f2580; text-transform: uppercase; }
-        .place { color: #e1141c; font-weight: 700; letter-spacing: .12em; font-size: 12px; }
+        .school { font-size: 20px; font-weight: 800; color: #1f2580; text-transform: uppercase; white-space: nowrap; letter-spacing: .02em; }
         .title { margin-top: 8px; font-size: 15px; font-weight: 800; text-decoration: underline; }
         .meta { margin: 10px 0 14px; }
         .meta td { padding: 3px 8px 3px 0; }
@@ -32,9 +31,13 @@
         <a href="{{ route('roll-number-list.index') }}" class="print-btn" style="background:#5f6488;">Back</a>
     </div>
 
+    @php
+        $schoolName = trim($school['name'] ?? 'Ultra English School');
+        $fullSchoolName = preg_match('/keshod/i', $schoolName) ? $schoolName : ($schoolName . ' KESHOD');
+    @endphp
+
     <div class="header">
-        <div class="school">{{ $school['name'] ?? 'Ultra School' }}</div>
-        <div class="place">KESHOD</div>
+        <div class="school">{{ $fullSchoolName }}</div>
         <div class="title">Roll Number List</div>
     </div>
 

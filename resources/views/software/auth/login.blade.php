@@ -171,7 +171,10 @@
             background: #fff1f1; border: 1px solid #f7c3c5; color: #b80f16;
             border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; font-size: .88rem;
         }
-        .lg-alert i { font-size: 1.15rem; margin-top: 1px; }
+        .lg-alert-success { background: #eefbf3; border-color: #bbf0d0; color: #157347; }
+        .lg-alert-warning { background: #fff9e6; border-color: #ffe69c; color: #996500; }
+        .lg-alert-info    { background: #eef7fd; border-color: #bfe3f7; color: #17548d; }
+        .lg-alert i { font-size: 1.15rem; margin-top: 1px; flex-shrink: 0; }
         .lg-alert ul { margin: 0; padding-left: 16px; }
 
         .lg-error { color: var(--lg-red); font-size: .8rem; margin-top: -12px; margin-bottom: 14px; }
@@ -219,6 +222,34 @@
 
                 <form id="formAuthentication" action="{{ route('login') }}" method="post" novalidate>
                     @csrf
+
+                    @if (session('success'))
+                        <div class="lg-alert lg-alert-success">
+                            <i class="ti ti-circle-check"></i>
+                            <div>{{ session('success') }}</div>
+                        </div>
+                    @endif
+
+                    @if (session('warning'))
+                        <div class="lg-alert lg-alert-warning">
+                            <i class="ti ti-alert-triangle"></i>
+                            <div>{{ session('warning') }}</div>
+                        </div>
+                    @endif
+
+                    @if (session('error'))
+                        <div class="lg-alert">
+                            <i class="ti ti-alert-circle"></i>
+                            <div>{{ session('error') }}</div>
+                        </div>
+                    @endif
+
+                    @if (session('status'))
+                        <div class="lg-alert lg-alert-info">
+                            <i class="ti ti-info-circle"></i>
+                            <div>{{ session('status') }}</div>
+                        </div>
+                    @endif
 
                     @if ($errors->any())
                         <div class="lg-alert">

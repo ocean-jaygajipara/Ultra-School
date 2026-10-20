@@ -115,9 +115,9 @@
         @enddirectCanAny
 
 
-        @directCanAny(['admission-list', 'admission-create', 'admission-edit', 'admission-delete', 'admission-import', 'student_report-list', 'roll-number-list-list', 'class-promotion-list'])
+        @directCanAny(['admission-list', 'admission-create', 'admission-edit', 'admission-delete', 'admission-import', 'student_report-list', 'roll-number-generate-list', 'roll-number-list-list', 'class-promotion-list'])
         <li
-            class="menu-item {{ $sidebar_active == 'admission' || $sidebar_active == 'cource-registration' || $sidebar_active == 'student_report' || $sidebar_active == 'roll-number-list' || $sidebar_active == 'class-promotion' ? 'active open' : '' }}">
+            class="menu-item {{ $sidebar_active == 'admission' || $sidebar_active == 'cource-registration' || $sidebar_active == 'student_report' || $sidebar_active == 'roll-number-generate' || $sidebar_active == 'roll-number-list' || $sidebar_active == 'class-promotion' ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-school me-2"></i>
                 <div data-i18n="Student">Student</div>
@@ -161,6 +161,16 @@
                 </li>
                 @enddirectCan
 
+                {{-- Generate Roll Number --}}
+                @directCanAny(['roll-number-generate-list', 'roll-number-list-list', 'admission-edit'])
+                <li class="menu-item {{ $sidebar_active == 'roll-number-generate' ? 'active' : '' }}">
+                    <a href="{{ route('roll-number-generate.index') }}" class="menu-link">
+                        <div data-i18n="Generate Roll Number">Generate Roll Number</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
+                {{-- Roll Number List --}}
                 @directCan('roll-number-list-list')
                 <li class="menu-item {{ $sidebar_active == 'roll-number-list' ? 'active' : '' }}">
                     <a href="{{ route('roll-number-list.index') }}" class="menu-link">

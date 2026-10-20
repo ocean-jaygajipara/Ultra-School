@@ -58,6 +58,7 @@ class SyncSchoolsDatabaseCommand extends Command
             'master_fees',
             'master_semesters',
             'master_subjects',
+            'master_academic_years',
         ];
 
         foreach ($schools as $code => $school) {

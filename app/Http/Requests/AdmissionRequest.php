@@ -59,9 +59,6 @@ class AdmissionRequest extends FormRequest
     {
         $id = $request->route('admission') ?? 0;
 
-        $admission = $id ? Admission::find($id) : null;
-        $profilePicRule = ($admission && $admission->profile_pic) ? 'nullable' : 'required';
-
         $rules = [
             'aadhar_card_no' => [
                 'required',
@@ -175,7 +172,7 @@ class AdmissionRequest extends FormRequest
             ],
 
             'profile_pic' => [
-                $profilePicRule,
+                'nullable',
                 'image',
                 'mimes:jpeg,png,jpg,gif',
                 'max:2048',
@@ -328,7 +325,6 @@ class AdmissionRequest extends FormRequest
             'date_of_birth.required' => 'The Date of Birth is required.',
             'gender.required' => 'The Gender is required.',
             'category.required' => 'The Category is required.',
-            'profile_pic.required' => 'The Profile Picture is required.',
         ];
     }
 }

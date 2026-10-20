@@ -30,13 +30,12 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
-        $this->middleware('auth')->only('logout');
     }
 
     public function showLoginForm(Request $request)
     {
         $schools = SchoolDatabaseManager::all();
-        $selectedSchool = $request->query('school', null);
+        $selectedSchool = $request->query('school', $request->cookie('last_school_code'));
 
         return view('software.auth.login', compact('schools', 'selectedSchool'));
     }
@@ -84,10 +83,16 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        $activeSchool = SchoolDatabaseManager::getActiveSchoolCode();
+
+        if (Auth::check()) {
+            Auth::logout();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route("login");
+
+        return redirect()->route("login", ['school' => $activeSchool])
+            ->with('success', 'You have been logged out successfully.');
     }
 }

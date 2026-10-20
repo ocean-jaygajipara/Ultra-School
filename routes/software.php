@@ -14,6 +14,7 @@ use App\Http\Controllers\admin\DocumentTypeController;
 use App\Http\Controllers\admin\FeesCollectionController;
 use App\Http\Controllers\admin\BusFeeCollectionController;
 use App\Http\Controllers\admin\RollNumberListController;
+use App\Http\Controllers\admin\RollNumberGenerateController;
 use App\Http\Controllers\admin\ClassPromotionController;
 use App\Http\Controllers\admin\master\MasterCityController;
 use App\Http\Controllers\admin\master\MasterCountryController;
@@ -166,6 +167,11 @@ Route::post('admission-education-detail-delete', [AdmissionController::class, 'e
 Route::post('admission/create-folder', [AdmissionController::class, 'createFolder'])->name('admission.create-folder');
 Route::get('admission/{id}/roll-number', [AdmissionController::class, 'rollNumber'])->name('admission.roll-number');
 Route::post('admission/{id}/roll-number', [AdmissionController::class, 'rollNumberStore'])->name('admission.roll-number.store');
+
+Route::get('roll-number-generate', [RollNumberGenerateController::class, 'index'])->name('roll-number-generate.index');
+Route::post('roll-number-generate', [RollNumberGenerateController::class, 'filter'])->name('roll-number-generate.filter');
+Route::post('roll-number-generate/store', [RollNumberGenerateController::class, 'store'])->name('roll-number-generate.store');
+
 Route::get('roll-number-list', [RollNumberListController::class, 'index'])->name('roll-number-list.index');
 Route::post('roll-number-list', [RollNumberListController::class, 'filter'])->name('roll-number-list.filter');
 Route::get('roll-number-list/print', [RollNumberListController::class, 'print'])->name('roll-number-list.print');

@@ -628,7 +628,7 @@
                             {{-- Profile Picture --}}
                             <div class="col-md-6 col-sm-12 mb-3">
                                 <div class="form-group">
-                                    <label class="form-label">Profile Picture <span class="text-danger">*</span></label>
+                                    <label class="form-label">Profile Picture</label>
                                     <div class="afx-photo">
                                         <div class="afx-photo-preview" id="profilePicPreview">
                                             @if (!empty($edit?->profile_pic))

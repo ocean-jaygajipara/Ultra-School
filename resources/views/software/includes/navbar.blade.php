@@ -1,10 +1,18 @@
 @php
-    $sidebar_active = Route::current()->getName();
+    $sidebar_active = Route::current()?->getName() ?? '';
     $expand = explode('.', $sidebar_active);
     $sidebar_active = count($expand) > 0 ? $expand[0] : '';
     $loginUser = Auth::user();
-    $navBarProfilePhoto = asset('admin/assets/images/favicon/favicon.ico');
-    $navBarProfilePhoto = asset('admin/assets/img/default/profile.png');
+
+    // Generate Initials Avatar from User Name
+    $userName = trim($loginUser?->name ?? 'Admin');
+    $nameParts = array_values(array_filter(preg_split('/\s+/', $userName)));
+    if (count($nameParts) >= 2) {
+        $initials = mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[1], 0, 1);
+    } else {
+        $initials = mb_substr($userName, 0, 2);
+    }
+    $initials = mb_strtoupper($initials ?: 'AD');
 @endphp
 <nav class="layout-navbar container-fuild navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
     id="layout-navbar">
@@ -46,16 +54,22 @@
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        <img src="{{ $navBarProfilePhoto }}" alt class="h-auto rounded-circle" />
+                        <span class="avatar-initial rounded-circle" 
+                              style="background: linear-gradient(135deg, #1f2580 0%, #353fa8 100%); color: #ffffff; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(31,37,128,0.35);">
+                            {{ $initials }}
+                        </span>
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                         <a class="dropdown-item" href="javascript:void(0);" style="cursor: default;">
-                            <div class="d-flex">
+                            <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        <img src="{{ $navBarProfilePhoto }}" alt class="h-auto rounded-circle" />
+                                        <span class="avatar-initial rounded-circle" 
+                                              style="background: linear-gradient(135deg, #1f2580 0%, #353fa8 100%); color: #ffffff; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(31,37,128,0.35);">
+                                            {{ $initials }}
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
@@ -112,13 +126,13 @@
                     <li>
                         <a class="dropdown-item" href="{{ route('logout') }}"
                             onclick="event.preventDefault();
-                                document.getElementById('logout-form').submit();">
+                                document.getElementById('navbar-logout-form').submit();">
                             <i class="ti ti-logout me-2 ti-sm"></i>
                             <span class="align-middle">Log Out</span>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
                         </a>
+                        <form id="navbar-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
                     </li>
                 </ul>
             </li>

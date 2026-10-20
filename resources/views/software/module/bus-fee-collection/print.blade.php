@@ -126,8 +126,13 @@
                             <img src="{{ asset('admin/assets/images/logo-light.png') }}" alt="Logo" style="width: 80px; height: auto;">
                         </td>
                         <td>
-                            <div class="school-name">{{ $schoolName }}</div>
-                            <div class="school-place">KESHOD</div>
+                            @php
+                                $busSchoolName = trim($schoolName ?? 'Ultra English School');
+                                if (!preg_match('/keshod/i', $busSchoolName)) {
+                                    $busSchoolName .= ' KESHOD';
+                                }
+                            @endphp
+                            <div class="school-name">{{ $busSchoolName }}</div>
                         </td>
                         <td style="width: 90px;"></td>
                     </tr>

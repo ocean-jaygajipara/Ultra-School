@@ -46,6 +46,7 @@ class AdmissionController extends Controller
     public $modules = [];
     protected array $exportableColumns = [
         'id' => 'REG No.',
+        'roll_no' => 'Roll No.',
         'gr_no' => 'GR No.',
         'bus_route_village' => 'Bus Route Village',
         'admission_date' => 'Admission Date',
@@ -89,6 +90,7 @@ class AdmissionController extends Controller
 
     protected array $defaultExportColumns = [
         'id',
+        'roll_no',
         'gr_no',
         'bus_route_village',
         'current_std',
@@ -169,7 +171,14 @@ class AdmissionController extends Controller
 
         try {
             $columns = [
-                (object) ['data' => "DT_RowIndex", 'name' => 'DT_RowIndex', 'td_label' => 'Sr No.', 'orderable' => false, 'searchable' => false],
+                (object) [
+                    'data' => 'roll_no',
+                    'name' => 'roll_no',
+                    'td_label' => 'Roll No.',
+                    'className' => 'w-5 text-center',
+                    'orderable' => true,
+                    'searchable' => true,
+                ],
                 // (object) ['data' => "admission_name", 'name' => 'first_name', 'td_label' => 'Name'],
                 (object) [
                     'data' => 'admission_name',
@@ -215,7 +224,7 @@ class AdmissionController extends Controller
                 }
 
                 if (empty($request->input('order'))) {
-                    $data->orderBy('id');
+                    $data->orderByRaw("CASE WHEN roll_no IS NULL OR roll_no = 0 THEN 1 ELSE 0 END, CAST(roll_no AS UNSIGNED) ASC, id ASC");
                 }
 
                 $editPermisstion = $modules['permission_edit'];
@@ -224,6 +233,15 @@ class AdmissionController extends Controller
 
                 return Datatables::of($data)
                     ->addIndexColumn()
+                    ->orderColumn('roll_no', function ($query, $order) {
+                        $query->orderByRaw("CASE WHEN roll_no IS NULL OR roll_no = 0 THEN 1 ELSE 0 END, CAST(roll_no AS UNSIGNED) {$order}, id ASC");
+                    })
+                    ->editColumn('roll_no', function ($row) {
+                        if (!empty($row->roll_no)) {
+                            return '<span class="badge bg-label-primary fs-6 fw-bold px-2 py-1">' . $row->roll_no . '</span>';
+                        }
+                        return '<span class="text-muted small">—</span>';
+                    })
 
                     ->filter(function ($query) use ($request) {
                         $search = $request->input('search');
@@ -234,6 +252,7 @@ class AdmissionController extends Controller
                             $query->where(function ($q) use ($trimmedSearch) {
                                 if (is_numeric($trimmedSearch)) {
                                     $q->where('id', $trimmedSearch)
+                                      ->orWhere('roll_no', $trimmedSearch)
                                       ->orWhere('gr_no', $trimmedSearch)
                                       ->orWhere('biometric_id', $trimmedSearch);
                                 } else {
@@ -338,7 +357,7 @@ class AdmissionController extends Controller
                         return $btn ?: '-';
                     })
 
-                    ->rawColumns(['status', 'action', 'gdrivefolderurl', 'admission_name', 'course_button', 'view_button', 'book_button', 'attendance_button', 'test_button'])
+                    ->rawColumns(['status', 'action', 'gdrivefolderurl', 'admission_name', 'course_button', 'view_button', 'book_button', 'attendance_button', 'test_button', 'roll_no'])
                     ->make(true);
             }
 
@@ -702,24 +721,9 @@ class AdmissionController extends Controller
                 $validated['roll_no'] = null;
             }
 
-            // Roll for this academic year already saved? Then normal update goes to list.
-            $yearHistory = AdmissionClassHistory::where('admission_id', $admission->id)
-                ->where('academic_year_id', $academicYear->id)
-                ->first();
-
             $admission->update($validated);
             $admission->refresh();
             AdmissionClassHistory::record($admission, $loginUserId, $academicYear);
-
-            $needsRollPage = $classChanged
-                || empty($admission->roll_no)
-                || !$yearHistory
-                || empty($yearHistory->roll_no);
-
-            if ($needsRollPage) {
-                return Redirect::route('admission.roll-number', $admission->id)
-                    ->with('success', $modules['title'] . ' updated successfully. Please confirm the roll number.');
-            }
 
             return Redirect::route($modules['route'] . '.index')
                 ->withSuccess($modules['title'] . ' updated successfully');

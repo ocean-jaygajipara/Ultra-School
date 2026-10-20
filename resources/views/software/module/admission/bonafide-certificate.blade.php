@@ -110,23 +110,12 @@
 
         .brand-school {
             color: #1f2580;
-            font-size: 31px;
+            font-size: 26px;
             font-weight: 900;
-            letter-spacing: 1.5px;
-            line-height: 1.15;
+            letter-spacing: 1.2px;
+            line-height: 1.2;
             text-transform: uppercase;
-        }
-
-        .header-place {
-            display: inline-block;
-            margin-top: 7px;
-            padding: 3px 18px;
-            border-radius: 20px;
-            background: #e1141c;
-            color: #fff;
-            font-weight: 700;
-            font-size: 13px;
-            letter-spacing: 4px;
+            white-space: nowrap;
         }
 
         .letterhead-meta {
@@ -336,12 +325,16 @@
             }
 
             .letterhead-logo {
-                width: 100px;
-                height: 100px;
+                width: 92px;
+                height: 92px;
+            }
+
+            .letterhead-meta {
+                width: 92px;
             }
 
             .brand-school {
-                font-size: 30px;
+                font-size: 26px;
                 white-space: nowrap;
             }
 
@@ -516,20 +509,11 @@
 
         $dobInWords = $dobToWords($dob);
 
-        // 8. Caste & Religion (e.g. Hindu LOHANA, Hindu KOLI (GHEDIYA))
-        $religion = trim($admission->religion ?? '');
+        // 8. Only Caste
         $caste = trim($admission->cast ?? '');
-        if ($religion && !str_contains(strtolower($caste), strtolower($religion))) {
-            $casteDisplay = trim($religion . ' ' . $caste);
-        } else {
-            $casteDisplay = $caste ?: ($religion ?: '________');
-        }
+        $casteDisplay = $caste !== '' ? mb_strtoupper($caste) : '________';
 
-        // 9. Photo path check
-        $photoPath = null;
-        if (!empty($admission->profile_pic) && file_exists(public_path($admission->profile_pic))) {
-            $photoPath = asset($admission->profile_pic);
-        }
+        // 9. Photo box is intentionally kept empty for physical photograph / stamp
     @endphp
 
     <div class="print-bar no-print">
@@ -546,8 +530,7 @@
                 <div class="letterhead">
                     <img src="{{ asset('admin/assets/images/logo-light.png') }}" alt="School Logo" class="letterhead-logo">
                     <div class="letterhead-text">
-                        <div class="brand-school">{{ $schoolName }}</div>
-                        <div class="header-place">KESHOD</div>
+                        <div class="brand-school">{{ $schoolName }} - KESHOD</div>
                     </div>
                     <div class="letterhead-meta"></div>
                 </div>
@@ -576,9 +559,7 @@
                         </td>
                         <td class="footer-photo-wrap">
                             <div class="photo-box">
-                                @if($photoPath)
-                                    <img src="{{ $photoPath }}" alt="Student Photo">
-                                @endif
+                                {{-- Kept empty for physical photograph / official school stamp --}}
                             </div>
                         </td>
                         <td class="footer-right">

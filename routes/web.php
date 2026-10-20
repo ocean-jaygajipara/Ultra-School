@@ -18,6 +18,7 @@ Route::get('optimize', function () {
 })->name('optimize');
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::match(['get', 'post'], '/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/software/login', function () {
     return redirect()->route('login');
 })->name('software.login');

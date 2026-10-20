@@ -272,6 +272,11 @@ class PermissionTableSeeder extends Seeder
                 'roll-number-list-list',
                 'roll-number-list-print',
             ],
+            'roll-number-generate' => [
+                'roll-number-generate-list',
+                'roll-number-generate-create',
+                'roll-number-generate-edit',
+            ],
             'class-promotion' => [
                 'class-promotion-list',
                 'class-promotion-create',
