@@ -321,12 +321,7 @@ class RollNumberGenerateController extends Controller
 
     protected function authorizeView(): void
     {
-        if (!Helper::directCanAny([
-            $this->modules['permission_prefix'] . '-list',
-            'roll-number-list-list',
-            'admission-list',
-            'admission-edit',
-        ])) {
+        if (!Helper::directCan($this->modules['permission_prefix'] . '-list')) {
             abort(403, 'User does not have the right permissions.');
         }
     }
@@ -336,8 +331,6 @@ class RollNumberGenerateController extends Controller
         if (!Helper::directCanAny([
             $this->modules['permission_prefix'] . '-create',
             $this->modules['permission_prefix'] . '-edit',
-            'admission-edit',
-            'roll-number-list-list',
         ])) {
             abort(403, 'User does not have the right permissions.');
         }

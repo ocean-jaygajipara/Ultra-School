@@ -162,13 +162,13 @@
                 @enddirectCan
 
                 {{-- Generate Roll Number --}}
-                @directCanAny(['roll-number-generate-list', 'roll-number-list-list', 'admission-edit'])
+                @directCan('roll-number-generate-list')
                 <li class="menu-item {{ $sidebar_active == 'roll-number-generate' ? 'active' : '' }}">
                     <a href="{{ route('roll-number-generate.index') }}" class="menu-link">
                         <div data-i18n="Generate Roll Number">Generate Roll Number</div>
                     </a>
                 </li>
-                @enddirectCanAny
+                @enddirectCan
 
                 {{-- Roll Number List --}}
                 @directCan('roll-number-list-list')
