@@ -57,6 +57,15 @@
                         class="ti ti-filter"></i></button>
             @endif
 
+            @if (isset($show_report_settings_btn) && $show_report_settings_btn)
+                <button type="button" class="btn btn-sm btn-primary waves-effect waves-light text-white"
+                    id="reportSettingsBtn" data-bs-toggle="modal" data-bs-target="#classReportSettingsModal"
+                    title="Report Settings">
+                    <i class="ti ti-adjustments-horizontal me-1"></i>
+                    <span class="d-none d-md-inline">Report Settings</span>
+                </button>
+            @endif
+
             @if (isset($show_export_btns) && $show_export_btns && isset($route))
 
                 {{-- Dropdown --}}

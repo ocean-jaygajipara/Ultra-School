@@ -57,6 +57,7 @@ class RollNumberGenerateController extends Controller
 
         $filters = session(self::SESSION_KEY, []);
         $standardId = !empty($filters['standard_id']) ? (int) $filters['standard_id'] : null;
+        $selectedStandard = $standardId ? $standards->firstWhere('id', $standardId) : null;
         $division = !empty($filters['division']) ? trim($filters['division']) : null;
         $orderBy = !empty($filters['order_by']) ? trim($filters['order_by']) : '';
         $genderOrder = !empty($filters['gender_order']) && in_array($filters['gender_order'], ['male', 'female', 'both'], true) ? $filters['gender_order'] : '';
@@ -68,6 +69,7 @@ class RollNumberGenerateController extends Controller
         $totalStudents = 0;
         $allAssigned = false;
         $pendingCounts = [];
+        $missingGenderCountsByStd = [];
 
         if ($currentYearModel) {
             $pendingCounts = Admission::where('academic_year_id', (int) $currentYearModel->id)
@@ -80,7 +82,19 @@ class RollNumberGenerateController extends Controller
                 ->selectRaw('current_std_id, count(*) as count')
                 ->pluck('count', 'current_std_id')
                 ->all();
+
+            $missingGenderCountsByStd = Admission::where('academic_year_id', (int) $currentYearModel->id)
+                ->where(function ($q) {
+                    $q->whereNull('gender')
+                      ->orWhereRaw("TRIM(COALESCE(gender, '')) = ''");
+                })
+                ->groupBy('current_std_id')
+                ->selectRaw('current_std_id, count(*) as count')
+                ->pluck('count', 'current_std_id')
+                ->all();
         }
+
+        $missingGenderStudents = collect();
 
         if ($standardId && $currentYearModel) {
             $baseQuery = Admission::where('current_std_id', $standardId)
@@ -99,6 +113,14 @@ class RollNumberGenerateController extends Controller
                 ->where('roll_no', '>', 0)
                 ->max('roll_no'));
 
+            // Query any students in this class/standard who have missing or empty gender
+            $missingGenderStudents = (clone $baseQuery)
+                ->where(function ($q) {
+                    $q->whereNull('gender')
+                      ->orWhereRaw("TRIM(COALESCE(gender, '')) = ''");
+                })
+                ->get();
+
             // If all enrolled students already have roll numbers, allAssigned = true
             if ($totalStudents > 0 && $assignedCount === $totalStudents) {
                 $allAssigned = true;
@@ -109,7 +131,7 @@ class RollNumberGenerateController extends Controller
             }
         }
 
-        $selectedStandard = $standardId ? $standards->firstWhere('id', $standardId) : null;
+        $missingGenderCount = $missingGenderStudents->count();
 
         return view($modules['folder_path'] . '.index', compact(
             'modules',
@@ -128,7 +150,10 @@ class RollNumberGenerateController extends Controller
             'assignedCount',
             'existingMaxRoll',
             'totalStudents',
-            'pendingCounts'
+            'pendingCounts',
+            'missingGenderCountsByStd',
+            'missingGenderStudents',
+            'missingGenderCount'
         ));
     }
 
@@ -158,6 +183,26 @@ class RollNumberGenerateController extends Controller
             }
         }
         $cleanOrderBy = !empty($cleanFields) ? implode(',', $cleanFields) : 'surname,name,father_name';
+
+        $currentYearModel = MasterAcademicYear::where('is_current', 1)->first();
+        if ($currentYearModel) {
+            $missingGenderStudents = Admission::where('current_std_id', (int) $request->standard_id)
+                ->where('academic_year_id', (int) $currentYearModel->id)
+                ->when($request->filled('division'), fn($q) => $q->where('division', trim($request->division)))
+                ->where(function ($q) {
+                    $q->whereNull('gender')
+                      ->orWhereRaw("TRIM(COALESCE(gender, '')) = ''");
+                })
+                ->get();
+
+            if ($missingGenderStudents->isNotEmpty()) {
+                session()->forget(self::SESSION_KEY);
+
+                return redirect()->route('roll-number-generate.index')
+                    ->withInput()
+                    ->with('error', "Roll numbers cannot be generated! All students must have a Gender specified first. Missing gender for {$missingGenderStudents->count()} student(s) in this class. Please update their Gender in Admission module.");
+            }
+        }
 
         session()->put(self::SESSION_KEY, [
             'standard_id'  => (int) $request->standard_id,
@@ -198,6 +243,43 @@ class RollNumberGenerateController extends Controller
 
         if (empty($selectedIds)) {
             return redirect()->back()->withInput()->withErrors('Please select at least one student to assign roll numbers.');
+        }
+
+        // Validate that ALL students in this class have a gender specified before allowing roll number generation
+        $firstStudent = Admission::find($selectedIds[0] ?? 0);
+        if ($firstStudent) {
+            $classMissingGender = Admission::where('current_std_id', $firstStudent->current_std_id)
+                ->where('academic_year_id', $firstStudent->academic_year_id)
+                ->when($firstStudent->division, fn($q, $d) => $q->where('division', $d))
+                ->where(function ($q) {
+                    $q->whereNull('gender')
+                      ->orWhereRaw("TRIM(COALESCE(gender, '')) = ''");
+                })
+                ->get();
+
+            if ($classMissingGender->isNotEmpty()) {
+                return redirect()->back()->withInput()->with('error', 
+                    "Roll numbers cannot be generated! All students must have a Gender specified first. Missing gender for {$classMissingGender->count()} student(s) in this class. Please update their Gender in Admission module."
+                );
+            }
+        }
+
+        // Double-check selected students
+        $missingGenderAdmissions = Admission::whereIn('id', $selectedIds)
+            ->where(function ($q) {
+                $q->whereNull('gender')
+                  ->orWhereRaw("TRIM(COALESCE(gender, '')) = ''");
+            })
+            ->get();
+
+        if ($missingGenderAdmissions->isNotEmpty()) {
+            $names = $missingGenderAdmissions->map(function ($s) {
+                return trim("{$s->first_name} {$s->last_name}") . ($s->gr_no ? " (GR: {$s->gr_no})" : "");
+            })->join(', ');
+
+            return redirect()->back()->withInput()->with('error', 
+                "Roll numbers cannot be generated! All students must have a Gender specified first. Missing gender for {$missingGenderAdmissions->count()} student(s) in this class. Please update their Gender in Admission module."
+            );
         }
 
         // Check duplicate roll numbers among selected students
@@ -287,6 +369,14 @@ class RollNumberGenerateController extends Controller
             $query->whereRaw("LOWER(TRIM(gender)) = 'male'");
         } elseif ($genderOrder === 'female') {
             $query->whereRaw("LOWER(TRIM(gender)) = 'female'");
+        }
+
+        // Both: girls first, then boys, then apply selected sort fields within each gender
+        if ($genderOrder === 'both' || $genderOrder === '') {
+            $query->orderByRaw("CASE LOWER(TRIM(COALESCE(gender, '')))
+                WHEN 'female' THEN 0
+                WHEN 'male' THEN 1
+                ELSE 2 END");
         }
 
         // Selected sort criteria (supports multiple fields in user-specified priority sequence)

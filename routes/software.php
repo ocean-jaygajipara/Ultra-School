@@ -609,6 +609,7 @@ Route::match(['get', 'post'], 'student_report/bulk-pdf', [StudentReportControlle
 /** Class Wise Report Routes */
 Route::get('class-report', [\App\Http\Controllers\admin\ClassReportController::class, 'index'])->name('class-report.index');
 Route::post('class-report', [\App\Http\Controllers\admin\ClassReportController::class, 'filter'])->name('class-report.filter');
+Route::post('class-report/settings', [\App\Http\Controllers\admin\ClassReportController::class, 'saveSettings'])->name('class-report.settings');
 Route::post('class-report/print', [\App\Http\Controllers\admin\ClassReportController::class, 'printList'])->name('class-report.print');
 Route::post('class-report/export-excel', [\App\Http\Controllers\admin\ClassReportController::class, 'exportExcel'])->name('class-report.export-excel');
 

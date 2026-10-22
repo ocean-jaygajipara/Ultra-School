@@ -441,7 +441,7 @@
                     <select name="standard_id" id="standard_id" class="form-select select2" required>
                         <option value="">Select Standard</option>
                         @foreach ($standards as $std)
-                            <option value="{{ $std->id }}" {{ (string) $standardId === (string) $std->id ? 'selected' : '' }}>
+                            <option value="{{ $std->id }}" {{ (string) old('standard_id', $standardId) === (string) $std->id ? 'selected' : '' }}>
                                 {{ $std->name }}
                             </option>
                         @endforeach
@@ -454,7 +454,7 @@
                     <select name="division" id="division" class="form-select select2">
                         <option value="">Select Division</option>
                         @foreach ($divisions as $div)
-                            <option value="{{ $div }}" {{ $division === $div ? 'selected' : '' }}>{{ $div }}</option>
+                            <option value="{{ $div }}" {{ old('division', $division) === $div ? 'selected' : '' }}>{{ $div }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -464,9 +464,9 @@
                     <label class="rng-label">Gender</label>
                     <select name="gender_order" id="gender_order" class="form-select select2">
                         <option value="">Select Gender</option>
-                        <option value="both" {{ $genderOrder === 'both' ? 'selected' : '' }}>Both</option>
-                        <option value="male" {{ $genderOrder === 'male' ? 'selected' : '' }}>Male</option>
-                        <option value="female" {{ $genderOrder === 'female' ? 'selected' : '' }}>Female</option>
+                        <option value="both" {{ old('gender_order', $genderOrder ?? 'both') === 'both' ? 'selected' : '' }}>Both</option>
+                        <option value="male" {{ old('gender_order', $genderOrder) === 'male' ? 'selected' : '' }}>Male</option>
+                        <option value="female" {{ old('gender_order', $genderOrder) === 'female' ? 'selected' : '' }}>Female</option>
                     </select>
                 </div>
 
@@ -582,7 +582,6 @@
                 </div>
             @elseif (!$standardId)
                 <div class="rng-empty">
-                    <i class="ti ti-pointer" style="font-size:2.5rem; color:#a5a9c7;"></i>
                     <h5 class="mt-2 text-muted">Select Standard and click "Generate"</h5>
                     <p class="small text-muted mb-0">Set your sort criteria order and click Generate to see the generated roll numbers list below.</p>
                 </div>
@@ -598,6 +597,30 @@
                         All <strong>{{ $assignedCount }} student(s)</strong> in <strong>{{ $selectedStandard->name ?? '' }}{{ $division ? ' (Div ' . $division . ')' : '' }}</strong> already have their roll numbers assigned for Academic Year <strong>{{ $currentYear }}</strong> (Roll 1 to {{ $existingMaxRoll }}).<br>
                         When new students are admitted without roll numbers, they will appear here to be assigned the next sequential roll numbers (starting from Roll No <strong>{{ $existingMaxRoll + 1 }}</strong>).
                     </p>
+                    @if (($missingGenderCount ?? 0) > 0)
+                        <div class="alert alert-warning py-3 px-3 mx-auto mb-4 text-start border-warning" style="max-width: 650px;">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="ti ti-alert-triangle text-warning fs-4"></i>
+                                <strong class="text-dark">Notice: {{ $missingGenderCount }} student(s) in this class do not have Gender set</strong>
+                            </div>
+                            <p class="small text-muted mb-2">
+                                Please update their Gender in Admission module so that future roll number generation and reports have complete student details.
+                            </p>
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                @foreach ($missingGenderStudents->take(10) as $mStudent)
+                                    <span class="badge bg-warning text-dark py-1 px-2" style="font-size: 0.78rem;">
+                                        {{ $mStudent->first_name }} {{ $mStudent->last_name }}{{ $mStudent->gr_no ? ' (GR: ' . $mStudent->gr_no . ')' : '' }}
+                                    </span>
+                                @endforeach
+                                @if ($missingGenderCount > 10)
+                                    <span class="badge bg-light text-muted">+{{ $missingGenderCount - 10 }} more</span>
+                                @endif
+                            </div>
+                            <a href="{{ route('admission.index') }}" class="btn btn-sm btn-warning text-dark fw-bold">
+                                <i class="ti ti-edit me-1"></i> Update Gender in Admission Module
+                            </a>
+                        </div>
+                    @endif
                     <div class="d-flex justify-content-center gap-2">
                         <a href="{{ route('roll-number-list.index') }}" class="btn btn-primary px-4">
                             <i class="ti ti-list-numbers me-1"></i> View Saved Roll List
@@ -625,6 +648,35 @@
                                 <strong>{{ $assignedCount }} existing student(s)</strong> already have roll numbers (Roll 1 to {{ $existingMaxRoll }}).
                                 Generating roll numbers for <strong>{{ $students->count() }} new student(s)</strong> starting from Roll No <strong>{{ $startFrom }}</strong>.
                             </span>
+                        </div>
+                    @endif
+
+                    @if (($missingGenderCount ?? 0) > 0)
+                        <div class="alert alert-danger py-3 px-3 mb-3 d-flex align-items-start gap-2 shadow-sm border-danger">
+                            <i class="ti ti-alert-triangle fs-2 text-danger flex-shrink-0 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold text-danger mb-1">
+                                    Cannot Generate Roll Numbers: Gender Missing for {{ $missingGenderCount }} Student(s)
+                                </h6>
+                                <p class="mb-2 text-dark" style="font-size: 0.9rem;">
+                                    All students must have a <strong>Gender</strong> specified before roll numbers can be generated and saved.
+                                    The following student(s) currently do not have gender set:
+                                </p>
+                                <div class="p-2 rounded bg-white border border-danger mb-2 d-flex flex-wrap gap-1">
+                                    @foreach ($missingGenderStudents as $mStudent)
+                                        <span class="badge bg-danger py-1 px-2" style="font-size: 0.8rem;">
+                                            <i class="ti ti-user-x me-1"></i>
+                                            {{ $mStudent->first_name }} {{ $mStudent->last_name }}{{ $mStudent->gr_no ? ' (GR: ' . $mStudent->gr_no . ')' : '' }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a href="{{ route('admission.index') }}" class="btn btn-sm btn-danger fw-bold">
+                                        <i class="ti ti-edit me-1"></i> Update Gender in Admission Module
+                                    </a>
+                                    <span class="text-muted small">Once updated, reload this page to generate roll numbers.</span>
+                                </div>
+                            </div>
                         </div>
                     @endif
 
@@ -720,7 +772,9 @@
                                             @elseif ($isFemale)
                                                 <span class="rng-gender-girl">Female</span>
                                             @else
-                                                <span class="text-muted">{{ $student->gender ?: '—' }}</span>
+                                                <span class="badge bg-danger py-1 px-2 fw-bold" title="Gender is required before generating roll numbers">
+                                                    <i class="ti ti-alert-circle me-1"></i>Missing Gender
+                                                </span>
                                             @endif
                                         </td>
                                         {{-- Division --}}
@@ -735,7 +789,9 @@
                     </div>
 
                     <div class="d-flex justify-content-end mt-4">
-                        <button type="submit" class="rng-btn-save-modern" id="btnSubmitRollsBottom">
+                        <button type="submit" class="rng-btn-save-modern" id="btnSubmitRollsBottom"
+                            {{ ($missingGenderCount ?? 0) > 0 ? 'disabled' : '' }}
+                            @if (($missingGenderCount ?? 0) > 0) title="All students must have Gender specified before roll numbers can be saved" @endif>
                             <span class="rng-icon-pill"><i class="ti ti-device-floppy"></i></span>
                             <span>Save Roll Numbers</span>
                         </button>
@@ -991,7 +1047,8 @@
             });
 
             $('#duplicateAlert').toggleClass('d-none', !hasDup);
-            $('#btnSubmitRolls, #btnSubmitRollsBottom').prop('disabled', hasDup);
+            var missingGender = {{ ($missingGenderCount ?? 0) }};
+            $('#btnSubmitRolls, #btnSubmitRollsBottom').prop('disabled', hasDup || missingGender > 0);
             return hasDup;
         }
 
@@ -1000,6 +1057,12 @@
         });
 
         $('#saveRollForm').on('submit', function(e) {
+            var missingGender = {{ ($missingGenderCount ?? 0) }};
+            if (missingGender > 0) {
+                e.preventDefault();
+                alert('All students must have Gender specified before roll numbers can be generated. Please update gender in Admission first.');
+                return false;
+            }
             if (checkDuplicates()) {
                 e.preventDefault();
                 alert('Please resolve duplicate roll numbers before saving.');

@@ -4,24 +4,26 @@
     $page_title = $modules['title'] ?? 'Class Wise Report';
     $route = $modules['route'] ?? null;
     $controller = app(\App\Http\Controllers\admin\ClassReportController::class);
+    $dataColumns = $controller->selectedColumns($filters);
+    $blankHeaders = $controller->blankColumnHeaders($filters);
+    $tableColCount = count($dataColumns) + count($blankHeaders);
 @endphp
 @section('title', $page_title)
 
 @section('page_style_file')
     <style>
         .crx {
-            /* Colours taken from the school logo */
-            --crx-ink: #1f2580;          /* navy border */
+            --crx-ink: #1f2580;
             --crx-ink-2: #2e3a9e;
             --crx-muted: #5f6488;
             --crx-line: #e1e4f2;
             --crx-soft: #f7f8fd;
-            --crx-accent: #e1141c;       /* red lettering */
+            --crx-accent: #e1141c;
             --crx-accent-dark: #b80f16;
             --crx-accent-soft: #fff1f1;
-            --crx-sky: #bfe3f7;          /* ribbon */
+            --crx-sky: #bfe3f7;
             --crx-sky-soft: #eef7fd;
-            --crx-gold: #f5b400;         /* halo */
+            --crx-gold: #f5b400;
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             color: var(--crx-ink);
         }
@@ -129,15 +131,6 @@
         .crx-stat.is-accent { background: var(--crx-accent); border-color: var(--crx-accent); }
         .crx-stat.is-accent small { color: #ffd9db; }
 
-        .crx-config {
-            background: linear-gradient(180deg, var(--crx-sky-soft), #fff);
-            border: 1.5px dashed var(--crx-sky); border-radius: 14px;
-            padding: 18px 20px; margin-bottom: 22px;
-        }
-        .crx-config-title { font-weight: 700; color: var(--crx-ink); display: flex; align-items: center; gap: 8px; }
-        .crx-config-title i { color: var(--crx-gold); }
-        .crx-config-hint { color: var(--crx-muted); font-size: .8rem; }
-
         .crx-table-wrap {
             border: 1px solid var(--crx-line); border-radius: 14px;
             max-height: 65vh; overflow: auto;
@@ -187,6 +180,110 @@
         }
         .crx-empty h5 { font-weight: 700; color: var(--crx-ink); margin-bottom: 6px; }
         .crx-empty p { color: var(--crx-muted); margin: 0; }
+
+        #classReportSettingsModal .modal-content {
+            border: 0; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 24px 48px -16px rgba(15, 23, 42, .35);
+        }
+        #classReportSettingsModal .modal-header {
+            background: linear-gradient(135deg, #171c6b 0%, #2e3a9e 100%);
+            color: #fff !important; border-bottom: 0; padding: 16px 20px;
+        }
+        #classReportSettingsModal .modal-title {
+            font-weight: 700; font-size: 1.05rem;
+            display: flex; align-items: center; gap: 8px;
+            color: #fff !important;
+        }
+        #classReportSettingsModal .modal-title i {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: rgba(245, 180, 0, .2); border: 1px solid rgba(245, 180, 0, .45);
+            color: #f5b400; display: inline-flex; align-items: center; justify-content: center;
+        }
+        #classReportSettingsModal .btn-close {
+            background: rgba(255,255,255,.15); opacity: 1; border-radius: 8px;
+            width: 32px; height: 32px; padding: 0;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e");
+            background-size: 12px; background-repeat: no-repeat; background-position: center;
+        }
+        #classReportSettingsModal .btn-close:hover { background-color: rgba(255,255,255,.28); }
+        #classReportSettingsModal .modal-body { padding: 22px 22px 8px; background: #fafbff; }
+        #classReportSettingsModal .modal-footer {
+            border-top: 1px solid #e8ebf5; background: #fff; padding: 14px 20px;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px;
+        }
+        #classReportSettingsModal .modal-footer .btn {
+            min-height: 38px; padding: 8px 16px; border-radius: 10px;
+            font-weight: 600; font-size: .875rem;
+        }
+        #classReportSettingsModal .btn-reset {
+            margin-right: auto;
+            background: #fff1f1; border: 1.5px solid #f7c3c5; color: #e1141c;
+        }
+        #classReportSettingsModal .btn-reset:hover {
+            background: #e1141c; border-color: #e1141c; color: #fff;
+        }
+        #classReportSettingsModal .btn-cancel {
+            background: #fff; border: 1.5px solid #d5dae8; color: #5f6488;
+        }
+        #classReportSettingsModal .btn-cancel:hover {
+            background: #f7f8fd; border-color: #1f2580; color: #1f2580;
+        }
+        #classReportSettingsModal .btn-save {
+            background: #1f2580; border: 1.5px solid #1f2580; color: #fff !important;
+        }
+        #classReportSettingsModal .btn-save:hover {
+            background: #171c6b; border-color: #171c6b; color: #fff !important;
+        }
+
+        .crx-set-hint {
+            font-size: .85rem; color: var(--crx-muted); margin: 0 0 16px;
+            line-height: 1.45;
+        }
+        .crx-set-block {
+            background: #fff; border: 1px solid var(--crx-line);
+            border-radius: 14px; padding: 16px 16px 14px; margin-bottom: 14px;
+        }
+        .crx-set-block .crx-label { margin-bottom: 12px; }
+
+        .crx-col-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        @media (max-width: 767.98px) {
+            .crx-col-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .crx-col-check {
+            display: flex; align-items: center; gap: 8px;
+            min-height: 44px; padding: 10px 12px; border-radius: 10px;
+            border: 1.5px solid var(--crx-line); background: var(--crx-soft);
+            cursor: pointer; margin: 0; user-select: none;
+            transition: border-color .15s, background .15s, box-shadow .15s;
+        }
+        .crx-col-check:hover {
+            border-color: #c5cce8; background: #fff;
+            box-shadow: 0 2px 8px rgba(31, 37, 128, .06);
+        }
+        .crx-col-check.is-on,
+        .crx-col-check:has(input:checked) {
+            border-color: var(--crx-ink); background: var(--crx-sky-soft);
+            box-shadow: inset 0 0 0 1px rgba(31, 37, 128, .08);
+        }
+        .crx-col-check input {
+            width: 15px; height: 15px; accent-color: var(--crx-ink);
+            flex-shrink: 0; margin: 0;
+        }
+        .crx-col-check span {
+            font-size: .82rem; font-weight: 600; color: var(--crx-ink);
+            line-height: 1.2; white-space: nowrap;
+        }
+
+        #classReportSettingsModal .crx-input {
+            background: #fff !important;
+            border-color: #d5dae8 !important;
+        }
+        #classReportSettingsModal .crx-field > i { color: #7a82a8; }
     </style>
 @endsection
 
@@ -200,6 +297,7 @@
             'show_export_btns' => true,
             'show_excal_btn' => true,
             'show_print_btn' => true,
+            'show_report_settings_btn' => true,
             'show_back_btn' => false,
         ])
     </div>
@@ -265,56 +363,45 @@
                 </div>
 
                 <div class="crx-body">
-                    <div class="crx-config">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                            <span class="crx-config-title"><i class="ti ti-columns-3"></i> Extra Columns for Excel / Print</span>
-                            <span class="crx-config-hint"><i class="ti ti-settings"></i> Use the settings button on top to Export Excel or Print</span>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-3 col-sm-6">
-                                <label class="crx-label" for="extra_columns">Extra Columns</label>
-                                <div class="crx-field">
-                                    <i class="ti ti-hash"></i>
-                                    <input type="number" id="extra_columns" class="crx-input" min="0"
-                                        max="{{ \App\Http\Controllers\admin\ClassReportController::MAX_EXTRA_COLUMNS }}"
-                                        placeholder="e.g. 4"
-                                        value="{{ $filters['extra_columns'] ?: '' }}">
-                                </div>
-                            </div>
-                            <div class="col-md-9 col-sm-12">
-                                <label class="crx-label" for="column_names">Column Names <span style="text-transform:none;letter-spacing:0;font-weight:500">(optional, comma separated)</span></label>
-                                <div class="crx-field">
-                                    <i class="ti ti-tags"></i>
-                                    <input type="text" id="column_names" class="crx-input"
-                                        placeholder="e.g. Unit Test 1, Unit Test 2, Sign, Remark"
-                                        value="{{ $filters['column_names'] }}">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="crx-table-wrap">
                         <table class="crx-table" id="classStudentTable">
                             <thead>
                                 <tr>
-                                    <th class="text-center" style="width:100px">Roll No</th>
-                                    <th>Student Name</th>
-                                    <th style="width:140px">GR No</th>
+                                    @foreach ($dataColumns as $key => $label)
+                                        <th class="{{ $key === 'roll_no' ? 'text-center' : '' }}"
+                                            @if ($key === 'roll_no') style="width:100px" @endif
+                                            @if ($key === 'gr_no') style="width:140px" @endif>
+                                            {{ $label }}
+                                        </th>
+                                    @endforeach
+                                    @foreach ($blankHeaders as $heading)
+                                        <th class="extra-col" style="min-width:110px">{{ $heading ?: 'Column' }}</th>
+                                    @endforeach
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($students as $i => $s)
-                                    @php $name = $controller->fullName($s); @endphp
                                     <tr>
-                                        <td class="text-center">
-                                            <span class="crx-roll {{ $s->roll_no ? '' : 'is-empty' }}">{{ $s->roll_no ?: '—' }}</span>
-                                        </td>
-                                        <td><span class="crx-name">{{ $name }}</span></td>
-                                        <td><span class="crx-gr">{{ $s->gr_no }}</span></td>
+                                        @foreach ($dataColumns as $key => $label)
+                                            <td class="{{ $key === 'roll_no' ? 'text-center' : '' }}">
+                                                @if ($key === 'roll_no')
+                                                    <span class="crx-roll {{ $s->roll_no ? '' : 'is-empty' }}">{{ $s->roll_no ?: '—' }}</span>
+                                                @elseif ($key === 'student_name')
+                                                    <span class="crx-name">{{ $controller->columnValue($s, $key) }}</span>
+                                                @elseif ($key === 'gr_no')
+                                                    <span class="crx-gr">{{ $controller->columnValue($s, $key) }}</span>
+                                                @else
+                                                    {{ $controller->columnValue($s, $key) }}
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        @foreach ($blankHeaders as $heading)
+                                            <td class="extra-col"></td>
+                                        @endforeach
                                     </tr>
                                 @empty
                                     <tr class="no-students">
-                                        <td colspan="3">
+                                        <td colspan="{{ max(1, $tableColCount) }}">
                                             <div class="crx-empty">
                                                 <div class="crx-empty-icon"><i class="ti ti-user-off"></i></div>
                                                 <h5>No students in this class</h5>
@@ -338,16 +425,113 @@
             </div>
         @endif
     </div>
+
+    {{-- Report Settings Modal --}}
+    <div class="modal fade" id="classReportSettingsModal" tabindex="-1" aria-labelledby="classReportSettingsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 640px;">
+            <form method="POST" action="{{ route('class-report.settings') }}" class="modal-content crx">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="classReportSettingsLabel">
+                        <i class="ti ti-adjustments-horizontal"></i>
+                        Report Settings
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="crx-set-hint">Choose which columns appear in the list, print and Excel export.</p>
+
+                    <div class="crx-set-block">
+                        <label class="crx-label">Show Columns</label>
+                        <div class="crx-col-grid">
+                            @foreach ($availableColumns as $key => $label)
+                                <label class="crx-col-check {{ in_array($key, $filters['columns'], true) ? 'is-on' : '' }}">
+                                    <input type="checkbox" name="columns[]" value="{{ $key }}"
+                                        {{ in_array($key, $filters['columns'], true) ? 'checked' : '' }}>
+                                    <span>{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="crx-set-block mb-0">
+                        <label class="crx-label">Extra Blank Columns</label>
+                        <div class="row g-3">
+                            <div class="col-sm-4">
+                                <div class="crx-field">
+                                    <i class="ti ti-hash"></i>
+                                    <input type="number" id="extra_columns" name="extra_columns" class="crx-input" min="0"
+                                        max="{{ \App\Http\Controllers\admin\ClassReportController::MAX_EXTRA_COLUMNS }}"
+                                        placeholder="Count e.g. 4"
+                                        value="{{ $filters['extra_columns'] ?: '' }}">
+                                </div>
+                            </div>
+                            <div class="col-sm-8">
+                                <div class="crx-field">
+                                    <i class="ti ti-tags"></i>
+                                    <input type="text" id="column_names" name="column_names" class="crx-input"
+                                        placeholder="Names (optional): Sign, Remark, Attendance"
+                                        value="{{ $filters['column_names'] }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-reset" id="resetReportColumns">
+                        <i class="ti ti-rotate me-1"></i> Reset Default
+                    </button>
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-save">
+                        <i class="ti ti-device-floppy me-1"></i> Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
 
 @section('page_leavel_script')
     <script type="text/javascript">
         $(function() {
+            var defaultColumns = @json(\App\Http\Controllers\admin\ClassReportController::DEFAULT_COLUMNS);
+            var maxExtra = {{ \App\Http\Controllers\admin\ClassReportController::MAX_EXTRA_COLUMNS }};
+
             $('.report_filter').on('change', function() {
                 $('#filterForm').submit();
             });
 
-            var maxExtra = {{ \App\Http\Controllers\admin\ClassReportController::MAX_EXTRA_COLUMNS }};
+            function syncColCheckState() {
+                $('#classReportSettingsModal input[name="columns[]"]').each(function() {
+                    $(this).closest('.crx-col-check').toggleClass('is-on', this.checked);
+                });
+            }
+
+            $('#classReportSettingsModal').on('change', 'input[name="columns[]"]', syncColCheckState);
+
+            $('#resetReportColumns').on('click', function() {
+                $('#classReportSettingsModal input[name="columns[]"]').each(function() {
+                    $(this).prop('checked', defaultColumns.indexOf($(this).val()) !== -1);
+                });
+                $('#extra_columns').val('');
+                $('#column_names').val('');
+                syncColCheckState();
+            });
+
+            $('#classReportSettingsModal form').on('submit', function(e) {
+                if (!$('#classReportSettingsModal input[name="columns[]"]:checked').length) {
+                    e.preventDefault();
+                    var msg = 'Please select at least one column.';
+                    typeof toastr !== 'undefined' ? toastr.warning(msg) : alert(msg);
+                    return false;
+                }
+            });
+
+            function selectedColumns() {
+                return $('#classReportSettingsModal input[name="columns[]"]:checked').map(function() {
+                    return $(this).val();
+                }).get();
+            }
 
             function extraColumnCount() {
                 var n = parseInt($('#extra_columns').val(), 10);
@@ -356,15 +540,13 @@
             }
 
             function currentParams() {
-                var params = {
+                return {
                     standard: $('#standard').val() || '',
-                    division: $('#division').val() || ''
+                    division: $('#division').val() || '',
+                    columns: selectedColumns().join(','),
+                    extra_columns: extraColumnCount(),
+                    column_names: $('#column_names').val() || ''
                 };
-                if ($('#extra_columns').length) {
-                    params.extra_columns = extraColumnCount();
-                    params.column_names = $('#column_names').val() || '';
-                }
-                return params;
             }
 
             function postTo(url, target) {
@@ -376,31 +558,6 @@
                 $form.appendTo('body').trigger('submit');
                 setTimeout(function() { $form.remove(); }, 1000);
             }
-
-            function renderExtraColumns() {
-                var $table = $('#classStudentTable');
-                if (!$table.length) return;
-
-                var count = extraColumnCount();
-                var names = ($('#column_names').val() || '').split(',').map(function(v) {
-                    return $.trim(v);
-                });
-
-                $table.find('.extra-col').remove();
-                var $headRow = $table.find('thead tr');
-                for (var i = 0; i < count; i++) {
-                    $('<th class="extra-col" style="min-width:110px">').text(names[i] || 'Column ' + (i + 1)).appendTo($headRow);
-                }
-                $table.find('tbody tr').not('.no-students').each(function() {
-                    for (var i = 0; i < count; i++) {
-                        $(this).append('<td class="extra-col"></td>');
-                    }
-                });
-                $table.find('tr.no-students td').attr('colspan', 3 + count);
-            }
-
-            $('#extra_columns, #column_names').on('input change', renderExtraColumns);
-            renderExtraColumns();
 
             function hasStandard() {
                 if ($('#standard').val()) return true;

@@ -25,6 +25,22 @@ class ClassReportController extends Controller
 {
     public $modules = [];
 
+    public const MAX_EXTRA_COLUMNS = 20;
+
+    /** @var array<string, string> */
+    public const AVAILABLE_COLUMNS = [
+        'roll_no'      => 'Roll No',
+        'student_name' => 'Student Name',
+        'gr_no'        => 'GR No',
+        'phone'        => 'Phone',
+        'birth_date'   => 'Birth Date',
+    ];
+
+    /** @var string[] */
+    public const DEFAULT_COLUMNS = ['roll_no', 'student_name', 'gr_no'];
+
+    protected const SESSION_KEY = 'class_report_filters';
+
     public function __construct()
     {
         $this->modules = [
@@ -44,21 +60,45 @@ class ClassReportController extends Controller
         $standards = $this->standardNames();
         $divisions = MasterDivision::where('status', 'active')->orderBy('name')->pluck('name');
         $students = $filters['standard'] ? $this->students($filters) : collect();
+        $availableColumns = self::AVAILABLE_COLUMNS;
 
-        return view($modules['folder_path'] . '.index', compact('modules', 'filters', 'standards', 'divisions', 'students'));
+        return view($modules['folder_path'] . '.index', compact(
+            'modules', 'filters', 'standards', 'divisions', 'students', 'availableColumns'
+        ));
     }
 
     public function filter(Request $request)
     {
         $this->authorizeView();
 
+        $current = session(self::SESSION_KEY, []);
+
         if ($request->boolean('clear')) {
-            session()->forget(self::SESSION_KEY);
+            session()->put(self::SESSION_KEY, array_merge($current, [
+                'standard' => '',
+                'division' => '',
+            ]));
         } else {
-            session()->put(self::SESSION_KEY, $request->only(['standard', 'division']));
+            session()->put(self::SESSION_KEY, array_merge($current, $request->only(['standard', 'division'])));
         }
 
         return redirect()->route('class-report.index');
+    }
+
+    public function saveSettings(Request $request)
+    {
+        $this->authorizeView();
+
+        $current = session(self::SESSION_KEY, []);
+        $columns = $this->normalizeColumns($request->input('columns', self::DEFAULT_COLUMNS));
+
+        session()->put(self::SESSION_KEY, array_merge($current, [
+            'columns'       => $columns,
+            'extra_columns' => max(0, min(self::MAX_EXTRA_COLUMNS, (int) $request->input('extra_columns', 0))),
+            'column_names'  => trim((string) $request->input('column_names', '')),
+        ]));
+
+        return redirect()->route('class-report.index')->withSuccess('Report settings saved.');
     }
 
     public function printList(Request $request)
@@ -68,8 +108,11 @@ class ClassReportController extends Controller
         $summary = $this->summary($filters);
         $students = $filters['standard'] ? $this->students($filters) : collect();
         $school = SchoolDatabaseManager::getActiveSchool();
+        $dataColumns = $this->selectedColumns($filters);
 
-        return view($this->modules['folder_path'] . '.print', compact('filters', 'summary', 'students', 'school'));
+        return view($this->modules['folder_path'] . '.print', compact(
+            'filters', 'summary', 'students', 'school', 'dataColumns'
+        ));
     }
 
     public function exportExcel(Request $request)
@@ -84,13 +127,18 @@ class ClassReportController extends Controller
         $blankColumns = 0;
         if ($filters['standard']) {
             $sheet->setTitle('Students');
+            $dataColumns = $this->selectedColumns($filters);
             $blankHeaders = $this->blankColumnHeaders($filters);
             $blankColumns = count($blankHeaders);
-            $headers = array_merge(['Roll No', 'Student Name', 'GR No'], $blankHeaders);
-            $rows = $this->students($filters)->map(fn ($s) => array_merge(
-                [$s->roll_no, $this->fullName($s), $s->gr_no],
-                array_fill(0, $blankColumns, '')
-            ))->all();
+            $headers = array_merge(array_values($dataColumns), $blankHeaders);
+            $rows = $this->students($filters)->map(function ($s) use ($dataColumns, $blankColumns) {
+                $row = [];
+                foreach (array_keys($dataColumns) as $key) {
+                    $row[] = $this->columnValue($s, $key);
+                }
+
+                return array_merge($row, array_fill(0, $blankColumns, ''));
+            })->all();
             $title = 'Class Report - ' . $this->classLabel($filters);
         } else {
             $sheet->setTitle('Summary');
@@ -101,7 +149,7 @@ class ClassReportController extends Controller
             $title = 'Class Wise Summary';
         }
 
-        $lastCol = Coordinate::stringFromColumnIndex(count($headers));
+        $lastCol = Coordinate::stringFromColumnIndex(max(1, count($headers)));
 
         $sheet->setCellValue('A1', $school['name'] ?? config('app.name'));
         $sheet->mergeCells("A1:{$lastCol}1");
@@ -135,7 +183,7 @@ class ClassReportController extends Controller
         $firstBlankIndex = count($headers) - $blankColumns + 1;
         for ($i = 1; $i <= count($headers); $i++) {
             $dimension = $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i));
-            if ($i >= $firstBlankIndex) {
+            if ($blankColumns > 0 && $i >= $firstBlankIndex) {
                 $dimension->setWidth(14);
             } else {
                 $dimension->setAutoSize(true);
@@ -143,7 +191,10 @@ class ClassReportController extends Controller
         }
         if ($filters['standard']) {
             $sheet->getStyle("A4:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle("D4:{$lastCol}4")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            if ($blankColumns > 0) {
+                $blankStart = Coordinate::stringFromColumnIndex($firstBlankIndex);
+                $sheet->getStyle("{$blankStart}4:{$lastCol}4")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
         }
 
         $fileName = str_replace([' ', '/'], '_', $title) . '.xlsx';
@@ -155,23 +206,67 @@ class ClassReportController extends Controller
         return $response;
     }
 
-    public const MAX_EXTRA_COLUMNS = 20;
-
-    protected const SESSION_KEY = 'class_report_filters';
-
     protected function filters(Request $request): array
     {
+        $session = session(self::SESSION_KEY, []);
+
+        $columnsInput = $request->input('columns', $session['columns'] ?? self::DEFAULT_COLUMNS);
+        if (is_string($columnsInput)) {
+            $columnsInput = array_filter(array_map('trim', explode(',', $columnsInput)));
+        }
+
         return [
-            'standard'      => trim((string) $request->input('standard', '')),
-            'division'      => trim((string) $request->input('division', '')),
-            'extra_columns' => max(0, min(self::MAX_EXTRA_COLUMNS, (int) $request->input('extra_columns', 0))),
-            'column_names'  => trim((string) $request->input('column_names', '')),
+            'standard'      => trim((string) $request->input('standard', $session['standard'] ?? '')),
+            'division'      => trim((string) $request->input('division', $session['division'] ?? '')),
+            'columns'       => $this->normalizeColumns($columnsInput),
+            'extra_columns' => max(0, min(
+                self::MAX_EXTRA_COLUMNS,
+                (int) $request->input('extra_columns', $session['extra_columns'] ?? 0)
+            )),
+            'column_names'  => trim((string) $request->input('column_names', $session['column_names'] ?? '')),
         ];
     }
 
     /**
-     * Headings for the empty columns added after GR No. Names typed by the user
-     * (comma separated) are used in order; the rest stay blank.
+     * @param  mixed  $columns
+     * @return string[]
+     */
+    protected function normalizeColumns($columns): array
+    {
+        if (!is_array($columns)) {
+            $columns = [];
+        }
+
+        $valid = array_values(array_filter(
+            $columns,
+            fn ($key) => is_string($key) && array_key_exists($key, self::AVAILABLE_COLUMNS)
+        ));
+
+        // Keep master order; always keep Student Name if nothing selected
+        $ordered = array_values(array_intersect(array_keys(self::AVAILABLE_COLUMNS), $valid));
+
+        return $ordered ?: self::DEFAULT_COLUMNS;
+    }
+
+    /**
+     * Selected data columns as key => label (master order).
+     *
+     * @return array<string, string>
+     */
+    public function selectedColumns(array $filters): array
+    {
+        $selected = [];
+        foreach ($filters['columns'] as $key) {
+            if (isset(self::AVAILABLE_COLUMNS[$key])) {
+                $selected[$key] = self::AVAILABLE_COLUMNS[$key];
+            }
+        }
+
+        return $selected ?: array_intersect_key(self::AVAILABLE_COLUMNS, array_flip(self::DEFAULT_COLUMNS));
+    }
+
+    /**
+     * Headings for empty columns added after data columns.
      */
     public function blankColumnHeaders(array $filters): array
     {
@@ -181,6 +276,18 @@ class ClassReportController extends Controller
         $names = array_map('trim', explode(',', $filters['column_names']));
 
         return array_map(fn ($i) => $names[$i] ?? '', range(0, $filters['extra_columns'] - 1));
+    }
+
+    public function columnValue($student, string $key): string
+    {
+        return match ($key) {
+            'roll_no'      => (string) ($student->roll_no ?? ''),
+            'student_name' => $this->fullName($student),
+            'gr_no'        => (string) ($student->gr_no ?? ''),
+            'phone'        => (string) ($student->mobile_no ?: $student->parent_mobile_no ?: ''),
+            'birth_date'   => $this->formatDate($student->date_of_birth),
+            default        => '',
+        };
     }
 
     protected function standardNames(): Collection
@@ -255,7 +362,7 @@ class ClassReportController extends Controller
             return '';
         }
         try {
-            return Carbon::parse($date)->format('d-m-Y');
+            return Carbon::parse($date)->format('d/m/y');
         } catch (\Throwable $e) {
             return (string) $date;
         }

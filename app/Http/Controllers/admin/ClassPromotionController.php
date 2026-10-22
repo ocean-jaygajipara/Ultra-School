@@ -50,6 +50,8 @@ class ClassPromotionController extends Controller
         $fromDivision = !empty($filters['from_division']) ? trim($filters['from_division']) : null;
         $toStandardId = !empty($filters['to_standard_id']) ? (int) $filters['to_standard_id'] : null;
         $toDivision = array_key_exists('to_division', $filters) ? ($filters['to_division'] ?: null) : null;
+        $orderBy = !empty($filters['order_by']) ? trim($filters['order_by']) : 'surname,name,father_name';
+        $genderOrder = !empty($filters['gender_order']) ? trim($filters['gender_order']) : 'both';
 
         $students = collect();
         $fromStandard = null;
@@ -57,7 +59,7 @@ class ClassPromotionController extends Controller
         $suggestedToStandardId = null;
 
         if ($fromStandardId) {
-            $students = $this->students($fromStandardId, $fromDivision, $currentYear?->id);
+            $students = $this->students($fromStandardId, $fromDivision, $currentYear?->id, $orderBy, $genderOrder);
             $fromStandard = $standards->firstWhere('id', $fromStandardId);
             $suggestedToStandardId = $this->nextStandardId($standards, $fromStandardId);
             if (!$toStandardId && $suggestedToStandardId) {
@@ -67,6 +69,21 @@ class ClassPromotionController extends Controller
 
         if ($toStandardId) {
             $toStandard = $standards->firstWhere('id', $toStandardId);
+        }
+
+        $alreadyInCurrentYearCount = 0;
+        if ($fromStandardId && $currentYear) {
+            $alreadyQuery = Admission::where('current_std_id', $fromStandardId)
+                ->where('academic_year_id', $currentYear->id);
+            if ($fromDivision) {
+                $alreadyQuery->where('division', $fromDivision);
+            }
+            if ($genderOrder === 'male') {
+                $alreadyQuery->whereRaw("LOWER(TRIM(gender)) = 'male'");
+            } elseif ($genderOrder === 'female') {
+                $alreadyQuery->whereRaw("LOWER(TRIM(gender)) = 'female'");
+            }
+            $alreadyInCurrentYearCount = $alreadyQuery->count();
         }
 
         return view($modules['folder_path'] . '.index', compact(
@@ -81,7 +98,10 @@ class ClassPromotionController extends Controller
             'fromStandard',
             'toStandard',
             'suggestedToStandardId',
-            'currentYear'
+            'currentYear',
+            'orderBy',
+            'genderOrder',
+            'alreadyInCurrentYearCount'
         ));
     }
 
@@ -100,6 +120,8 @@ class ClassPromotionController extends Controller
             'from_division' => 'nullable|string|max:50',
             'to_standard_id' => 'nullable|integer|exists:master_standards,id',
             'to_division' => 'nullable|string|max:50',
+            'order_by' => 'nullable|string',
+            'gender_order' => 'nullable|string',
         ]);
 
         session()->put(self::SESSION_KEY, [
@@ -107,6 +129,8 @@ class ClassPromotionController extends Controller
             'from_division' => $request->filled('from_division') ? trim($request->from_division) : null,
             'to_standard_id' => $request->filled('to_standard_id') ? (int) $request->to_standard_id : null,
             'to_division' => $request->filled('to_division') ? trim($request->to_division) : null,
+            'order_by' => $request->filled('order_by') ? trim($request->order_by) : 'surname,name,father_name',
+            'gender_order' => $request->filled('gender_order') ? trim($request->gender_order) : 'both',
         ]);
 
         return redirect()->route('class-promotion.index');
@@ -161,6 +185,15 @@ class ClassPromotionController extends Controller
         if ($students->isEmpty()) {
             return redirect()->route('class-promotion.index')
                 ->withErrors('No matching students found to promote.');
+        }
+
+        $alreadyPromoted = $students->filter(function ($s) use ($currentYear) {
+            return (int) $s->academic_year_id === (int) $currentYear->id;
+        });
+
+        if ($alreadyPromoted->isNotEmpty()) {
+            return redirect()->route('class-promotion.index')
+                ->withErrors('Cannot promote: Selected student(s) are already enrolled in Academic Year ' . $currentYear->name . '. Before promoting them to the next standard, please create and set the next Academic Year (e.g. 2027-28) as "Current" in Academic Year Master.');
         }
 
         $assignedRolls = [];
@@ -235,7 +268,7 @@ class ClassPromotionController extends Controller
             ->with('success', $promoted . ' student(s) promoted to ' . $toName . ' for ' . $currentYear->name . ' with new roll numbers.');
     }
 
-    protected function students(int $standardId, ?string $division, ?int $currentYearId = null): Collection
+    protected function students(int $standardId, ?string $division, ?int $currentYearId = null, string $orderBy = 'surname,name,father_name', string $genderOrder = 'both'): Collection
     {
         // Load students still on previous year (not yet promoted into current year)
         $query = Admission::with('currentStandard')
@@ -252,12 +285,42 @@ class ClassPromotionController extends Controller
             $query->where('division', $division);
         }
 
-        return $query
-            ->orderByRaw('CASE WHEN roll_no IS NULL OR roll_no = 0 THEN 1 ELSE 0 END')
-            ->orderBy('roll_no')
-            ->orderBy('first_name')
-            ->orderBy('last_name')
-            ->get();
+        if ($genderOrder === 'male') {
+            $query->whereRaw("LOWER(TRIM(gender)) = 'male'");
+        } elseif ($genderOrder === 'female') {
+            $query->whereRaw("LOWER(TRIM(gender)) = 'female'");
+        }
+
+        // Apply order criteria
+        $fields = array_filter(array_map('trim', explode(',', (string) $orderBy)));
+        if (empty($fields)) {
+            $fields = ['surname', 'name', 'father_name'];
+        }
+
+        foreach ($fields as $field) {
+            switch ($field) {
+                case 'surname':
+                    $query->orderByRaw("TRIM(COALESCE(first_name, '')) ASC");
+                    break;
+                case 'name':
+                    $query->orderByRaw("TRIM(COALESCE(last_name, '')) ASC");
+                    break;
+                case 'father_name':
+                    $query->orderByRaw("TRIM(COALESCE(father_name, '')) ASC");
+                    break;
+                case 'gr_no':
+                    $query->orderByRaw("CAST(NULLIF(TRIM(gr_no), '') AS UNSIGNED) ASC")->orderBy('gr_no');
+                    break;
+                case 'old_roll':
+                    $query->orderByRaw('CASE WHEN roll_no IS NULL OR roll_no = 0 THEN 1 ELSE 0 END')
+                          ->orderByRaw('CAST(roll_no AS UNSIGNED) ASC');
+                    break;
+            }
+        }
+
+        $query->orderBy('id');
+
+        return $query->get();
     }
 
     protected function nextStandardId(Collection $standards, int $fromStandardId): ?int
