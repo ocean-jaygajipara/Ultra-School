@@ -276,7 +276,7 @@
             'fees-collection-delete',
         ])
         <li
-            class="menu-item {{ $sidebar_active == 'bus-fee-collection' || $sidebar_active == 'fee-receipt-entry' ? 'active open' : '' }}">
+            class="menu-item {{ $sidebar_active == 'fee-receipt-entry' ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-receipt me-2"></i>
                 <div data-i18n="Fees Collection">Fees Collection</div>
@@ -299,18 +299,10 @@
                 </li>
                 @enddirectCan
 
-                @directCan('fees-collection-create')
-                <li class="menu-item {{ $current_route == 'bus-fee-collection.create' ? 'active' : '' }}">
-                    <a href="{{ route('bus-fee-collection.create') }}" class="menu-link">
-                        <div data-i18n="Bus Transport Fee">Bus Transport Fee</div>
-                    </a>
-                </li>
-                @enddirectCan
-
                 @directCan('fees-collection-list')
-                <li class="menu-item {{ $current_route == 'bus-fee-collection.index' ? 'active' : '' }}">
-                    <a href="{{ route('bus-fee-collection.index') }}" class="menu-link">
-                        <div data-i18n="Bus Fee Receipts">Bus Fee Receipts</div>
+                <li class="menu-item {{ $current_route == 'fee-receipt-entry.less-report' ? 'active' : '' }}">
+                    <a href="{{ route('fee-receipt-entry.less-report') }}" class="menu-link">
+                        <div data-i18n="Less Report">Less Report</div>
                     </a>
                 </li>
                 @enddirectCan

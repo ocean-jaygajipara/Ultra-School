@@ -123,10 +123,10 @@ class MasterBusRouteVillageController extends Controller
 
                         if (!$row->deleted_at) {
                             if ($modules['permission_edit']) {
-                                $btn .= '<a href="' . route($modules["route"] . ".edit", [$row->id]) . '" class="btn btn-primary btn-icon" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>';
+                                $btn .= '<a href="' . route($modules["route"] . ".edit", [$row->id]) . '" class="btn btn-primary btn-icon" title="Edit"><i class="ti ti-edit"></i></a>';
                             }
                             if ($modules['permission_delete']) {
-                                $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".destroy", [$row->id]) . '" class="btn btn-danger btn-icon deletebutton" title="Delete"><i class="fa-solid fa-trash"></i></a>';
+                                $btn .= '<a href="javascript:void(0)" data-id="' . $row->id . '" data-did="' . route($modules["route"] . ".destroy", [$row->id]) . '" class="btn btn-danger btn-icon deletebutton" title="Delete"><i class="ti ti-trash"></i></a>';
                             }
                         } else {
                             $btn .= '<a href="javascript:void(0)" data-restore="' . route($modules["route"] . ".restore", ['id' => $row->id]) . '" class="btn btn-light record-restore" title="Restore"><i class="ti ti-history"></i></a>';

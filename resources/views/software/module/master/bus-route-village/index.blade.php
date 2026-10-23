@@ -175,10 +175,12 @@
                 },
                 columns: {!! json_encode($columns) !!},
                 columnDefs: [
-                    { targets: 0, width: '40%' },
-                    { targets: 1, width: '20%', className: 'text-end' },
-                    { targets: 2, width: '20%', className: 'text-center' },
-                    { targets: 3, width: '20%', className: 'text-center', orderable: false, searchable: false },
+                    { targets: 0, width: '24%' },
+                    { targets: 1, width: '16%' },
+                    { targets: 2, width: '14%', className: 'text-end' },
+                    { targets: 3, width: '14%', className: 'text-end' },
+                    { targets: 4, width: '14%', className: 'text-center' },
+                    { targets: 5, width: '18%', className: 'text-center', orderable: false, searchable: false },
                 ],
                 language: { searchPlaceholder: 'Search village...' },
             });
