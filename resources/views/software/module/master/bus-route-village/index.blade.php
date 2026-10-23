@@ -57,7 +57,7 @@
                 <div class="mst-hero-icon"><i class="ti ti-bus"></i></div>
                 <div>
                     <h4>{{ $page_title }}</h4>
-                    <p>Manage bus stop villages and transport charges for fee collection.</p>
+                    <p>Manage bus stop villages, route numbers and term fees.</p>
                 </div>
             </div>
         </div>

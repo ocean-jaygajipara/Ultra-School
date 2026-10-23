@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin\master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MasterBusRouteVillageRequest;
 use App\Models\Master\MasterBusRouteVillage;
+use App\Models\Master\MasterRouteNo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\Helper;
@@ -23,13 +24,17 @@ class MasterBusRouteVillageController extends Controller
     public $modules = [];
     protected array $exportableColumns = [
         'name' => 'Village Name',
-        'charge' => 'Transport Charge (₹)',
+        'route_no' => 'Route No',
+        'fee_i' => 'Fee-I',
+        'fee_ii' => 'Fee-II',
         'status' => 'Status',
     ];
 
     protected array $defaultExportColumns = [
         'name',
-        'charge',
+        'route_no',
+        'fee_i',
+        'fee_ii',
         'status',
     ];
 
@@ -65,7 +70,9 @@ class MasterBusRouteVillageController extends Controller
         try {
             $columns = [
                 (object)['data' => "name", 'name' => 'name', 'td_label' => 'Village Name'],
-                (object)['data' => "charge", 'name' => 'charge', 'td_label' => 'Transport Charge (₹)', 'className' => 'text-end', 'width' => '15%'],
+                (object)['data' => "route_no", 'name' => 'route_no', 'td_label' => 'Route No'],
+                (object)['data' => "fee_i", 'name' => 'fee_i', 'td_label' => 'Fee-I', 'className' => 'text-end'],
+                (object)['data' => "fee_ii", 'name' => 'fee_ii', 'td_label' => 'Fee-II', 'className' => 'text-end'],
                 (object)['data' => "status", 'name' => 'status', 'td_label' => 'Status', 'className' => 'w-5 text-center', 'width' => '10%'],
                 (object)['data' => "action", 'name' => 'action', 'td_label' => 'Action', 'orderable' => false, 'searchable' => false, 'className' => 'w-10 text-center'],
             ];
@@ -80,7 +87,7 @@ class MasterBusRouteVillageController extends Controller
                         if (!empty($search)) {
                             $query->where(function ($q) use ($search) {
                                 $q->where('name', 'like', "%{$search}%")
-                                  ->orWhere('charge', 'like', "%{$search}%");
+                                  ->orWhere('route_no', 'like', "%{$search}%");
                             });
                         }
                     })
@@ -88,8 +95,14 @@ class MasterBusRouteVillageController extends Controller
                         $name = e($row->name ?? '-');
                         return '<span class="brv-village"><i class="ti ti-map-pin"></i><span>' . $name . '</span></span>';
                     })
-                    ->editColumn('charge', function ($row) {
-                        return '<span class="brv-charge">₹' . number_format((float) ($row->charge ?? 0), 2) . '</span>';
+                    ->editColumn('route_no', function ($row) {
+                        return e($row->route_no ?: '—');
+                    })
+                    ->editColumn('fee_i', function ($row) {
+                        return '<span class="brv-charge">₹' . number_format((float) ($row->fee_i ?? 0), 2) . '</span>';
+                    })
+                    ->editColumn('fee_ii', function ($row) {
+                        return '<span class="brv-charge">₹' . number_format((float) ($row->fee_ii ?? 0), 2) . '</span>';
                     })
                     ->editColumn('status', function ($row) use ($modules) {
                         if ($row->status === "active") {
@@ -123,7 +136,7 @@ class MasterBusRouteVillageController extends Controller
                         $btn .= '</div>';
                         return $btn !== '<div class="brv-actions"></div>' ? $btn : '-';
                     })
-                    ->rawColumns(['name', 'charge', 'status', 'action'])
+                    ->rawColumns(['name', 'fee_i', 'fee_ii', 'status', 'action'])
                     ->make(true);
             }
 
@@ -148,7 +161,8 @@ class MasterBusRouteVillageController extends Controller
             abort(403, 'User does not have the right permissions.');
         }
         View::share('modules', $modules);
-        return view($modules['folder_path'] . '.form', compact('modules'));
+        $routeNumbers = $this->routeNumberOptions();
+        return view($modules['folder_path'] . '.form', compact('modules', 'routeNumbers'));
     }
 
     public function store(MasterBusRouteVillageRequest $request)
@@ -200,7 +214,8 @@ class MasterBusRouteVillageController extends Controller
 
         try {
             $edit = MasterBusRouteVillage::findOrFail($id);
-            return view($modules['folder_path'] . '.form', compact('modules', 'edit'));
+            $routeNumbers = $this->routeNumberOptions($edit->route_no);
+            return view($modules['folder_path'] . '.form', compact('modules', 'edit', 'routeNumbers'));
         } catch (\Exception $e) {
             return Redirect::route($modules['route'] . '.index')->withErrors($e->getMessage());
         }
@@ -508,13 +523,32 @@ class MasterBusRouteVillageController extends Controller
         exit;
     }
 
+    protected function routeNumberOptions(?string $current = null): array
+    {
+        $options = MasterRouteNo::query()
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
+
+        if ($current && !in_array($current, $options, true)) {
+            array_unshift($options, $current);
+        }
+
+        return $options;
+    }
+
     protected function formatColumnValueForExcel(MasterBusRouteVillage $village, string $columnKey)
     {
         switch ($columnKey) {
             case 'name':
                 return $village->name ?? '-';
-            case 'charge':
-                return isset($village->charge) ? (float)$village->charge : 0;
+            case 'route_no':
+                return $village->route_no ?: '-';
+            case 'fee_i':
+                return isset($village->fee_i) ? (float) $village->fee_i : 0;
+            case 'fee_ii':
+                return isset($village->fee_ii) ? (float) $village->fee_ii : 0;
             case 'status':
                 return ucfirst($village->status ?? '-');
             default:

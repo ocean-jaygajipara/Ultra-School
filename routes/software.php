@@ -4,15 +4,15 @@
 use App\Http\Controllers\admin\ApplicationUserController;
 use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\admin\DocumentController;
-use App\Http\Controllers\admin\FeeHistoryController;
 use App\Http\Controllers\admin\master\LibraryMasterBookController;
 use App\Http\Controllers\admin\master\MasterFeeDetailController;
+use App\Http\Controllers\admin\master\FeeMasterController;
 use App\Http\Controllers\admin\master\MasterSubjectController;
 use App\Http\Controllers\admin\master\MasterEventController;
 use App\Http\Controllers\admin\master\MasterHolidayController;
 use App\Http\Controllers\admin\DocumentTypeController;
-use App\Http\Controllers\admin\FeesCollectionController;
 use App\Http\Controllers\admin\BusFeeCollectionController;
+use App\Http\Controllers\admin\FeeReceiptEntryController;
 use App\Http\Controllers\admin\RollNumberListController;
 use App\Http\Controllers\admin\RollNumberGenerateController;
 use App\Http\Controllers\admin\ClassPromotionController;
@@ -34,7 +34,6 @@ use App\Http\Controllers\admin\AttedanceController;
 use App\Http\Controllers\admin\FacultyAttedanceController;
 use App\Http\Controllers\admin\DailyAttedanceController;
 use App\Http\Controllers\admin\BioMaxController;
-use App\Http\Controllers\admin\FeescollectionpendingController;
 use App\Http\Controllers\admin\IssueCertificateController;
 use App\Http\Controllers\admin\FacultyComplaintReportController;
 use App\Http\Controllers\admin\SupplierController;
@@ -48,9 +47,9 @@ use App\Http\Controllers\admin\master\MasterDepartmentController;
 use App\Http\Controllers\admin\master\MasterDivisionController;
 use App\Http\Controllers\admin\master\MasterHouseController;
 use App\Http\Controllers\admin\master\MasterReligionController;
+use App\Http\Controllers\admin\master\MasterRouteNoController;
 use App\Http\Controllers\admin\master\MasterSemesterController;
 use App\Http\Controllers\admin\master\MasterShiftController;
-use App\Http\Controllers\admin\StudentsFeesReportController;
 use App\Http\Controllers\admin\SystemUserController;
 use App\Http\Controllers\admin\MarksheetIssueController;
 use App\Http\Controllers\admin\AssessmentController;
@@ -298,6 +297,14 @@ Route::match(['get', 'post'], 'religion/restore/{id}', [MasterReligionController
 Route::match(['get', 'post'], 'religion-update-status', [MasterReligionController::class, 'status_update'])->name('religion.status-update');
 Route::delete('/religion/permanent-delete/{id}', [MasterReligionController::class, 'permanentDelete'])->name('religion.permanent-delete');
 
+/** Master Route No Modules */
+Route::get('route-no/export-excel', [MasterRouteNoController::class, 'exportExcel'])->name('route-no.export-excel');
+Route::get('route-no/print', [MasterRouteNoController::class, 'printView'])->name('route-no.print');
+Route::resource('/route-no', MasterRouteNoController::class);
+Route::match(['get', 'post'], 'route-no/restore/{id}', [MasterRouteNoController::class, 'restore'])->name('route-no.restore');
+Route::match(['get', 'post'], 'route-no-update-status', [MasterRouteNoController::class, 'status_update'])->name('route-no.status-update');
+Route::delete('/route-no/permanent-delete/{id}', [MasterRouteNoController::class, 'permanentDelete'])->name('route-no.permanent-delete');
+
 /** Master Bus Route Village Modules */
 Route::get('bus-route-village/export-excel', [MasterBusRouteVillageController::class, 'exportExcel'])->name('bus-route-village.export-excel');
 Route::get('bus-route-village/print', [MasterBusRouteVillageController::class, 'printView'])->name('bus-route-village.print');
@@ -383,19 +390,6 @@ Route::get('/cource-registration/{register_id}/edit/', [CourceRegistrationContro
 
 
 
-// Fees Collection
-
-Route::resource('fees-collection', FeesCollectionController::class);
-Route::get('fees-collection/create/{id?}', [FeesCollectionController::class, 'create'])
-    ->name('fees-collection.create_by_id');
-Route::match(['get', 'post'], 'fees-collection/restore/{id}', [FeesCollectionController::class, 'restore'])->name('fees-collection.restore');
-Route::match(['get', 'post'], 'fees-collection-update-status', [FeesCollectionController::class, 'update_status'])->name('fees-collection.status-update');
-Route::match(['get', 'post'], 'search-fees-collection-details', [FeesCollectionController::class, 'search_fees_collection_details'])->name('fees-collection.search-fees-collection-details');
-Route::match(['get', 'post'], 'check-master-password', [FeesCollectionController::class, 'check_master_password'])->name('fees-collection.check-master-password');
-Route::get('/fees-collection/get-details/{id}', [FeesCollectionController::class, 'getDetails'])->name('fees-collection.getDetails');
-Route::get('/fees-collection/print/{id}', [FeesCollectionController::class, 'print'])->name('software.fees-collection.print');
-Route::get('fees-collection/{register_id}/semester-report', [FeesCollectionController::class, 'semesterReport'])->name('fees-collection.semester-report');
-
 // Bus Transport Fee (separate receipt)
 Route::get('bus-fee-collection', [BusFeeCollectionController::class, 'index'])->name('bus-fee-collection.index');
 Route::get('bus-fee-collection/create', [BusFeeCollectionController::class, 'create'])->name('bus-fee-collection.create');
@@ -405,15 +399,14 @@ Route::get('bus-fee-collection/student/{id}', [BusFeeCollectionController::class
 Route::get('bus-fee-collection/print/{id}', [BusFeeCollectionController::class, 'print'])->whereNumber('id')->name('bus-fee-collection.print');
 Route::get('bus-fee-collection/{id}', [BusFeeCollectionController::class, 'show'])->whereNumber('id')->name('bus-fee-collection.show');
 
-// Fees Pending Report (Menu 1)
-Route::get('fees-pending-report', [\App\Http\Controllers\admin\FeesPendingReportController::class, 'index'])->name('fees-pending-report.index');
-Route::get('fees-pending-report/print-list', [\App\Http\Controllers\admin\FeesPendingReportController::class, 'printList'])->name('fees-pending-report.print-list');
-Route::get('fees-pending-report/export-excel', [\App\Http\Controllers\admin\FeesPendingReportController::class, 'exportExcel'])->name('fees-pending-report.export-excel');
-
-// Fees Collection Report (Menu 2)
-Route::get('fees-collection-report', [\App\Http\Controllers\admin\FeesCollectionReportController::class, 'index'])->name('fees-collection-report.index');
-Route::get('fees-collection-report/print-list', [\App\Http\Controllers\admin\FeesCollectionReportController::class, 'printList'])->name('fees-collection-report.print-list');
-Route::get('fees-collection-report/export-excel', [\App\Http\Controllers\admin\FeesCollectionReportController::class, 'exportExcel'])->name('fees-collection-report.export-excel');
+// Fee Receipt Entry
+Route::get('fee-receipt-entry', [FeeReceiptEntryController::class, 'index'])->name('fee-receipt-entry.index');
+Route::get('fee-receipt-entry/create', [FeeReceiptEntryController::class, 'create'])->name('fee-receipt-entry.create');
+Route::post('fee-receipt-entry', [FeeReceiptEntryController::class, 'store'])->name('fee-receipt-entry.store');
+Route::get('fee-receipt-entry/find-student', [FeeReceiptEntryController::class, 'findStudent'])->name('fee-receipt-entry.find-student');
+Route::get('fee-receipt-entry/students', [FeeReceiptEntryController::class, 'students'])->name('fee-receipt-entry.students');
+Route::get('fee-receipt-entry/fee-master', [FeeReceiptEntryController::class, 'loadFeeMaster'])->name('fee-receipt-entry.fee-master');
+Route::get('fee-receipt-entry/print/{id}', [FeeReceiptEntryController::class, 'print'])->whereNumber('id')->name('fee-receipt-entry.print');
 
 // Other List
 Route::get('other-list', [OtherListController::class, 'index'])->name('other-list.index');
@@ -441,26 +434,6 @@ Route::delete('faculty-complaint-report/permanent-delete/{id}', [FacultyComplain
 Route::get('supplier/export-excel', [SupplierController::class, 'exportExcel'])->name('supplier.export-excel');
 Route::get('supplier/print', [SupplierController::class, 'printView'])->name('supplier.print');
 Route::resource('supplier', SupplierController::class);
-
-// Fee History
-Route::resource('fee-history', FeeHistoryController::class)
-    ->only(['index']);
-
-Route::post('fee-history/update-status', [FeeHistoryController::class, 'updateCheckedStatus'])
-    ->name('fee-history.update-status');
-// fees collection pending
-Route::get('fees-collection-pending/export-excel', [FeescollectionpendingController::class, 'exportExcel'])->name('fees-collection-pending.export-excel');
-Route::get('fees-collection-pending/print', [FeescollectionpendingController::class, 'printView'])->name('fees-collection-pending.print');
-Route::resource('fees-collection-pending', FeescollectionpendingController::class);
-Route::get('fees-collection-pending/view-fee/{id}', [FeescollectionpendingController::class, 'viewFee'])->name('fees-collection-pending.view-fee');
-
-
-
-// Students Fees Report
-// Route::post('students-fees-report/export-excel', [StudentsFeesReportController::class, 'exportExcel'])->name('students-fees-report.export-excel');
-Route::post('/students-fees-report/export-excel', [StudentsFeesReportController::class, 'exportExcel'])->name('students-fees-report.export-excel');
-Route::get('students-fees-report/print', [StudentsFeesReportController::class, 'printView'])->name('students-fees-report.print');
-Route::resource('students-fees-report', StudentsFeesReportController::class);
 
 //syllabus
 
@@ -512,6 +485,12 @@ Route::delete(
 
 //Fee Details
 Route::resource('fees', MasterFeeDetailController::class);
+
+// Fee Master (Standard + Term fee structure) — same pattern as Standard master
+Route::get('fee-master/fetch', [FeeMasterController::class, 'fetch'])->name('fee-master.fetch');
+Route::match(['get', 'post'], 'fee-master/restore/{id}', [FeeMasterController::class, 'restore'])->name('fee-master.restore');
+Route::match(['get', 'post'], 'fee-master-update-status', [FeeMasterController::class, 'status_update'])->name('fee-master.status-update');
+Route::resource('fee-master', FeeMasterController::class)->except(['show']);
 
 
 /** Test Modules */

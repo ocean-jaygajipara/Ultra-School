@@ -75,7 +75,7 @@
             <div class="icon"><i class="ti ti-{{ $isEdit ? 'edit' : 'plus' }}"></i></div>
             <div>
                 <h4>{{ $isEdit ? 'Edit' : 'Add' }} Bus Route Village</h4>
-                <p>{{ $isEdit ? 'Update village name and transport charge.' : 'Add a new bus stop village with transport charge.' }}</p>
+                <p>{{ $isEdit ? 'Update village, route number and fees.' : 'Add a bus stop village with route number and fees.' }}</p>
             </div>
         </div>
 
@@ -103,21 +103,59 @@
                             </div>
                         </div>
 
+                        
+
                         <div class="col-md-6 col-sm-12 mb-3">
                             <div class="form-group">
-                                <label class="form-label">Transport Charge (₹)</label>
+                                <label class="form-label">Fee-I (₹)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">₹</span>
-                                    <input id="charge" type="number" step="0.01" min="0"
-                                        class="form-control @error('charge') is-invalid @enderror" name="charge"
-                                        value="{{ isset($edit?->charge) ? $edit?->charge : old('charge', '0') }}"
-                                        placeholder="Enter transport charge">
+                                    <input id="fee_i" type="number" step="0.01" min="0"
+                                        class="form-control @error('fee_i') is-invalid @enderror" name="fee_i"
+                                        value="{{ isset($edit?->fee_i) ? $edit?->fee_i : old('fee_i', '0') }}"
+                                        placeholder="Enter Fee-I">
                                 </div>
-                                @error('charge')
+                                @error('fee_i')
                                     <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
                         </div>
+
+                        <div class="col-md-6 col-sm-12 mb-3">
+                            <div class="form-group">
+                                <label class="form-label">Fee-II (₹)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input id="fee_ii" type="number" step="0.01" min="0"
+                                        class="form-control @error('fee_ii') is-invalid @enderror" name="fee_ii"
+                                        value="{{ isset($edit?->fee_ii) ? $edit?->fee_ii : old('fee_ii', '0') }}"
+                                        placeholder="Enter Fee-II">
+                                </div>
+                                @error('fee_ii')
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-sm-12 mb-3">
+                            <div class="form-group">
+                                <label class="form-label">Route No</label>
+                                <select id="route_no" name="route_no"
+                                    class="form-select select2 @error('route_no') is-invalid @enderror">
+                                    <option value="">Select route no</option>
+                                    @foreach ($routeNumbers ?? [] as $routeNumber)
+                                        <option value="{{ $routeNumber }}"
+                                            @selected(old('route_no', isset($edit) ? $edit->route_no : '') == $routeNumber)>
+                                            {{ $routeNumber }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('route_no')
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="text-center mt-3">

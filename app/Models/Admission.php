@@ -177,9 +177,9 @@ class Admission extends Authenticatable
     //     return $this->hasMany(CourceRegistration::class, 'register_id');
     // }
     // app/Models/Admission.php
-    public function feesCollections()
+    public function feeReceiptEntries()
     {
-        return $this->hasMany(FeesCollection::class);
+        return $this->hasMany(FeeReceiptEntry::class, 'admission_id');
     }
     public function courses()
     {

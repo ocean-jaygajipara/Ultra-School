@@ -274,12 +274,9 @@
             'fees-collection-create',
             'fees-collection-edit',
             'fees-collection-delete',
-            'fees-collection-pending',
-            'fees-collection-report',
-            'fee-history-list'
         ])
         <li
-            class="menu-item {{ $sidebar_active == 'fees-collection' || $sidebar_active == 'fees-collection-list' || $sidebar_active == 'fees-collection-create' || $sidebar_active == 'fees-collection-pending' || $sidebar_active == 'fee-history' || $sidebar_active == 'fees-pending-report' || $sidebar_active == 'fees-collection-report' || $sidebar_active == 'bus-fee-collection' ? 'active open' : '' }}">
+            class="menu-item {{ $sidebar_active == 'bus-fee-collection' || $sidebar_active == 'fee-receipt-entry' ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-receipt me-2"></i>
                 <div data-i18n="Fees Collection">Fees Collection</div>
@@ -287,9 +284,17 @@
             <ul class="menu-sub">
 
                 @directCan('fees-collection-create')
-                <li class="menu-item {{ $current_route == 'fees-collection.create' ? 'active' : '' }}">
-                    <a href="{{ route('fees-collection.create') }}" class="menu-link">
-                        <div data-i18n="Fees Collection">Fees Collection</div>
+                <li class="menu-item {{ $current_route == 'fee-receipt-entry.create' ? 'active' : '' }}">
+                    <a href="{{ route('fee-receipt-entry.create') }}" class="menu-link">
+                        <div data-i18n="Fee Receipt Entry">Fee Receipt Entry</div>
+                    </a>
+                </li>
+                @enddirectCan
+
+                @directCan('fees-collection-list')
+                <li class="menu-item {{ $current_route == 'fee-receipt-entry.index' ? 'active' : '' }}">
+                    <a href="{{ route('fee-receipt-entry.index') }}" class="menu-link">
+                        <div data-i18n="Fee Receipt List">Fee Receipt List</div>
                     </a>
                 </li>
                 @enddirectCan
@@ -309,43 +314,6 @@
                     </a>
                 </li>
                 @enddirectCan
-
-                @directCan('fees-collection-list')
-                <li class="menu-item {{ $current_route == 'fees-collection.index' ? 'active' : '' }}">
-                    <a href="{{ route('fees-collection.index') }}" class="menu-link">
-                        <div data-i18n="Fees Collection Report">Fees Collection Report</div>
-                    </a>
-                </li>
-                @enddirectCan
-
-                @directCan('fees-collection-pending')
-                <li
-                    class="menu-item {{ $current_route == 'fees-collection-pending.index' ? 'active' : '' }}">
-                    <a href="{{ route('fees-collection-pending.index') }}" class="menu-link">
-                        <div data-i18n="Fees Pending">Fees Pending</div>
-                    </a>
-                </li>
-                @enddirectCan
-
-                @directCan('fee-history-list')
-                <li class="menu-item {{ $current_route == 'fee-history.index' ? 'active' : '' }}">
-                    <a href="{{ route('fee-history.index') }}" class="menu-link">
-                        <div data-i18n="Fee History">Fee History</div>
-                    </a>
-                </li>
-                @enddirectCan
-
-                <li class="menu-item {{ $current_route == 'fees-pending-report.index' ? 'active' : '' }}">
-                    <a href="{{ route('fees-pending-report.index') }}" class="menu-link">
-                        <div data-i18n="Fees Pending Report">Fees Pending Report</div>
-                    </a>
-                </li>
-
-                <li class="menu-item {{ $current_route == 'fees-collection-report.index' ? 'active' : '' }}">
-                    <a href="{{ route('fees-collection-report.index') }}" class="menu-link">
-                        <div data-i18n="Fees Collection Report">Fees Collection Report</div>
-                    </a>
-                </li>
 
             </ul>
         </li>
@@ -551,6 +519,7 @@
             'timetable-list',
             'student-requests-list',
             'fees-list',
+            'fee-master-list',
             'department-list',
             'division-list',
             'category-list',
@@ -559,10 +528,11 @@
             'school-list',
             'house-list',
             'religion-list',
+            'route-no-list',
             'bus-route-village-list'
         ])
         <li
-            class="menu-item {{ in_array($sidebar_active, ['syllabus', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'department', 'division', 'category', 'cast', 'standard', 'academic-year', 'school', 'house', 'religion', 'bus-route-village']) ? 'active open' : '' }}">
+            class="menu-item {{ in_array($sidebar_active, ['syllabus', 'subject', 'event', 'holiday', 'timetable', 'student-requests', 'fees', 'fee-master', 'department', 'division', 'category', 'cast', 'standard', 'academic-year', 'school', 'house', 'religion', 'route-no', 'bus-route-village']) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-certificate me-2"></i>
                 <div data-i18n="Masters">Masters</div>
@@ -630,6 +600,14 @@
                 </li>
                 @enddirectCanAny
 
+                @directCanAny(['route-no-list', 'route-no-create', 'route-no-edit', 'route-no-delete', 'bus-route-village-list', 'bus-route-village-create', 'bus-route-village-edit', 'bus-route-village-delete'])
+                <li class="menu-item {{ $sidebar_active == 'route-no' ? 'active' : '' }}">
+                    <a href="{{ route('route-no.index') }}" class="menu-link">
+                        <div data-i18n="Route No Master">Route No Master</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
                 @directCanAny(['bus-route-village-list', 'bus-route-village-create', 'bus-route-village-edit', 'bus-route-village-delete'])
                 <li class="menu-item {{ $sidebar_active == 'bus-route-village' ? 'active' : '' }}">
                     <a href="{{ route('bus-route-village.index') }}" class="menu-link">
@@ -689,6 +667,14 @@
                 <li class="menu-item {{ $sidebar_active == 'timetable' ? 'active' : '' }}">
                     <a href="{{ route('timetable.index') }}" class="menu-link">
                         <div data-i18n="Timetable">Timetable</div>
+                    </a>
+                </li>
+                @enddirectCanAny
+
+                @directCanAny(['fee-master-list', 'fees-list', 'fees-create', 'fees-edit', 'fees-delete'])
+                <li class="menu-item {{ $sidebar_active == 'fee-master' ? 'active' : '' }}">
+                    <a href="{{ route('fee-master.index') }}" class="menu-link">
+                        <div data-i18n="Fee Master">Fee Master</div>
                     </a>
                 </li>
                 @enddirectCanAny

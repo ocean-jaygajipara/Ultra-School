@@ -165,6 +165,18 @@ class PermissionTableSeeder extends Seeder
             'class-report' => [
                 'class-report-list',
             ],
+            'fee-master' => [
+                'fee-master-list',
+                'fee-master-create',
+                'fee-master-edit',
+                'fee-master-delete',
+            ],
+            'fees' => [
+                'fees-list',
+                'fees-create',
+                'fees-edit',
+                'fees-delete',
+            ],
             'school' => [
                 'school-list',
                 'school-create',
@@ -261,6 +273,12 @@ class PermissionTableSeeder extends Seeder
                 'religion-create',
                 'religion-edit',
                 'religion-delete',
+            ],
+            'route-no' => [
+                'route-no-list',
+                'route-no-create',
+                'route-no-edit',
+                'route-no-delete',
             ],
             'bus-route-village' => [
                 'bus-route-village-list',

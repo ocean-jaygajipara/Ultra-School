@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\api;
 
-use App\Http\Controllers\admin\StudentsFeesReportController;
 use App\Http\Controllers\Controller;
 use App\Models\Admission;
 use App\Models\Attedance;
 use App\Models\CourceRegistration;
-use App\Models\FeesCollection;
+use App\Models\FeeReceiptEntry;
 use App\Models\Master\MasterCourse;
 use App\Models\Master\MasterHoliday;
 use App\Models\NotificationSetting;
@@ -212,42 +211,36 @@ class ApiStudentController extends Controller
                 return $this->sendError("Unauthorization.", [], [], 401);
             }
 
-            $feeRecordsQuery = FeesCollection::with('course')
-                ->where('student_id', $student->id);
+            $feeRecordsQuery = FeeReceiptEntry::query()
+                ->where('admission_id', $student->id);
 
-            if ($request->filled('semester')) {
-                $feeRecordsQuery->where('year_semester', $request->semester);
+            if ($request->filled('semester') || $request->filled('term')) {
+                $feeRecordsQuery->where('term', $request->input('term', $request->input('semester')));
             }
 
-            $feeRecords = $feeRecordsQuery->get();
+            $feeRecords = $feeRecordsQuery->orderByDesc('id')->get();
 
             if ($feeRecords->isEmpty()) {
                 return $this->sendError('No fee records found.', [], [], 404);
             }
 
-            $courseFees = $feeRecords->first()->course->course_fees ?? 0;
-
-
-            $paidFees = $feeRecords->where('status', true)->sum('fees');
-
-            $pendingFees = $courseFees - $paidFees;
+            $paidFees = (float) $feeRecords->sum('net_amount');
 
             $feesDetails = $feeRecords->map(function ($fee) {
                 return [
-                    'course'      => $fee->course->course_name ?? '',
-                    'semester'    => 'Semester ' . $fee->year_semester,
-                    'receipt_no'  => $fee->id,
-                    'amount'      => (int)$fee->fees,
-                    'date'        => $fee->date ? \Carbon\Carbon::parse($fee->date)->format('Y-m-d') : null,
+                    'term'        => $fee->term,
+                    'receipt_no'  => $fee->receipt_no,
+                    'amount'      => (float) $fee->net_amount,
+                    'date'        => $fee->date ? $fee->date->format('Y-m-d') : null,
                     'status'      => 'Paid',
-                    'receipt_url' => route('student.fee-receipt.download', ['id' => $fee->id]),
+                    'receipt_url' => route('fee-receipt-entry.print', ['id' => $fee->id]),
                 ];
             });
 
             $data = [
-                'total'   => $courseFees,
+                'total'   => $paidFees,
                 'paid'    => $paidFees,
-                'pending' => $pendingFees,
+                'pending' => 0,
                 'details' => $feesDetails,
             ];
 
@@ -1375,35 +1368,21 @@ class ApiStudentController extends Controller
     public function download_fee_receipt($id, Request $request)
     {
         try {
-            $feesData = FeesCollection::with(['course', 'batch', 'admission', 'registration.batch', 'createdByUser'])->find($id);
+            $entry = FeeReceiptEntry::with(['standard', 'academicYear', 'admission'])->find($id);
 
-            if (!$feesData) {
+            if (!$entry) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Receipt not found.'
                 ], 404);
             }
 
-            $feesDetails = json_decode($feesData->fee_details, true);
-            $totalFee = 0;
-            if ($feesDetails && is_array($feesDetails)) {
-                foreach ($feesDetails as $fee) {
-                    $totalFee += (float)($fee['amount'] ?? 0);
-                }
-            } else {
-                $totalFee = (float)$feesData->fees;
-            }
-
+            $school = \App\Services\SchoolDatabaseManager::getActiveSchool();
+            $modules = ['title' => 'Fee Receipt Entry'];
+            $html = view('software.module.fee-receipt-entry.print', compact('entry', 'school', 'modules'))->render();
+            $totalFee = (float) $entry->net_amount;
             $amountInWords = $this->numberToWords($totalFee);
             $logo_src = $this->getPdfImageSrc('uploads/logo/logo.png');
-
-            $html = view('software.module.fees-collection.receipt_pdf', compact(
-                'feesData',
-                'feesDetails',
-                'totalFee',
-                'amountInWords',
-                'logo_src'
-            ))->render();
 
             $mpdf = new Mpdf([
                 'mode' => 'utf-8',
@@ -1423,15 +1402,15 @@ class ApiStudentController extends Controller
                 $mpdf->watermarkImgBehind = true;
             }
 
-            $mpdf->SetTitle('Fee Receipt - #' . $feesData->id);
+            $mpdf->SetTitle('Fee Receipt - #' . $entry->receipt_no);
             $mpdf->WriteHTML($html);
 
-            $rawStudentName = $feesData->student_name ?? ($feesData->admission ? $feesData->admission->first_name . ' ' . $feesData->admission->last_name : 'Student');
+            $rawStudentName = $entry->student_name ?? 'Student';
             $safeStudentName = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '_', trim($rawStudentName)));
             $safeStudentName = trim($safeStudentName, '_');
-            $semesterStr = !empty($feesData->year_semester) ? 'Sem_' . $feesData->year_semester : 'Receipt';
+            $semesterStr = !empty($entry->term) ? $entry->term : 'Receipt';
 
-            $fileName = 'Fee_Receipt_' . $feesData->id . '_' . $safeStudentName . '_' . $semesterStr . '.pdf';
+            $fileName = 'Fee_Receipt_' . $entry->receipt_no . '_' . $safeStudentName . '_' . $semesterStr . '.pdf';
             $pdfContent = $mpdf->Output($fileName, 'S');
 
             $disposition = ($request->get('action') === 'view' || $request->get('action') === 'stream') ? 'inline' : 'attachment';

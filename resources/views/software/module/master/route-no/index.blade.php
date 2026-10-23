@@ -4,7 +4,7 @@
     $page_title = isset($modules['title']) ? $modules['title'] : null;
     $folder_path = isset($modules['folder_path']) ? $modules['folder_path'] : null;
     $route = isset($modules['route']) ? $modules['route'] : null;
-    $permisstion_prefix = isset($modules['permisstion_prefix']) ? $modules['permisstion_prefix'] : null;
+    $permission_prefix = isset($modules['permission_prefix']) ? $modules['permission_prefix'] : null;
     $i = 0;
     $exportColumns = $availableExportColumns ?? [];
     $defaultColumns = $defaultExportColumns ?? array_keys($exportColumns);
@@ -12,117 +12,73 @@
 @section('title', $page_title)
 
 @section('page_style_file')
-    {{-- <link href="{{ asset('public/assets/admin/plugins/datatable/dataTables.bootstrap4.min.css') }}" rel="stylesheet" type="text/css"> --}}
     <!--datatable css-->
     <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css') }}">
     <!--datatable responsive css-->
     <link rel="stylesheet"
         href="{{ asset('admin/assets/cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css') }}">
-
     <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css') }}">
+    <style>
+        .card .table-responsive,
+        .card-body .table-responsive {
+            overflow: visible !important;
+            overflow-x: clip !important;
+        }
+        .dataTables_wrapper {
+            overflow-x: hidden !important;
+        }
+    </style>
 @endsection
 
-@section('content')
+@section('breadcrumb')
     <div class="d-flex justify-content-lg-between px-1">
         @include('software.includes.breadcrumb', [
             'breadcrumbArray' => [['title' => $page_title, 'url' => '']],
+            'page_title' => $page_title,
+            'show_page_title' => false,
             'route' => $route,
-            'show_add_btn' => false,
-            'show_filter_btn' => true,
+            'show_add_btn' => isset($modules) && isset($modules['permission_add']) ? $modules['permission_add'] : false,
+            'show_filter_btn' => false,
             'show_export_btns' => true,
             'show_excal_btn' => true,
             'show_print_btn' => true,
             'show_back_btn' => false,
         ])
     </div>
+@endsection
 
-    <!-- @include('software.partials.flash_messages') -->
-    <div class="row my-3">
-        <div class="col-md-12 mb-5" id="filter_section">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row" id="filter_section">
-                        <div class="col-md-3 mb-2 col-sm-12">
-                            <div class="form-group">
-                                <label for="student_filter">Filter by Student (ID, Name, Contact)</label>
-                                <input type="text" id="student_filter" name="student_filter"
-                                    class="form-control select_filter" placeholder="Enter student ID, name or contact">
-                            </div>
-                        </div>
-
-                        <div class="col-md-2 col-sm-12 mb-3">
-                            <div class="form-group">
-                                <label class="form-label">Filter by Course </label>
-                                <select id="course_id" name="course_id"
-                                    class="form-control search_by_course select2 select_filter"
-                                    data-append="search_by_course" autofocus>
-                                    <option value="">Filter by Course</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="col-md-2 col-sm-12 mb-3">
-                            <div class="form-group">
-                                <label class="form-label d-flex justify-content-between align-items-center">Filter by
-                                    Batch</label>
-                                <select id="batch_id" name="batch_id"
-                                    class="form-control search_by_batch select2 select_filter" data-append="search_by_batch"
-                                    autofocus>
-                                    <option value="">Filter by Batch</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="col-md-2 col-sm-12 mb-3">
-                            <div class="form-group">
-                                <label class="form-label d-flex justify-content-between align-items-center">Filter by
-                                    Class</label>
-                                <select id="class_id" name="class_id"
-                                    class="form-control search_by_class select2 select_filter" data-append="search_by_class"
-                                    autofocus>
-                                    <option value="">Filter by Class</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="col-md-2 col-sm-12 mb-3">
-                            <div class="form-group">
-                                <label class="form-label d-flex justify-content-between align-items-center">Filter by
-                                    Semester</label>
-                                <select id="semester_id" name="semester_id"
-                                    class="form-control search_by_semester select2 select_filter"
-                                    data-append="search_by_semester" autofocus>
-                                    <option value="">Filter by Semester</option>
-                                </select>
-                            </div>
-                        </div>
-
-                    </div>
+@section('content')
+    <div class="mst my-2">
+        <div class="mst-hero">
+            <div class="mst-hero-l">
+                <div class="mst-hero-icon"><i class="ti ti-route"></i></div>
+                <div>
+                    <h4>{{ $page_title }}</h4>
+                    <p>Manage bus route numbers.</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                    <table id="yajra-datatables" class="table table-hover dt-responsive">
 
-                            @if (isset($columns))
-                                <thead>
-                                    <tr>
-                                        @foreach ($columns as $item)
-                                            <th class="{{ $item?->className ?? '' }}">
-                                                {{ ucfirst($item?->td_label ?? $item?->name) ?? '' }}</th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
-                            @endif
-                        </table>
-                    </div>
+        <div class="card mst-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="yajra-datatables" class="table table-hover w-100 mst-table mb-0">
+                        @if (isset($columns))
+                            <thead>
+                                <tr>
+                                    @foreach ($columns as $item)
+                                        <th class="{{ $item?->className ?? '' }}">
+                                            {{ ucfirst($item?->td_label ?? $item?->name) ?? '' }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                        @endif
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -137,16 +93,16 @@
                             <label class="form-label fw-bold">Data Scope</label>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="export_scope" id="scopeFiltered"
-                                       value="filtered" checked>
+                                    value="filtered" checked>
                                 <label class="form-check-label" for="scopeFiltered">
-                                    Use current filters
+                                    Use current filters / search
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="export_scope" id="scopeAll"
-                                       value="all">
+                                    value="all">
                                 <label class="form-check-label" for="scopeAll">
-                                    Export complete Fees Pending list
+                                    Export complete {{ $page_title }} list
                                 </label>
                             </div>
                         </div>
@@ -171,8 +127,8 @@
                                     <div class="col-md-4 col-sm-6 mb-2">
                                         <div class="form-check">
                                             <input class="form-check-input export-column" type="checkbox"
-                                                   value="{{ $columnKey }}" id="export_column_{{ $columnKey }}"
-                                                   {{ in_array($columnKey, $defaultColumns) ? 'checked' : '' }}>
+                                                value="{{ $columnKey }}" id="export_column_{{ $columnKey }}"
+                                                {{ in_array($columnKey, $defaultColumns) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="export_column_{{ $columnKey }}">
                                                 {{ $columnLabel }}
                                             </label>
@@ -201,7 +157,6 @@
     <script src="{{ asset('admin/assets/cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('admin/assets/cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js') }}"></script>
     <script src="{{ asset('admin/assets/cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js') }}"></script>
-
 @endsection
 
 @section('page_leavel_script')
@@ -213,62 +168,40 @@
         });
 
         var dtable = null;
-
         $(document).ready(function() {
-            $('.select2').select2();
-
-            if ($.fn.DataTable.isDataTable('#yajra-datatables')) {
-                $('#yajra-datatables').DataTable().clear().destroy();
-            }
-
             dtable = $('#yajra-datatables').DataTable({
+                searching: true,
                 processing: true,
                 serverSide: true,
-                searching: false,
-
                 order: [
-                    [1, 'desc']
+                    [0, 'asc']
                 ],
                 ajax: {
-                    url: "{{ route($route . '.index') }}",
+                    "url": "{{ route($route . '.index') }}",
+                    'beforeSend': function(request) {
+                        request.setRequestHeader("X-CSRF-TOKEN", $('meta[name="csrf-token"]').attr('content'));
+                    },
                     type: "GET",
                     data: function(data) {
-                        data.student_filter = $('#student_filter').val();
-                        data.course_id = $('#course_id').val();
-                        data.batch_id = $('#batch_id').val();
-                        data.class_id = $('#class_id').val();
-                        data.semester_id = $('#semester_id').val();
-                    }
+                        data.search = $('input[type="search"]').val();
+                    },
                 },
                 columns: {!! json_encode($columns) !!},
                 language: {
                     searchPlaceholder: 'Search...',
                 },
             });
-            $(document).ready(function() {
-                $('#filter_section').hide();
-                $("#show_filter").click(function() {
+        });
 
-                    if ($('#filter_section').is(':hidden')) {
-                        $('#filter_section').show();
-                    } else {
-                        $('#filter_section').hide();
-                    }
-                });
-
-                $("#cilory_filter").click(function() {
-                    $('.select_filter').val(null).trigger('change');
-                    $('.search').val('');
-                    dtable.draw();
-                });
-            });
-
-            $('.select_filter').on('change keyup', function() {
-                dtable.draw();
-            });
+        $('input[name="search"]').keyup(function() {
+            dtable.draw();
+        });
+        jQuery(document).on('change', 'select', function(event) {
+            event.preventDefault();
+            dtable.draw();
         });
     </script>
-    <script>
+    <script type="text/javascript">
         $(function() {
             const defaultColumns = @json(array_values($defaultColumns));
             const exportModalElement = document.getElementById('exportModal');
@@ -332,7 +265,7 @@
                 }).get();
 
                 if (!selectedColumns.length) {
-                    alert('Please select at least one column to continue.');
+                    toastr.warning('Please select at least one column to continue.');
                     return;
                 }
 
@@ -341,17 +274,10 @@
                 params.append('scope', scope);
 
                 if (scope === 'filtered') {
-                    const studentFilter = $('#student_filter').val() || '';
-                    const courseId = $('#course_id').val() || '';
-                    const batchId = $('#batch_id').val() || '';
-                    const classId = $('#class_id').val() || '';
-                    const semesterId = $('#semester_id').val() || '';
-
-                    if (studentFilter) params.append('student_filter', studentFilter);
-                    if (courseId) params.append('course_id', courseId);
-                    if (batchId) params.append('batch_id', batchId);
-                    if (classId) params.append('class_id', classId);
-                    if (semesterId) params.append('semester_id', semesterId);
+                    const searchValue = $('#yajra-datatables_filter input[type="search"]').val();
+                    if (searchValue) {
+                        params.append('search', searchValue);
+                    }
                 }
 
                 selectedColumns.forEach(column => params.append('columns[]', column));
@@ -374,11 +300,6 @@
         });
     </script>
 
-    @include('software.utils.getCourse')
-    @include('software.utils.getBatchByCourseid')
-    @include('software.utils.getClassByBatch')
-    @include('software.utils.getSamasterByCourseid')
-    @include('software.utils.getAdmission')
     @include('software.includes.script-delete-record')
     @include('software.includes.script-restore-record')
     @include('software.includes.script-update-status')

@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Documents;
 use App\Models\Admission;
 use App\Models\CourceRegistration;
-use App\Models\FeesCollection;
+use App\Models\FeeReceiptEntry;
 use App\Models\LibraryMasterBook;
 use App\Models\Master\MasterCity;
 use App\Models\Master\MasterCountry;
@@ -757,6 +757,9 @@ class CommonController extends Controller
                 return $this->sendError("Please select date.");
             }
 
+            $query = FeeReceiptEntry::query();
+            $requestDateLabel = '';
+
             if ($request->filled('date') || $request->filled('request_date')) {
                 $rawDate = trim($request->input('date') ?? $request->input('request_date'));
                 try {
@@ -774,23 +777,11 @@ class CommonController extends Controller
                 $requestDateLabel = Carbon::parse($fromDate)->format('d-m-Y') . ' to ' . Carbon::parse($toDate)->format('d-m-Y');
             }
 
-            if ($request->filled('course_id')) {
-                $query->where('course_id', $request->course_id);
+            if ($request->filled('student_id') || $request->filled('admission_id')) {
+                $query->where('admission_id', $request->input('admission_id', $request->input('student_id')));
             }
 
-            if ($request->filled('batch_id')) {
-                $query->where('batch_id', $request->batch_id);
-            }
-
-            if ($request->filled('student_id')) {
-                $query->where('student_id', $request->student_id);
-            }
-
-            if ($request->filled('admission_id')) {
-                $query->where('admission_id', $request->admission_id);
-            }
-
-            $totalFees = (float) $query->sum('fees');
+            $totalFees = (float) $query->sum('net_amount');
 
             $data = [
                 'request_date'         => $requestDateLabel,

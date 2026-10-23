@@ -4,6 +4,7 @@
     $page_title = 'Import Student';
     $route = isset($modules['route']) ? $modules['route'] : null;
     $report = session()->pull('import_report');
+    $schoolTitle = strtoupper(\App\Services\SchoolDatabaseManager::getActiveSchool()['name'] ?? 'ULTRA SCHOOL');
 @endphp
 @section('title', $page_title)
 
@@ -611,8 +612,8 @@
                         <i class="ti ti-heading"></i>
                         <div>
                             Each class starts with a <b>title row</b> that ends with <b>Standard-Division</b>, for example
-                            <code>ULTRA ENGLISH SCHOOL 1-A</code>, <code>ULTRA ENGLISH SCHOOL SKG-A</code>,
-                            <code>ULTRA ENGLISH SCHOOL BALVATIKA-B</code>.
+                            <code>{{ $schoolTitle }} 1-A</code>, <code>{{ $schoolTitle }} SKG-A</code>,
+                            <code>{{ $schoolTitle }} BALVATIKA-B</code>.
                         </div>
                     </li>
                     <li>

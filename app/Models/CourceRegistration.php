@@ -72,13 +72,7 @@ class CourceRegistration extends Model
     // }
     public function feescollection()
     {
-        return $this->hasMany(FeesCollection::class, 'student_id', 'register_id');
-    }
-
-
-    public function semester()
-    {
-        return $this->belongsTo(FeesCollection::class, 'year_semester'); // adjust name/key as needed
+        return $this->hasMany(\App\Models\FeeReceiptEntry::class, 'admission_id', 'admission_id');
     }
     public function student()
     {

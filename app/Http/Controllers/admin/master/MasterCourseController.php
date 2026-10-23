@@ -4,7 +4,6 @@ namespace App\Http\Controllers\admin\master;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
-use App\Models\FeesReceipt;
 use App\Models\Master\MasterCourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +15,6 @@ use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\MasterCourceRequest;
 use App\Models\Admission;
 use App\Models\CourceRegistration;
-use App\Models\FeesCollection;
 use App\Models\StudentRequest;
 use App\Models\Timetable;
 use App\Traits\BioMetricTrait;
@@ -402,11 +400,8 @@ class MasterCourseController extends Controller
             // ✅ Use correct column names for all related modules
             $isUsed =
                 $course->batches()->exists() ||
-
-                FeesCollection::where('course_id', $course->id)->exists() ||  // corrected
-
-                CourceRegistration::where('course_id', $course->id)->exists() || // corrected
-                Timetable::where('course_id', $course->id)->exists();       // corrected
+                CourceRegistration::where('course_id', $course->id)->exists() ||
+                Timetable::where('course_id', $course->id)->exists();
 
 
             if ($isUsed) {
@@ -442,7 +437,6 @@ class MasterCourseController extends Controller
 
             $isUsed =
                 $course->batches()->exists() ||
-                FeesCollection::where('course_id', $course->id)->exists() ||
                 CourceRegistration::where('course_id', $course->id)->exists() ||
                 Timetable::where('course_id', $course->id)->exists();
 
@@ -476,7 +470,6 @@ class MasterCourseController extends Controller
 
             $isUsed =
                 $course->batches()->exists() ||
-                FeesCollection::where('course_id', $course->id)->exists() ||
                 CourceRegistration::where('course_id', $course->id)->exists() ||
                 Timetable::where('course_id', $course->id)->exists();
 

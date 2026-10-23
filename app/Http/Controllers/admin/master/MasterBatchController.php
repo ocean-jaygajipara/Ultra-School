@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\MasterBatchRequest;
 use App\Models\CourceRegistration;
-use App\Models\FeesCollection;
 use App\Models\StudentRequest;
 use App\Models\Timetable;
 use Illuminate\Database\Eloquent\Builder;

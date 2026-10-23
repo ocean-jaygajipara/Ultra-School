@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\Helper;
 use App\Models\Admission;
 use App\Models\CourceRegistration;
-use App\Models\FeesCollection;
+use App\Models\FeeReceiptEntry;
 use App\Models\Attedance;
 use App\Models\Test;
 use App\Models\StudentTestMark;
@@ -373,44 +373,19 @@ class StudentReportController extends Controller
             if ($courseReg->is_lateral_entry == 1 && $courseReg->joining_semester) {
                 $currentSemester = $courseReg->joining_semester;
             }
-            $maxPaidSem = FeesCollection::where('student_id', $student->id)
-                ->where('course_id', $courseReg->course_id)
-                ->max('year_semester');
-            if ($maxPaidSem && $maxPaidSem > $currentSemester) {
-                $currentSemester = (int)$maxPaidSem;
-            }
         }
 
-        // 3. Fees Details (All Semesters)
+        // 3. Fees Details (from Fee Receipt Entry)
         $feesList = [];
-        if ($courseReg && $courseReg->course) {
-            $totalSemesters = $courseReg->course->semester;
-            $courseFees = $courseReg->course->course_fees;
-            $semesterFee = $totalSemesters ? ($courseFees / $totalSemesters) : 0;
-
-            // Group paid fees by semester
-            $paidFeesBySem = FeesCollection::where('student_id', $student->id)
-                ->where('course_id', $courseReg->course_id)
-                ->select('year_semester', DB::raw('SUM(fees) as total_paid'))
-                ->groupBy('year_semester')
-                ->pluck('total_paid', 'year_semester')
-                ->toArray();
-
-            for ($sem = 1; $sem <= $totalSemesters; $sem++) {
-                // If lateral entry and semester is before joining semester, they don't pay
-                if ($courseReg->is_lateral_entry == 1 && $sem < $courseReg->joining_semester) {
-                    continue;
-                }
-                $paid = $paidFeesBySem[$sem] ?? 0;
-                if ($paid <= 0) {
-                    continue;
-                }
-                $feesList[] = [
-                    'semester' => 'Semester ' . $sem,
-                    'total_fees' => number_format($semesterFee, 2),
-                    'paid_fees' => number_format($paid, 2)
-                ];
-            }
+        $paidFees = FeeReceiptEntry::where('admission_id', $student->id)
+            ->orderBy('term')
+            ->get();
+        foreach ($paidFees as $fee) {
+            $feesList[] = [
+                'semester' => $fee->term ?: 'Fee',
+                'total_fees' => number_format((float) $fee->total, 2),
+                'paid_fees' => number_format((float) $fee->net_amount, 2),
+            ];
         }
 
         // 4. Attendance Details (current Semester)

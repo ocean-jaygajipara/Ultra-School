@@ -104,7 +104,7 @@ class BusFeeCollectionController extends Controller
         $standards = MasterStandard::where('status', 'active')->orderBy('id')->get(['id', 'name']);
         $busRoutes = MasterBusRouteVillage::where('status', 'active')
             ->orderBy('name')
-            ->get(['id', 'name', 'charge']);
+            ->get(['id', 'name']);
 
         return view($modules['folder_path'] . '.form', compact('modules', 'academicYears', 'currentYear', 'standards', 'busRoutes'));
     }
@@ -178,10 +178,6 @@ class BusFeeCollectionController extends Controller
     {
         $admission = Admission::with('currentStandard')->findOrFail($id);
 
-        $charge = MasterBusRouteVillage::where('name', $admission->bus_route_village)
-            ->where('status', 'active')
-            ->value('charge');
-
         return response()->json([
             'success' => true,
             'data' => [
@@ -191,7 +187,7 @@ class BusFeeCollectionController extends Controller
                 'standard' => $admission->current_std,
                 'division' => $admission->division,
                 'bus_route_village' => $admission->bus_route_village,
-                'charge' => $charge !== null ? (float) $charge : null,
+                'charge' => null,
                 'has_bus_route' => !empty($admission->bus_route_village),
             ],
         ]);

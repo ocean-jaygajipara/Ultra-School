@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Master\MasterBusRouteVillage;
+use App\Models\Master\MasterRouteNo;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
@@ -34,7 +35,17 @@ class MasterBusRouteVillageRequest extends FormRequest
                     ->whereNull('deleted_at')
                     ->ignore($id),
             ],
-            'charge' => [
+            'route_no' => [
+                'nullable',
+                'max:50',
+                Rule::exists((new MasterRouteNo())->getTable(), 'name')->whereNull('deleted_at'),
+            ],
+            'fee_i' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+            'fee_ii' => [
                 'nullable',
                 'numeric',
                 'min:0',
