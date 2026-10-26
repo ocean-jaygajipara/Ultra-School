@@ -1309,11 +1309,13 @@ class FeeReceiptEntryController extends Controller
             !empty($data['ignore_id']) ? (int) $data['ignore_id'] : null
         );
 
+        $yearFees = $this->annualAndCreditFees($data);
+
         if (!$row) {
             return response()->json([
                 'success' => false,
                 'message' => 'Fee Master not found for selected year / standard / term.',
-                'data'    => [
+                'data'    => array_merge([
                     'admission_fee'         => 0,
                     'deposit_fee'          => 0,
                     'term_fee'             => 0,
@@ -1322,13 +1324,13 @@ class FeeReceiptEntryController extends Controller
                     'last_yr_pending'      => $pending['amount'],
                     'last_yr_pending_help' => $pending['help'],
                     'last_yr_breakdown'    => $pending['breakdown'],
-                ],
+                ], $yearFees),
             ]);
         }
 
         return response()->json([
             'success' => true,
-            'data'    => [
+            'data'    => array_merge([
                 'admission_fee'         => $row->admission_fee,
                 'deposit_fee'          => $row->deposit_fee,
                 'term_fee'             => $row->term_fee,
@@ -1337,8 +1339,60 @@ class FeeReceiptEntryController extends Controller
                 'last_yr_pending'      => $pending['amount'],
                 'last_yr_pending_help' => $pending['help'],
                 'last_yr_breakdown'    => $pending['breakdown'],
-            ],
+            ], $yearFees),
         ]);
+    }
+
+    protected function annualAndCreditFees(array $data): array
+    {
+        $heads = ['last_yr_pending', 'admission_fee', 'term_fee', 'school_fee', 'vehicle_fee'];
+        $annual = array_fill_keys($heads, 0.0);
+        $credit = array_fill_keys($heads, 0.0);
+
+        $masters = FeeMaster::query()
+            ->where('academic_year_id', $data['academic_year_id'])
+            ->where('standard_id', $data['standard_id'])
+            ->where('status', 'active')
+            ->whereIn('term', array_keys(FeeMaster::TERMS))
+            ->get();
+
+        foreach ($masters as $master) {
+            foreach (['admission_fee', 'term_fee', 'school_fee'] as $head) {
+                $annual[$head] += (float) $master->{$head};
+            }
+        }
+
+        $admissionId = (int) ($data['admission_id'] ?? 0);
+        $gr = trim((string) ($data['gr_no'] ?? ''));
+        if ($admissionId || $gr !== '') {
+            $receipts = FeeReceiptEntry::query()
+                ->where('academic_year_id', $data['academic_year_id'])
+                ->where('standard_id', $data['standard_id'])
+                ->where('term', '!=', $data['term'])
+                ->when(!empty($data['ignore_id']), fn ($query) => $query->where('id', '!=', (int) $data['ignore_id']))
+                ->where(function ($query) use ($admissionId, $gr) {
+                    if ($admissionId) {
+                        $query->where('admission_id', $admissionId);
+                    }
+                    if ($gr !== '') {
+                        $admissionId ? $query->orWhere('gr_no', $gr) : $query->where('gr_no', $gr);
+                    }
+                })
+                ->get();
+
+            foreach ($receipts as $receipt) {
+                foreach ($heads as $head) {
+                    $credit[$head] += (float) $receipt->{$head};
+                }
+            }
+        }
+
+        $round = fn (array $amounts) => array_map(fn ($amount) => round($amount, 2), $amounts);
+
+        return [
+            'annual' => $round($annual),
+            'credit' => $round($credit),
+        ];
     }
 
     public function calculatePreviousPendingFee(?int $admissionId, ?string $grNo, int $currentStandardId, int $currentYearId, ?int $ignoreReceiptId = null): array

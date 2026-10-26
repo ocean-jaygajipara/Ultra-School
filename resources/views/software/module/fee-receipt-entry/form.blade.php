@@ -339,6 +339,8 @@
                                     <th style="min-width:180px">Fee Type</th>
                                     <th class="text-end" style="min-width:140px">Fee</th>
                                     <th class="text-end" style="min-width:140px">Term Fee</th>
+                                    <th class="text-end" style="min-width:140px">Annual Fee</th>
+                                    <th class="text-end" style="min-width:140px">Credit Fee</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -352,6 +354,8 @@
                                             class="form-control text-end fee-input" value="{{ $field('last_yr_pending', 0) }}">
                                     </td>
                                     <td><input type="text" class="form-control text-end fre-readonly" id="term_last_yr" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="annual_last_yr" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="credit_last_yr" value="0.00" readonly></td>
                                 </tr>
                                 <tr>
                                     <td class="fee-label">Admission Fee</td>
@@ -360,6 +364,8 @@
                                             class="form-control text-end fee-input" value="{{ $field('admission_fee', 0) }}">
                                     </td>
                                     <td><input type="text" class="form-control text-end fre-readonly" id="term_admission" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="annual_admission" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="credit_admission" value="0.00" readonly></td>
                                 </tr>
                                 <tr>
                                     <td class="fee-label">Term Fee</td>
@@ -368,6 +374,8 @@
                                             class="form-control text-end fee-input" value="{{ $field('term_fee', 0) }}">
                                     </td>
                                     <td><input type="text" class="form-control text-end fre-readonly" id="term_term" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="annual_term" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="credit_term" value="0.00" readonly></td>
                                 </tr>
                                 <tr>
                                     <td class="fee-label">School Fee</td>
@@ -376,6 +384,8 @@
                                             class="form-control text-end fee-input" value="{{ $field('school_fee', 0) }}">
                                     </td>
                                     <td><input type="text" class="form-control text-end fre-readonly" id="term_school" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="annual_school" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="credit_school" value="0.00" readonly></td>
                                 </tr>
                                 <tr>
                                     <td class="fee-label">
@@ -398,11 +408,15 @@
                                             class="form-control text-end fee-input" value="{{ $field('vehicle_fee', 0) }}">
                                     </td>
                                     <td><input type="text" class="form-control text-end fre-readonly" id="term_vehicle" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="annual_vehicle" value="0.00" readonly></td>
+                                    <td><input type="text" class="form-control text-end fre-readonly" id="credit_vehicle" value="0.00" readonly></td>
                                 </tr>
                                 <tr class="fre-total-row">
                                     <td>Total</td>
                                     <td><input type="text" id="total_display" class="form-control text-end fre-readonly" value="0.00" readonly></td>
                                     <td><input type="text" id="term_total_display" class="form-control text-end fre-readonly" value="0.00" readonly></td>
+                                    <td><input type="text" id="annual_total_display" class="form-control text-end fre-readonly" value="0.00" readonly></td>
+                                    <td><input type="text" id="credit_total_display" class="form-control text-end fre-readonly" value="0.00" readonly></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -486,6 +500,25 @@
                 calc();
             }
 
+            function paintAnnualCredit(data) {
+                var annual = (data && data.annual) || {};
+                var credit = (data && data.credit) || {};
+                var heads = ['last_yr', 'admission', 'term', 'school', 'vehicle'];
+                var keys = ['last_yr_pending', 'admission_fee', 'term_fee', 'school_fee', 'vehicle_fee'];
+                var annualTotal = 0;
+                var creditTotal = 0;
+                heads.forEach(function (head, index) {
+                    var annualAmount = money(annual[keys[index]] || 0);
+                    var creditAmount = money(credit[keys[index]] || 0);
+                    $('#annual_' + head).val(annualAmount.toFixed(2));
+                    $('#credit_' + head).val(creditAmount.toFixed(2));
+                    annualTotal += annualAmount;
+                    creditTotal += creditAmount;
+                });
+                $('#annual_total_display').val(annualTotal.toFixed(2));
+                $('#credit_total_display').val(creditTotal.toFixed(2));
+            }
+
             function loadFeeMaster() {
                 var yearId = $('#academic_year_id').val();
                 var stdId = $('#standard_id').val();
@@ -493,10 +526,6 @@
                 var admId = $('#admission_id').val();
                 var grNo = $.trim($('#gr_no').val());
                 if (!yearId || !stdId || !term) return;
-                if (isCurrentTermPaid()) {
-                    clearPaidFees();
-                    return;
-                }
 
                 $.get("{{ route('fee-receipt-entry.fee-master') }}", {
                     academic_year_id: yearId,
@@ -506,11 +535,13 @@
                     gr_no: grNo,
                     ignore_id: editingReceiptId || ''
                 }).done(function (res) {
-                    if ($('#term').val() !== term || isCurrentTermPaid()) {
+                    if ($('#term').val() !== term) return;
+                    if (!res || !res.data) return;
+                    paintAnnualCredit(res.data);
+                    if (isCurrentTermPaid()) {
                         clearPaidFees();
                         return;
                     }
-                    if (!res || !res.data) return;
                     $('#admission_fee').val(money(res.data.admission_fee));
                     $('#term_fee').val(money(res.data.term_fee));
                     $('#school_fee').val(money(res.data.school_fee));
