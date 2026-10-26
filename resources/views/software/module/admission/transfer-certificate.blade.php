@@ -2,6 +2,8 @@
 <html lang="gu">
 
 <head>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('admin/assets/images/favicon/favicon-32.png') }}" />
+
     <meta charset="UTF-8">
     <title>Transfer Certificate</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;600;700&display=swap" rel="stylesheet">

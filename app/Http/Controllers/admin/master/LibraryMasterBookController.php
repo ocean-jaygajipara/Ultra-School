@@ -63,7 +63,7 @@ class LibraryMasterBookController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = LibraryMasterBook::withTrashed('createdByUser');
+                $data = LibraryMasterBook::with('createdByUser');
 
                 return DataTables::of($data)
                     ->addIndexColumn()

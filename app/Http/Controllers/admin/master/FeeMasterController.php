@@ -102,7 +102,7 @@ class FeeMasterController extends Controller
             View::share('columns', $columns);
 
             if ($request->ajax()) {
-                $data = FeeMaster::withTrashed()
+                $data = FeeMaster::query()
                     ->with(['standard', 'academicYear'])
                     ->leftJoin('master_standards as ms', 'ms.id', '=', 'fee_masters.standard_id')
                     ->leftJoin('master_academic_years as may', 'may.id', '=', 'fee_masters.academic_year_id')

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('admin/assets/images/favicon/favicon-32.png') }}" />
+
     <meta charset="utf-8">
     <title>{{ ($autoPrint ?? true) ? 'Print' : 'View' }} Bus Transport Fee Receipt - {{ $feesData->receipt_no }}</title>
     <style>

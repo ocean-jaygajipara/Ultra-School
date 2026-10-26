@@ -20,6 +20,9 @@
             'show_page_title' => false,
             'route' => $route,
             'show_add_btn' => isset($modules['permission_add']) ? $modules['permission_add'] : false,
+            'show_export_btns' => true,
+            'show_excal_btn' => true,
+            'show_print_btn' => true,
             'show_back_btn' => false,
         ])
     </div>
@@ -68,6 +71,14 @@
 @section('page_leavel_script')
     <script>
         $(function () {
+            $('#exportExcelBtn').on('click', function (e) {
+                e.preventDefault();
+                window.location.href = "{{ route($route . '.export-excel') }}";
+            });
+            $('#print_btn').on('click', function (e) {
+                e.preventDefault();
+                window.open("{{ route($route . '.print-list') }}", '_blank');
+            });
             $('#yajra-datatables').DataTable({
                 searching: true,
                 processing: true,
@@ -85,4 +96,5 @@
             });
         });
     </script>
+    @include('software.includes.script-delete-record')
 @endsection

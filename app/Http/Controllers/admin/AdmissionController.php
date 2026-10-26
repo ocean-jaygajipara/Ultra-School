@@ -214,14 +214,7 @@ class AdmissionController extends Controller
                     });
                 }
 
-                if ($request->filled('filter_standard')) {
-                    $filterStandard = $request->input('filter_standard');
-                    $data->whereHas('currentStandard', fn ($q) => $q->where('name', $filterStandard));
-                }
-
-                if ($request->filled('filter_division')) {
-                    $data->where('division', $request->input('filter_division'));
-                }
+                $this->applyAdmissionListFilters($data, $request);
 
                 if (empty($request->input('order'))) {
                     $data->orderByRaw("CASE WHEN roll_no IS NULL OR roll_no = 0 THEN 1 ELSE 0 END, CAST(roll_no AS UNSIGNED) ASC, id ASC");
@@ -367,8 +360,9 @@ class AdmissionController extends Controller
             $batches = \App\Models\Master\MasterBatch::where('status', 'active')->orderBy('batch_name')->get();
             $standards = $this->getStandardList();
             $divisions = \App\Models\Master\MasterDivision::where('status', 'active')->orderBy('name')->pluck('name')->filter()->values()->all();
+            $academicYears = MasterAcademicYear::where('status', 'active')->orderByDesc('start_date')->get(['id', 'name']);
 
-            return view($modules['folder_path'] . '.index', compact('data', 'availableExportColumns', 'defaultExportColumns', 'courses', 'batches', 'standards', 'divisions'));
+            return view($modules['folder_path'] . '.index', compact('data', 'availableExportColumns', 'defaultExportColumns', 'courses', 'batches', 'standards', 'divisions', 'academicYears'));
         } catch (\Exception $e) {
             return Redirect::route('dashboard')->withErrors($e->getMessage());
         }
@@ -1595,6 +1589,45 @@ class AdmissionController extends Controller
         }
     }
 
+    protected function applyAdmissionListFilters($query, Request $request): void
+    {
+        $yearId = (int) $request->input('filter_academic_year');
+        $standard = trim((string) $request->input('filter_standard', ''));
+        $division = trim((string) $request->input('filter_division', ''));
+
+        if ($yearId) {
+            $query->where(function ($outer) use ($yearId, $standard, $division) {
+                $outer->where(function ($current) use ($yearId, $standard, $division) {
+                    $current->where('academic_year_id', $yearId);
+                    if ($standard !== '') {
+                        $current->whereHas('currentStandard', fn ($q) => $q->where('name', $standard));
+                    }
+                    if ($division !== '') {
+                        $current->where('division', $division);
+                    }
+                })->orWhereHas('classHistories', function ($history) use ($yearId, $standard, $division) {
+                    $history->where('academic_year_id', $yearId);
+                    if ($standard !== '') {
+                        $history->whereHas('standard', fn ($q) => $q->where('name', $standard));
+                    }
+                    if ($division !== '') {
+                        $history->where('division', $division);
+                    }
+                });
+            });
+
+            return;
+        }
+
+        if ($standard !== '') {
+            $query->whereHas('currentStandard', fn ($q) => $q->where('name', $standard));
+        }
+
+        if ($division !== '') {
+            $query->where('division', $division);
+        }
+    }
+
     /**
      * Build filtered query for export/print.
      */
@@ -1627,14 +1660,7 @@ class AdmissionController extends Controller
             return $query;
         }
 
-        if ($request->filled('filter_standard')) {
-            $filterStandard = $request->input('filter_standard');
-            $query->whereHas('currentStandard', fn ($q) => $q->where('name', $filterStandard));
-        }
-
-        if ($request->filled('filter_division')) {
-            $query->where('division', $request->input('filter_division'));
-        }
+        $this->applyAdmissionListFilters($query, $request);
 
         $search = trim((string) $request->get('search', ''));
         if ($search !== '') {

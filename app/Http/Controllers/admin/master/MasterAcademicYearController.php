@@ -74,6 +74,9 @@ class MasterAcademicYearController extends Controller
                 ->editColumn('start_date', fn ($row) => $row->start_date?->format('d-m-Y'))
                 ->editColumn('end_date', fn ($row) => $row->end_date?->format('d-m-Y'))
                 ->editColumn('is_current', function ($row) use ($modules) {
+                    if ($row->deleted_at) {
+                        return '-';
+                    }
                     if ($row->is_current) {
                         return '<span class="badge bg-success"><i class="ti ti-circle-check me-1"></i>Current</span>';
                     }
@@ -85,10 +88,16 @@ class MasterAcademicYearController extends Controller
                     return '-';
                 })
                 ->editColumn('status', function ($row) {
+                    if ($row->deleted_at) {
+                        return '<span class="badge bg-label-danger">Deleted</span>';
+                    }
                     $class = $row->status === 'active' ? 'success' : 'danger';
                     return '<span class="badge bg-label-' . $class . '">' . ucfirst($row->status) . '</span>';
                 })
                 ->addColumn('action', function ($row) use ($modules) {
+                    if ($row->deleted_at) {
+                        return '<a href="javascript:void(0)" data-restore="' . route($modules['route'] . '.restore', ['id' => $row->id]) . '" class="btn btn-light mx-1 record-restore" title="Restore"><i class="ti ti-history"></i> Restore</a>';
+                    }
                     $btn = '';
                     if ($modules['permission_edit']) {
                         $btn .= '<a href="' . route($modules['route'] . '.edit', [$row->id]) . '" class="btn btn-light btn-icon mx-1">
@@ -210,6 +219,22 @@ class MasterAcademicYearController extends Controller
         $year->delete();
 
         return response()->json(['success' => true, 'message' => $modules['title'] . ' deleted successfully.']);
+    }
+
+    public function restore($id)
+    {
+        $modules = $this->permissions();
+        if (!$modules['permission_delete']) {
+            return response()->json(['status' => false, 'message' => 'User does not have the right permissions.'], 403);
+        }
+
+        $year = MasterAcademicYear::withTrashed()->findOrFail($id);
+        $year->restore();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $modules['title'] . ' restored successfully.',
+        ]);
     }
 
     protected function validateYear(Request $request, ?int $ignoreId = null): array

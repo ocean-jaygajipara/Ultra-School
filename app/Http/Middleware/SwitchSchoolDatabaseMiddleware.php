@@ -20,6 +20,16 @@ class SwitchSchoolDatabaseMiddleware
         $activeCode = SchoolDatabaseManager::getActiveSchoolCode();
         SchoolDatabaseManager::switchDatabase($activeCode);
 
+        $route = (string) ($request->route()?->getName() ?? '');
+        $onFeeStatusReport = str_starts_with($route, 'fee-receipt-entry.paid-report')
+            || str_starts_with($route, 'fee-receipt-entry.unpaid-report');
+        if (!$onFeeStatusReport) {
+            session()->forget([
+                'fee_receipt_paid_report.' . $activeCode,
+                'fee_receipt_unpaid_report.' . $activeCode,
+            ]);
+        }
+
         return $next($request);
     }
 }

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('admin/assets/images/favicon/favicon-32.png') }}" />
+
     <meta charset="UTF-8">
     <title>Test Marks Report - {{ $test->subject_name ?? '' }}</title>
     <style>

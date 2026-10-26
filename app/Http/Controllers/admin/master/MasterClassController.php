@@ -79,7 +79,6 @@ class MasterClassController extends Controller
             if ($request->ajax()) {
                 // dd($request->all());
                 $data = MasterClass::select('*');
-                $data = $data->withTrashed();
 
                 $returnData = Datatables::of($data)
                     ->addIndexColumn()
@@ -508,7 +507,6 @@ class MasterClassController extends Controller
     protected function buildClassExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterClass::query()
-            ->withTrashed()
             ->orderByDesc('id');
 
         if ($scope === 'all') {

@@ -58,7 +58,7 @@ class MasterUniversityController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterUniversity::withTrashed()
+                $data = MasterUniversity::query()
                     ->orderBy('id', 'desc');
                 // dd('hello');
 

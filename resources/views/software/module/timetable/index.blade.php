@@ -230,4 +230,5 @@
     </script>
 
     @include('software.includes.script-delete-record')
+    @include('software.includes.script-restore-record')
 @endsection

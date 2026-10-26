@@ -2,6 +2,8 @@
 <html lang="en">
 
 <head>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('admin/assets/images/favicon/favicon-32.png') }}" />
+
     <meta charset="UTF-8">
     <title>Bonafide Certificate - Ultra English School</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">

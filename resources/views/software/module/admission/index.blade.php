@@ -334,7 +334,17 @@
                 <div class="card-body p-4">
                     <div class="row align-items-end g-3">
                         <!-- Filter Input -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <label for="filter_academic_year" class="adm-label"><i class="ti ti-calendar me-1"></i> Academic Year</label>
+                            <select id="filter_academic_year" class="form-select select2">
+                                <option value="">All Years</option>
+                                @foreach ($academicYears ?? [] as $yearItem)
+                                    <option value="{{ $yearItem->id }}">{{ $yearItem->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
                             <label for="search" class="adm-label"><i class="ti ti-search me-1"></i> Filter by Student</label>
                             <input list="search" id="search_id" name="search"
                                 class="form-control search @error('search') is-invalid @enderror"
@@ -344,7 +354,7 @@
                             </datalist>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="filter_standard" class="adm-label"><i class="ti ti-school me-1"></i> Standard</label>
                             <select id="filter_standard" class="form-select select2">
                                 <option value="">All Standards</option>
@@ -1197,6 +1207,7 @@
                             value: $('input[name="search"]').val(),
                             regex: false
                         };
+                        data.filter_academic_year = $('#filter_academic_year').val();
                         data.filter_standard = $('#filter_standard').val();
                         data.filter_division = $('#filter_division').val();
                     },
@@ -1231,7 +1242,7 @@
 
         $("#cilory_filter").click(function() {
             $('.search').val('');
-            $('#filter_standard, #filter_division').val('').trigger('change.select2');
+            $('#filter_academic_year, #filter_standard, #filter_division').val('').trigger('change.select2');
             dtable.draw();
         });
 
@@ -1619,6 +1630,9 @@
                     const searchValue = $('#yajra-datatables_filter input[type="search"]').val();
                     if (searchValue) {
                         params.append('search', searchValue);
+                    }
+                    if ($('#filter_academic_year').val()) {
+                        params.append('filter_academic_year', $('#filter_academic_year').val());
                     }
                     if ($('#filter_standard').val()) {
                         params.append('filter_standard', $('#filter_standard').val());

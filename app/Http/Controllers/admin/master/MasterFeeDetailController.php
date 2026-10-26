@@ -28,7 +28,7 @@ class MasterFeeDetailController extends Controller
     public function index()
     {
         $modules = $this->modules;
-        $fees = MasterFeeDetail::with('standard')->orderBy('standard_id')->orderBy('id', 'desc')->get();
+        $fees = $this->feeRows();
         $standards = MasterStandard::where('status', 'active')->orderBy('id')->get(['id', 'name']);
         View::share('modules', $modules);
 
@@ -55,7 +55,7 @@ class MasterFeeDetailController extends Controller
                 'status'     => 'active',
             ]);
 
-            $fees = MasterFeeDetail::with('standard')->orderBy('standard_id')->orderBy('id', 'desc')->get();
+            $fees = $this->feeRows();
 
             if ($request->ajax()) {
                 return response()->json(['success' => true, 'message' => 'Fee created successfully', 'fees' => $fees]);
@@ -90,7 +90,7 @@ class MasterFeeDetailController extends Controller
                 'updated_by' => Auth::id(),
             ]);
 
-            $fees = MasterFeeDetail::with('standard')->orderBy('standard_id')->orderBy('id', 'desc')->get();
+            $fees = $this->feeRows();
 
             return response()->json(['success' => true, 'message' => 'Fee updated successfully', 'fees' => $fees]);
         } catch (\Exception $e) {
@@ -107,7 +107,7 @@ class MasterFeeDetailController extends Controller
             $fee->save();
             $fee->delete();
 
-            $fees = MasterFeeDetail::with('standard')->orderBy('standard_id')->orderBy('id', 'desc')->get();
+            $fees = $this->feeRows();
 
             if ($request->ajax()) {
                 return response()->json(['success' => true, 'message' => 'Fee deleted successfully', 'fees' => $fees]);
@@ -120,5 +120,26 @@ class MasterFeeDetailController extends Controller
             }
             return redirect()->route('fees.index')->withErrors($e->getMessage());
         }
+    }
+
+    public function restore($id)
+    {
+        $fee = MasterFeeDetail::withTrashed()->findOrFail($id);
+        $fee->restore();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Fee restored successfully',
+            'fees' => $this->feeRows(),
+        ]);
+    }
+
+    protected function feeRows()
+    {
+        return MasterFeeDetail::query()
+            ->with('standard')
+            ->orderBy('standard_id')
+            ->orderBy('id', 'desc')
+            ->get();
     }
 }

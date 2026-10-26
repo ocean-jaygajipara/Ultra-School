@@ -66,7 +66,6 @@ class SyllabusController extends Controller
             if ($request->ajax()) {
                 // dd($request->all());
                 $data = Syllabus::select('*');
-                $data = $data->withTrashed();
 
                 $returnData = Datatables::of($data)
                     ->addIndexColumn()

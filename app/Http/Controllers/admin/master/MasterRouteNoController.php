@@ -69,7 +69,7 @@ class MasterRouteNoController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterRouteNo::withTrashed()->orderBy('id', 'desc');
+                $data = MasterRouteNo::query()->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->filter(function ($query) use ($request) {
@@ -444,7 +444,6 @@ class MasterRouteNoController extends Controller
     protected function buildRouteNoExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterRouteNo::query()
-            ->withTrashed()
             ->orderByDesc('id');
 
         if ($scope === 'all') {

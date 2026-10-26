@@ -33,7 +33,7 @@
 
 
 @if ($message = Session::get('warning'))
-    <<script>
+    <script>
         toastr.warning('{{ $message }}');
     </script>
 @endif
@@ -41,7 +41,7 @@
 
 @if ($message = Session::get('info'))
     <script>
-        toastr.info('{{ $error }}');
+        toastr.info('{{ $message }}');
     </script>
 @endif
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\admin\master\MasterEventController;
 use App\Http\Controllers\admin\master\MasterHolidayController;
 use App\Http\Controllers\admin\DocumentTypeController;
 use App\Http\Controllers\admin\BusFeeCollectionController;
+use App\Http\Controllers\admin\BusRouteStudentReportController;
 use App\Http\Controllers\admin\FeeReceiptEntryController;
 use App\Http\Controllers\admin\RollNumberListController;
 use App\Http\Controllers\admin\RollNumberGenerateController;
@@ -278,6 +279,7 @@ Route::match(['get', 'post'], 'standard-update-status', [MasterStandardControlle
 Route::delete('/standard/permanent-delete/{id}', [MasterStandardController::class, 'permanentDelete'])->name('standard.permanent-delete');
 
 Route::post('academic-year/{id}/set-current', [\App\Http\Controllers\admin\master\MasterAcademicYearController::class, 'setCurrent'])->name('academic-year.set-current');
+Route::match(['get', 'post'], 'academic-year/restore/{id}', [\App\Http\Controllers\admin\master\MasterAcademicYearController::class, 'restore'])->name('academic-year.restore');
 Route::resource('academic-year', \App\Http\Controllers\admin\master\MasterAcademicYearController::class)->except(['show']);
 
 
@@ -406,7 +408,26 @@ Route::post('fee-receipt-entry', [FeeReceiptEntryController::class, 'store'])->n
 Route::get('fee-receipt-entry/find-student', [FeeReceiptEntryController::class, 'findStudent'])->name('fee-receipt-entry.find-student');
 Route::get('fee-receipt-entry/students', [FeeReceiptEntryController::class, 'students'])->name('fee-receipt-entry.students');
 Route::get('fee-receipt-entry/fee-master', [FeeReceiptEntryController::class, 'loadFeeMaster'])->name('fee-receipt-entry.fee-master');
+Route::get('fee-receipt-entry/paid-terms', [FeeReceiptEntryController::class, 'paidTerms'])->name('fee-receipt-entry.paid-terms');
+Route::get('fee-receipt-entry/export-excel', [FeeReceiptEntryController::class, 'exportExcel'])->name('fee-receipt-entry.export-excel');
+Route::get('fee-receipt-entry/print-list', [FeeReceiptEntryController::class, 'printList'])->name('fee-receipt-entry.print-list');
+Route::get('fee-receipt-entry/day-report', [FeeReceiptEntryController::class, 'dayReport'])->name('fee-receipt-entry.day-report');
+Route::get('fee-receipt-entry/day-report/export-excel', [FeeReceiptEntryController::class, 'exportDayReport'])->name('fee-receipt-entry.day-report-export');
+Route::get('fee-receipt-entry/day-report/print', [FeeReceiptEntryController::class, 'dayReportPrint'])->name('fee-receipt-entry.day-report-print');
+Route::match(['get', 'post'], 'fee-receipt-entry/less-report', [FeeReceiptEntryController::class, 'lessReport'])->name('fee-receipt-entry.less-report');
+Route::get('fee-receipt-entry/less-report/print', [FeeReceiptEntryController::class, 'lessReportPrint'])->name('fee-receipt-entry.less-report-print');
+Route::get('fee-receipt-entry/less-report/export-excel', [FeeReceiptEntryController::class, 'exportLessReport'])->name('fee-receipt-entry.less-report-export');
+Route::match(['get', 'post'], 'fee-receipt-entry/paid-report', [FeeReceiptEntryController::class, 'paidReport'])->name('fee-receipt-entry.paid-report');
+Route::get('fee-receipt-entry/paid-report/print', [FeeReceiptEntryController::class, 'paidReportPrint'])->name('fee-receipt-entry.paid-report-print');
+Route::get('fee-receipt-entry/paid-report/export-excel', [FeeReceiptEntryController::class, 'exportPaidReport'])->name('fee-receipt-entry.paid-report-export');
+Route::match(['get', 'post'], 'fee-receipt-entry/unpaid-report', [FeeReceiptEntryController::class, 'unpaidReport'])->name('fee-receipt-entry.unpaid-report');
+Route::get('fee-receipt-entry/unpaid-report/print', [FeeReceiptEntryController::class, 'unpaidReportPrint'])->name('fee-receipt-entry.unpaid-report-print');
+Route::get('fee-receipt-entry/unpaid-report/export-excel', [FeeReceiptEntryController::class, 'exportUnpaidReport'])->name('fee-receipt-entry.unpaid-report-export');
 Route::get('fee-receipt-entry/print/{id}', [FeeReceiptEntryController::class, 'print'])->whereNumber('id')->name('fee-receipt-entry.print');
+Route::get('fee-receipt-entry/bus-print/{id}', [FeeReceiptEntryController::class, 'busPrint'])->whereNumber('id')->name('fee-receipt-entry.bus-print');
+Route::get('fee-receipt-entry/{id}/edit', [FeeReceiptEntryController::class, 'edit'])->whereNumber('id')->name('fee-receipt-entry.edit');
+Route::put('fee-receipt-entry/{id}', [FeeReceiptEntryController::class, 'update'])->whereNumber('id')->name('fee-receipt-entry.update');
+Route::delete('fee-receipt-entry/{id}', [FeeReceiptEntryController::class, 'destroy'])->whereNumber('id')->name('fee-receipt-entry.destroy');
 
 // Other List
 Route::get('other-list', [OtherListController::class, 'index'])->name('other-list.index');
@@ -484,6 +505,7 @@ Route::delete(
 )->name('class.permanent-delete');
 
 //Fee Details
+Route::match(['get', 'post'], 'fees/restore/{id}', [MasterFeeDetailController::class, 'restore'])->name('fees.restore');
 Route::resource('fees', MasterFeeDetailController::class);
 
 // Fee Master (Standard + Term fee structure) — same pattern as Standard master
@@ -586,6 +608,10 @@ Route::get('student_report/students-list', [StudentReportController::class, 'get
 Route::match(['get', 'post'], 'student_report/bulk-pdf', [StudentReportController::class, 'bulkDownloadPdf'])->name('student_report.bulk_pdf');
 
 /** Class Wise Report Routes */
+Route::match(['get', 'post'], 'bus-route-report', [BusRouteStudentReportController::class, 'index'])->name('bus-route-report.index');
+Route::match(['get', 'post'], 'bus-route-report/print', [BusRouteStudentReportController::class, 'printList'])->name('bus-route-report.print');
+Route::match(['get', 'post'], 'bus-route-report/export-excel', [BusRouteStudentReportController::class, 'exportExcel'])->name('bus-route-report.export-excel');
+Route::post('bus-route-report/settings', [BusRouteStudentReportController::class, 'saveSettings'])->name('bus-route-report.settings');
 Route::get('class-report', [\App\Http\Controllers\admin\ClassReportController::class, 'index'])->name('class-report.index');
 Route::post('class-report', [\App\Http\Controllers\admin\ClassReportController::class, 'filter'])->name('class-report.filter');
 Route::post('class-report/settings', [\App\Http\Controllers\admin\ClassReportController::class, 'saveSettings'])->name('class-report.settings');

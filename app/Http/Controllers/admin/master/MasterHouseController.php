@@ -69,7 +69,7 @@ class MasterHouseController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterHouse::withTrashed()->orderBy('id', 'desc');
+                $data = MasterHouse::query()->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->filter(function ($query) use ($request) {
@@ -444,7 +444,6 @@ class MasterHouseController extends Controller
     protected function buildHouseExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterHouse::query()
-            ->withTrashed()
             ->orderByDesc('id');
 
         if ($scope === 'all') {

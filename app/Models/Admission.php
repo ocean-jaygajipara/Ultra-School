@@ -92,6 +92,11 @@ class Admission extends Authenticatable
         return $this->belongsTo(\App\Models\Master\MasterAcademicYear::class, 'academic_year_id')->withTrashed();
     }
 
+    public function classHistories()
+    {
+        return $this->hasMany(AdmissionClassHistory::class, 'admission_id');
+    }
+
     /**
      * Standard names (read only) resolved from Standard Master.
      */

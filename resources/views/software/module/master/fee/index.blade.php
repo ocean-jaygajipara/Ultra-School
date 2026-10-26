@@ -170,26 +170,36 @@
                                     </td>
                                     <td class="fee-name-cell">
                                         <span class="fw-semibold">{{ $fee->fee_name }}</span>
+                                        @if ($fee->deleted_at)
+                                            <span class="badge bg-label-danger ms-1">Deleted</span>
+                                        @endif
                                     </td>
                                     <td class="fee-amount-cell">
                                         <span class="fw-bold text-success">₹{{ number_format((float) $fee->amount, 2) }}</span>
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1">
-                                            <button type="button" class="btn btn-sm btn-icon btn-label-primary edit-fee"
-                                                data-id="{{ $fee->id }}"
-                                                data-standard_id="{{ $fee->standard_id ?? '' }}"
-                                                data-fee_name="{{ $fee->fee_name }}"
-                                                data-amount="{{ $fee->amount }}"
-                                                title="Edit Fee">
-                                                <i class="ti ti-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-icon btn-label-danger delete-fee"
-                                                data-id="{{ $fee->id }}"
-                                                data-fee_name="{{ $fee->fee_name }}"
-                                                title="Delete Fee">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
+                                            @if ($fee->deleted_at)
+                                                <button type="button" class="btn btn-sm btn-label-secondary restore-fee"
+                                                    data-id="{{ $fee->id }}" title="Restore">
+                                                    <i class="ti ti-history"></i> Restore
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn btn-sm btn-icon btn-label-primary edit-fee"
+                                                    data-id="{{ $fee->id }}"
+                                                    data-standard_id="{{ $fee->standard_id ?? '' }}"
+                                                    data-fee_name="{{ $fee->fee_name }}"
+                                                    data-amount="{{ $fee->amount }}"
+                                                    title="Edit Fee">
+                                                    <i class="ti ti-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-icon btn-label-danger delete-fee"
+                                                    data-id="{{ $fee->id }}"
+                                                    data-fee_name="{{ $fee->fee_name }}"
+                                                    title="Delete Fee">
+                                                    <i class="ti ti-trash"></i>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -302,20 +312,12 @@
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                     });
-
-                    tbody.append(`
-                        <tr data-id="${fee.id}" data-standard-id="${standardIdAttr}">
-                            <td class="text-center serial-no">${i + 1}</td>
-                            <td>${standardBadge}</td>
-                            <td class="fee-name-cell">
-                                <span class="fw-semibold">${escapeHtml(fee.fee_name)}</span>
-                            </td>
-                            <td class="fee-amount-cell">
-                                <span class="fw-bold text-success">₹${amountFormatted}</span>
-                            </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-1">
-                                    <button type="button" class="btn btn-sm btn-icon btn-label-primary edit-fee"
+                    let deleted = !!fee.deleted_at;
+                    let nameHtml = `<span class="fw-semibold">${escapeHtml(fee.fee_name)}</span>` +
+                        (deleted ? ' <span class="badge bg-label-danger ms-1">Deleted</span>' : '');
+                    let actions = deleted
+                        ? `<button type="button" class="btn btn-sm btn-label-secondary restore-fee" data-id="${fee.id}" title="Restore"><i class="ti ti-history"></i> Restore</button>`
+                        : `<button type="button" class="btn btn-sm btn-icon btn-label-primary edit-fee"
                                         data-id="${fee.id}"
                                         data-standard_id="${fee.standard_id || ''}"
                                         data-fee_name="${escapeHtml(fee.fee_name)}"
@@ -328,8 +330,18 @@
                                         data-fee_name="${escapeHtml(fee.fee_name)}"
                                         title="Delete Fee">
                                         <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
+                                    </button>`;
+
+                    tbody.append(`
+                        <tr data-id="${fee.id}" data-standard-id="${standardIdAttr}">
+                            <td class="text-center serial-no">${i + 1}</td>
+                            <td>${standardBadge}</td>
+                            <td class="fee-name-cell">${nameHtml}</td>
+                            <td class="fee-amount-cell">
+                                <span class="fw-bold text-success">₹${amountFormatted}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1">${actions}</div>
                             </td>
                         </tr>
                     `);
@@ -490,6 +502,31 @@
                         confirmDeletion();
                     }
                 }
+            });
+
+            $(document).on('click', '.restore-fee', function() {
+                let feeId = $(this).data('id');
+                let restoreUrl = '{{ route("fees.restore", ":id") }}'.replace(':id', feeId);
+                $.ajax({
+                    url: restoreUrl,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('input[name="_token"]').val(),
+                        'Accept': 'application/json'
+                    },
+                    data: { _token: $('input[name="_token"]').val() },
+                    success: function(res) {
+                        if (res.success) {
+                            renderFeesTable(res.fees);
+                            toastr.success(res.message || 'Fee restored.');
+                        } else {
+                            toastr.error(res.message || 'Could not restore fee.');
+                        }
+                    },
+                    error: function(xhr) {
+                        toastr.error(xhr.responseJSON?.message || 'Restore failed.');
+                    }
+                });
             });
         });
     </script>

@@ -123,6 +123,9 @@ class TimetableController extends Controller
                         return '<a href="' . $fileUrl . '" target="_blank" class="text-primary">View Attachment</a>';
                     })
                     ->addColumn('action', function ($row) use ($modules) {
+                        if ($row->deleted_at) {
+                            return '<a href="javascript:void(0)" data-restore="' . route($modules['route'] . '.restore', ['id' => $row->id]) . '" class="btn btn-light mx-1 record-restore" title="Restore"><i class="ti ti-history"></i> Restore</a>';
+                        }
 
                         $btn = '';
                         if ($modules['permission_edit']) {

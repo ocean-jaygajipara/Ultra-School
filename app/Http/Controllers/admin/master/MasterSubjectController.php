@@ -59,7 +59,7 @@ class MasterSubjectController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-               $data = MasterSubject::withTrashed()
+               $data = MasterSubject::query()
             ->orderBy('id', 'desc');
                 // dd('hello');
 

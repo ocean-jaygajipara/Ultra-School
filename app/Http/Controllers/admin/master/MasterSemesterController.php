@@ -62,7 +62,6 @@ class MasterSemesterController extends Controller
             if ($request->ajax()) {
                 // dd($request->all());
                 $data = MasterSemester::select('*');
-                $data = $data->withTrashed();
                 $data = $data->with(['course']);
                 // $editPermisstion = (Auth::user()->can($modules["table_name"].'-edit')) ? true : false;
                 // $deletePermisstion = (Auth::user()->can($modules["table_name"].'-delete')) ? true : false;

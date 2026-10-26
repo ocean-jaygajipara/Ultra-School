@@ -69,7 +69,7 @@ class MasterDivisionController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterDivision::withTrashed()->orderBy('id', 'desc');
+                $data = MasterDivision::query()->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->filter(function ($query) use ($request) {
@@ -448,7 +448,6 @@ class MasterDivisionController extends Controller
     protected function buildDivisionExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterDivision::query()
-            ->withTrashed()
             ->orderByDesc('id');
 
         if ($scope === 'all') {

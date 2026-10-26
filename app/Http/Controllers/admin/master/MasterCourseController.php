@@ -94,7 +94,6 @@ class MasterCourseController extends Controller
 
             if ($request->ajax()) {
                 $data = MasterCourse::select('*');
-                $data = $data->withTrashed();
 
                 $returnData = Datatables::of($data)
                     ->addIndexColumn()
@@ -585,7 +584,7 @@ class MasterCourseController extends Controller
 
     protected function buildCourseExportQuery(Request $request, string $scope): Builder
     {
-        $query = MasterCourse::query()->withTrashed()->orderByDesc('id');
+        $query = MasterCourse::query()->orderByDesc('id');
 
         if ($scope === 'all') {
             return $query;

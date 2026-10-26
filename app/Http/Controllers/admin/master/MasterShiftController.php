@@ -128,7 +128,6 @@ class MasterShiftController extends Controller
             if ($request->ajax()) {
                 // dd($request->all());
                 $data = MasterShift::select('*');
-                $data = $data->withTrashed();
                 $data = $data->with(['batch', 'course', 'class']);
                 // $editPermisstion = (Auth::user()->can($modules["table_name"].'-edit')) ? true : false;
                 // $deletePermisstion = (Auth::user()->can($modules["table_name"].'-delete')) ? true : false;
@@ -664,7 +663,6 @@ class MasterShiftController extends Controller
     protected function buildShiftExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterShift::query()
-            ->withTrashed()
             ->with(['course', 'batch', 'class'])
             ->orderByDesc('id');
 

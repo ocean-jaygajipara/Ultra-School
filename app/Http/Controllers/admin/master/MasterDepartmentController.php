@@ -72,7 +72,7 @@ class MasterDepartmentController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterDepartment::withTrashed()
+                $data = MasterDepartment::query()
                     ->orderBy('id', 'desc');
                 // dd('hello');
 
@@ -519,7 +519,6 @@ class MasterDepartmentController extends Controller
     protected function buildDepartmentExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterDepartment::query()
-            ->withTrashed()
             ->orderByDesc('id');
 
         if ($scope === 'all') {

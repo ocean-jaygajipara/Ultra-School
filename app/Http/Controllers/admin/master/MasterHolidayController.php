@@ -61,7 +61,7 @@ class MasterHolidayController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterHoliday::withTrashed()->orderBy('from_date', 'desc')->orderBy('id', 'desc');
+                $data = MasterHoliday::query()->orderBy('from_date', 'desc')->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->addIndexColumn()

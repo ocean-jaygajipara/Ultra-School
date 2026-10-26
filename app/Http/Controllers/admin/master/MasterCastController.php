@@ -69,7 +69,7 @@ class MasterCastController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterCast::withTrashed()->orderBy('id', 'desc');
+                $data = MasterCast::query()->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->filter(function ($query) use ($request) {
@@ -445,7 +445,6 @@ class MasterCastController extends Controller
     protected function buildCastExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterCast::query()
-            ->withTrashed()
             ->orderByDesc('id');
 
         if ($scope === 'all') {

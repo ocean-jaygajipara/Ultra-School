@@ -81,7 +81,6 @@ class MasterBatchController extends Controller
             if ($request->ajax()) {
                 // dd($request->all());
                 $data = MasterBatch::select('*');
-                $data = $data->withTrashed();
                 $data = $data->with(['course']);
 
                 $returnData = Datatables::of($data)
@@ -487,7 +486,6 @@ class MasterBatchController extends Controller
     protected function buildBatchExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterBatch::query()
-            ->withTrashed()
             ->with(['course'])
             ->orderByDesc('id');
 

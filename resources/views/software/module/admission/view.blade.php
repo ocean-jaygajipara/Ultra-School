@@ -2,6 +2,8 @@
 <html lang="en">
 
 <head>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('admin/assets/images/favicon/favicon-32.png') }}" />
+
     <meta charset="UTF-8">
     <title>Shree Patel Vidhya Mandir Science College - Keshod Admission Form</title>
     <style>

@@ -79,7 +79,7 @@ class MasterBusRouteVillageController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterBusRouteVillage::withTrashed()->orderBy('id', 'desc');
+                $data = MasterBusRouteVillage::query()->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->filter(function ($query) use ($request) {
@@ -446,8 +446,6 @@ class MasterBusRouteVillageController extends Controller
             $query->where('status', 'active')->whereNull('deleted_at');
         } elseif ($filterStatus === 'inactive') {
             $query->where('status', 'inactive')->whereNull('deleted_at');
-        } else {
-            $query->withTrashed();
         }
 
         $villages = $query->orderBy('id', 'desc')->get();
@@ -484,8 +482,6 @@ class MasterBusRouteVillageController extends Controller
             $query->where('status', 'active')->whereNull('deleted_at');
         } elseif ($filterStatus === 'inactive') {
             $query->where('status', 'inactive')->whereNull('deleted_at');
-        } else {
-            $query->withTrashed();
         }
 
         $records = $query->orderBy('id', 'desc')->get();

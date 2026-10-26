@@ -69,7 +69,7 @@ class MasterReligionController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterReligion::withTrashed()->orderBy('id', 'desc');
+                $data = MasterReligion::query()->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->filter(function ($query) use ($request) {
@@ -444,7 +444,6 @@ class MasterReligionController extends Controller
     protected function buildReligionExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterReligion::query()
-            ->withTrashed()
             ->orderByDesc('id');
 
         if ($scope === 'all') {

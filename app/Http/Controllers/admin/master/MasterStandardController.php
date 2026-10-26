@@ -69,7 +69,7 @@ class MasterStandardController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterStandard::withTrashed()->orderBy('id', 'asc');
+                $data = MasterStandard::query()->orderBy('id', 'asc');
 
                 return Datatables::of($data)
                     ->filter(function ($query) use ($request) {
@@ -444,7 +444,6 @@ class MasterStandardController extends Controller
     protected function buildStandardExportQuery(Request $request, string $scope): Builder
     {
         $query = MasterStandard::query()
-            ->withTrashed()
             ->orderBy('id');
 
         if ($scope === 'all') {

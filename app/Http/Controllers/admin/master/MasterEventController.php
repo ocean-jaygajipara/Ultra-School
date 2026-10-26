@@ -56,7 +56,7 @@ class MasterEventController extends Controller
             View::share("columns", $columns);
 
             if ($request->ajax()) {
-                $data = MasterEvent::withTrashed()->orderBy('id', 'desc');
+                $data = MasterEvent::query()->orderBy('id', 'desc');
 
                 return Datatables::of($data)
                     ->addIndexColumn()

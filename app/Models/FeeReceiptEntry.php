@@ -30,11 +30,10 @@ class FeeReceiptEntry extends Model
         'term_fee',
         'school_fee',
         'vehicle_fee',
+        'vehicle_fee_part',
         'total',
         'less_amount',
         'net_amount',
-        'print_copies',
-        'is_preview',
         'mode',
         'remark',
         'fee_snapshot',
@@ -54,8 +53,6 @@ class FeeReceiptEntry extends Model
         'total'           => 'float',
         'less_amount'     => 'float',
         'net_amount'      => 'float',
-        'print_copies'    => 'integer',
-        'is_preview'      => 'boolean',
         'fee_snapshot'    => 'array',
     ];
 
