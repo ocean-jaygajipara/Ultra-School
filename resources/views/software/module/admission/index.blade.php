@@ -280,6 +280,12 @@
             padding: 4px 10px; border-radius: 8px; background: #eef7fd; color: #1f2580;
             font-weight: 700; border: 1px solid #d5eaf6;
         }
+        .si-fee-paid, .si-fee-unpaid {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 72px; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: .8rem;
+        }
+        .si-fee-paid { background: #e8f8ef; color: #157347; border: 1px solid #b7ebc9; }
+        .si-fee-unpaid { background: #fff1f1; color: #e1141c; border: 1px solid #f7c3c5; }
 
         @media (max-width: 991.98px) {
             .si-main { padding: 22px 18px; }
@@ -557,6 +563,7 @@
                             'attendance' => 'Attendance',
                         ]],
                         'class_history' => ['Class History', 'ti-list-details', []],
+                        'fee_details' => ['Fee Details', 'ti-receipt', []],
                     ];
                     $dateFields = ['admission_date', 'date_of_birth', 'lc_date'];
                     $wideFields = ['temporary_address', 'permanent_address', 'last_school_name', 'bus_route_village'];
@@ -615,7 +622,26 @@
                             <div class="tab-content si-tab-content">
                                 @foreach ($infoSections as $key => [$title, $icon, $fields])
                                     <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="si-tab-{{ $key }}" role="tabpanel">
-                                        @if ($key === 'class_history')
+                                        @if ($key === 'fee_details')
+                                            <div class="si-history-wrap table-responsive">
+                                                <table class="si-history-table" id="siFeeDetailsTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Standard</th>
+                                                            <th>Academic Year</th>
+                                                            <th>Term</th>
+                                                            <th class="text-end">Amount</th>
+                                                            <th class="text-center">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="siFeeDetailsBody">
+                                                        <tr>
+                                                            <td colspan="5" class="si-empty">No fee details.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @elseif ($key === 'class_history')
                                             <div class="si-history-wrap table-responsive">
                                                 <table class="si-history-table" id="siClassHistoryTable">
                                                     <thead>
@@ -913,6 +939,30 @@
             });
 
             $('#infoModal .si-tabs .nav-link').first().tab('show');
+            fillFeeDetails([]);
+        }
+
+        function fillFeeDetails(rows) {
+            const $body = $('#siFeeDetailsBody').empty();
+            if (!rows || !rows.length) {
+                $body.append('<tr><td colspan="5" class="si-empty">No fee details.</td></tr>');
+                return;
+            }
+            rows.forEach(function(row) {
+                const status = row.status || '—';
+                const badge = status === 'Paid'
+                    ? '<span class="si-fee-paid">Paid</span>'
+                    : (status === 'Unpaid' ? '<span class="si-fee-unpaid">Unpaid</span>' : status);
+                $body.append(
+                    '<tr>' +
+                    '<td class="col-std">' + (row.standard || '—') + '</td>' +
+                    '<td>' + (row.academic_year || '—') + '</td>' +
+                    '<td>' + (row.term || '—') + '</td>' +
+                    '<td class="text-end">' + (row.amount || '0.00') + '</td>' +
+                    '<td class="text-center">' + badge + '</td>' +
+                    '</tr>'
+                );
+            });
         }
 
         function fillClassHistory(rows) {
@@ -950,6 +1000,7 @@
                         if (data) {
                             fillStudentInfo(data);
                             fillClassHistory(response.class_history || []);
+                            fillFeeDetails(response.fee_details || []);
                             $('#infoModal').modal('show');
                         } else {
                             toastr.error('Student data not found');

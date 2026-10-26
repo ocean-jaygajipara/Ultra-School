@@ -8,7 +8,10 @@ use App\Imports\StudentImport;
 use Illuminate\Http\Request;
 use App\Models\Admission;
 use App\Models\AdmissionClassHistory;
+use App\Models\FeeReceiptEntry;
+use App\Models\Master\FeeMaster;
 use App\Models\Master\MasterAcademicYear;
+use App\Models\Master\MasterStandard;
 use App\Models\EducationDetails;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -614,7 +617,90 @@ class AdmissionController extends Controller
             'student' => $student,
             'courses' => $studentCourses,
             'class_history' => $classHistory,
+            'fee_details' => $student ? $this->studentFeeDetails($student) : [],
         ]);
+    }
+
+    protected function studentFeeDetails(Admission $student): array
+    {
+        $histories = AdmissionClassHistory::with(['academicYear', 'standard'])
+            ->where('admission_id', $student->id)
+            ->get();
+
+        $yearByStandard = [];
+        foreach ($histories as $history) {
+            $yearByStandard[$history->standard_id] = $history;
+        }
+        if ($student->current_std_id && !isset($yearByStandard[$student->current_std_id])) {
+            $yearByStandard[$student->current_std_id] = null;
+        }
+        if ($yearByStandard === []) {
+            return [];
+        }
+
+        $standards = MasterStandard::query()
+            ->whereIn('id', array_keys($yearByStandard))
+            ->orderBy('id')
+            ->get();
+        $masters = FeeMaster::query()->where('status', 'active')->get();
+        $receipts = FeeReceiptEntry::query()
+            ->where(function ($query) use ($student) {
+                $query->where('admission_id', $student->id);
+                if (trim((string) $student->gr_no) !== '') {
+                    $query->orWhere('gr_no', $student->gr_no);
+                }
+            })
+            ->get();
+        $years = MasterAcademicYear::query()->get()->keyBy('id');
+        $terms = ['FIRST' => 'First Term', 'SECOND' => 'Second Term'];
+
+        $rows = [];
+        $open = [];
+        foreach ($standards as $standard) {
+            $history = $yearByStandard[$standard->id] ?? null;
+            $yearId = (int) ($history->academic_year_id ?? $student->academic_year_id);
+            $yearName = $history?->academicYear?->name ?? ($years->get($yearId)?->name ?? '—');
+
+            foreach ($terms as $term => $label) {
+                $master = $masters->first(fn ($row) => (int) $row->standard_id === (int) $standard->id
+                    && (string) $row->term === $term
+                    && (int) $row->academic_year_id === $yearId)
+                    ?: $masters->first(fn ($row) => (int) $row->standard_id === (int) $standard->id
+                        && (string) $row->term === $term);
+                $amount = $master ? (float) $master->total : 0.0;
+                $paid = $receipts->contains(fn ($receipt) => (int) $receipt->standard_id === (int) $standard->id
+                    && (string) $receipt->term === $term);
+
+                $rows[] = [
+                    'standard' => $standard->name,
+                    'academic_year' => $yearName,
+                    'term' => $label,
+                    'amount' => $amount,
+                    'paid' => $paid,
+                ];
+                if (!$paid && $amount > 0) {
+                    $open[] = count($rows) - 1;
+                }
+            }
+        }
+
+        $pool = (float) $receipts->sum('last_yr_pending');
+        foreach ($open as $index) {
+            $due = $rows[$index]['amount'];
+            if (($pool + 0.009) < $due) {
+                continue;
+            }
+            $rows[$index]['paid'] = true;
+            $pool = round($pool - $due, 2);
+        }
+
+        return array_map(fn ($row) => [
+            'standard' => $row['standard'],
+            'academic_year' => $row['academic_year'],
+            'term' => $row['term'],
+            'amount' => number_format($row['amount'], 2),
+            'status' => $row['paid'] ? 'Paid' : ($row['amount'] > 0 ? 'Unpaid' : '—'),
+        ], $rows);
     }
 
     public function edit(string $id)
