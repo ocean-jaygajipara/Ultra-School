@@ -33,7 +33,7 @@ class FeeReceiptEntryController extends Controller
             'folder_path'       => 'software.module.fee-receipt-entry',
             'route'             => 'fee-receipt-entry',
             'table_name'        => (new FeeReceiptEntry())->getTable(),
-            'permission_prefix' => 'fees-collection',
+            'permission_prefix' => 'fee-receipt-entry',
         ];
     }
 
@@ -139,7 +139,7 @@ class FeeReceiptEntryController extends Controller
 
     public function exportDayReport()
     {
-        $this->authorizeFeeList();
+        $this->authorizeDayReport();
 
         $rows = FeeReceiptEntry::with('standard')->whereNotNull('date')->orderByDesc('date')->orderByDesc('id')->get();
         $data = $rows->map(fn ($row) => [
@@ -160,7 +160,7 @@ class FeeReceiptEntryController extends Controller
 
     public function exportLessReport()
     {
-        $this->authorizeFeeList();
+        $this->authorizeLessReport();
 
         $rows = $this->lessReportQuery($this->currentLessReportFilters())->get();
         $data = $rows->values()->map(fn ($row, $index) => [
@@ -182,6 +182,28 @@ class FeeReceiptEntryController extends Controller
     protected function authorizeFeeList(): void
     {
         if (!Helper::directCan($this->modules['permission_prefix'] . '-list')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+    }
+
+    protected function authorizeDayReport(): void
+    {
+        if (!Helper::directCan('fee-receipt-entry-day-report')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+    }
+
+    protected function authorizeLessReport(): void
+    {
+        if (!Helper::directCan('fee-receipt-entry-less-report')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+    }
+
+    protected function authorizeFeeStatusReport(string $kind): void
+    {
+        $perm = $kind === 'paid' ? 'fee-receipt-entry-paid-report' : 'fee-receipt-entry-unpaid-report';
+        if (!Helper::directCan($perm)) {
             abort(403, 'User does not have the right permissions.');
         }
     }
@@ -457,9 +479,7 @@ class FeeReceiptEntryController extends Controller
 
     public function dayReport(Request $request)
     {
-        if (!Helper::directCan($this->modules['permission_prefix'] . '-list')) {
-            abort(403, 'User does not have the right permissions.');
-        }
+        $this->authorizeDayReport();
 
         $modules = $this->modules;
         $modules['title'] = 'Day to Day Fees';
@@ -482,9 +502,7 @@ class FeeReceiptEntryController extends Controller
 
     public function dayReportPrint(Request $request)
     {
-        if (!Helper::directCan($this->modules['permission_prefix'] . '-list')) {
-            abort(403, 'User does not have the right permissions.');
-        }
+        $this->authorizeDayReport();
 
         $rows = FeeReceiptEntry::with('standard')->whereNotNull('date')->orderBy('date')->orderBy('id')->get();
         $days = $rows->groupBy(fn ($row) => $row->date->format('Y-m-d'));
@@ -495,9 +513,7 @@ class FeeReceiptEntryController extends Controller
 
     public function lessReport(Request $request)
     {
-        if (!Helper::directCan($this->modules['permission_prefix'] . '-list')) {
-            abort(403, 'User does not have the right permissions.');
-        }
+        $this->authorizeLessReport();
 
         if ($request->isMethod('post') || $request->query->count() > 0) {
             if ($request->boolean('reset_filter')) {
@@ -530,9 +546,7 @@ class FeeReceiptEntryController extends Controller
 
     public function lessReportPrint(Request $request)
     {
-        if (!Helper::directCan($this->modules['permission_prefix'] . '-list')) {
-            abort(403, 'User does not have the right permissions.');
-        }
+        $this->authorizeLessReport();
 
         $filters = $this->currentLessReportFilters();
         $rows = $this->lessReportQuery($filters)->get();
@@ -641,7 +655,7 @@ class FeeReceiptEntryController extends Controller
 
     protected function renderFeeStatusReport(Request $request, string $kind)
     {
-        $this->authorizeFeeList();
+        $this->authorizeFeeStatusReport($kind);
 
         if ($request->ajax()) {
             return $this->feeStatusDataTable($kind);
@@ -701,7 +715,7 @@ class FeeReceiptEntryController extends Controller
 
     protected function printFeeStatusReport(string $kind)
     {
-        $this->authorizeFeeList();
+        $this->authorizeFeeStatusReport($kind);
 
         $meta = $this->feeStatusMeta($kind);
         $filters = $this->currentFeeStatusFilters($kind);
@@ -726,7 +740,7 @@ class FeeReceiptEntryController extends Controller
 
     protected function exportFeeStatusReport(string $kind)
     {
-        $this->authorizeFeeList();
+        $this->authorizeFeeStatusReport($kind);
 
         $meta = $this->feeStatusMeta($kind);
         $rows = $this->feeStatusRows($kind, $this->currentFeeStatusFilters($kind));

@@ -272,7 +272,7 @@ class BusRouteStudentReportController extends Controller
 
     protected function authorizeReport(): void
     {
-        if (!Helper::directCanAny(['bus-route-village-list', 'class-report-list', 'fees-collection-list'])) {
+        if (!Helper::directCan('bus-route-report-list')) {
             abort(403, 'User does not have the right permissions.');
         }
     }

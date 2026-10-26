@@ -73,6 +73,16 @@ class PermissionTableSeeder extends Seeder
                 'attedance-edit',
                 'attedance-delete',
             ],
+            'Fee Receipt Entry' => [
+                'fee-receipt-entry-list',
+                'fee-receipt-entry-create',
+                'fee-receipt-entry-edit',
+                'fee-receipt-entry-delete',
+                'fee-receipt-entry-day-report',
+                'fee-receipt-entry-less-report',
+                'fee-receipt-entry-paid-report',
+                'fee-receipt-entry-unpaid-report',
+            ],
             'Fees-collection' => [
                 'fees-collection-list',
                 'fees-collection-create',
@@ -164,6 +174,9 @@ class PermissionTableSeeder extends Seeder
             ],
             'class-report' => [
                 'class-report-list',
+            ],
+            'bus-route-report' => [
+                'bus-route-report-list',
             ],
             'fee-master' => [
                 'fee-master-list',

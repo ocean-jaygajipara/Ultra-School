@@ -191,7 +191,7 @@
         </li>
         @enddirectCanAny
 
-        @directCanAny(['class-report-list', 'bus-route-village-list', 'fees-collection-list'])
+        @directCanAny(['class-report-list', 'bus-route-report-list'])
         <li class="menu-item {{ in_array($sidebar_active, ['class-report', 'bus-route-report'], true) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-report-analytics me-2"></i>
@@ -205,13 +205,13 @@
                     </a>
                 </li>
                 @enddirectCan
-                @directCanAny(['bus-route-village-list', 'class-report-list', 'fees-collection-list'])
+                @directCan('bus-route-report-list')
                 <li class="menu-item {{ $sidebar_active == 'bus-route-report' ? 'active' : '' }}">
                     <a href="{{ route('bus-route-report.index') }}" class="menu-link">
                         <div data-i18n="Bus Route Wise Students">Bus Route Wise Students</div>
                     </a>
                 </li>
-                @enddirectCanAny
+                @enddirectCan
             </ul>
         </li>
         @enddirectCanAny
@@ -277,20 +277,24 @@
 
 
         @directCanAny([
-            'fees-collection-list',
-            'fees-collection-create',
-            'fees-collection-edit',
-            'fees-collection-delete',
+            'fee-receipt-entry-list',
+            'fee-receipt-entry-create',
+            'fee-receipt-entry-edit',
+            'fee-receipt-entry-delete',
+            'fee-receipt-entry-day-report',
+            'fee-receipt-entry-less-report',
+            'fee-receipt-entry-paid-report',
+            'fee-receipt-entry-unpaid-report',
         ])
         <li
             class="menu-item {{ $sidebar_active == 'fee-receipt-entry' ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-receipt me-2"></i>
-                <div data-i18n="Fees Collection">Fees Collection</div>
+                <div data-i18n="Fee Entry">Fee Entry</div>
             </a>
             <ul class="menu-sub">
 
-                @directCan('fees-collection-create')
+                @directCan('fee-receipt-entry-create')
                 <li class="menu-item {{ $current_route == 'fee-receipt-entry.create' ? 'active' : '' }}">
                     <a href="{{ route('fee-receipt-entry.create') }}" class="menu-link">
                         <div data-i18n="Fee Receipt Entry">Fee Receipt Entry</div>
@@ -298,7 +302,7 @@
                 </li>
                 @enddirectCan
 
-                @directCan('fees-collection-list')
+                @directCan('fee-receipt-entry-list')
                 <li class="menu-item {{ $current_route == 'fee-receipt-entry.index' ? 'active' : '' }}">
                     <a href="{{ route('fee-receipt-entry.index') }}" class="menu-link">
                         <div data-i18n="Fee Receipt List">Fee Receipt List</div>
@@ -306,22 +310,31 @@
                 </li>
                 @enddirectCan
 
-                @directCan('fees-collection-list')
+                @directCan('fee-receipt-entry-day-report')
                 <li class="menu-item {{ $current_route == 'fee-receipt-entry.day-report' ? 'active' : '' }}">
                     <a href="{{ route('fee-receipt-entry.day-report') }}" class="menu-link">
                         <div data-i18n="Day to Day Fees">Day to Day Fees</div>
                     </a>
                 </li>
+                @enddirectCan
+
+                @directCan('fee-receipt-entry-less-report')
                 <li class="menu-item {{ $current_route == 'fee-receipt-entry.less-report' ? 'active' : '' }}">
                     <a href="{{ route('fee-receipt-entry.less-report') }}" class="menu-link">
                         <div data-i18n="Less Report">Less Report</div>
                     </a>
                 </li>
+                @enddirectCan
+
+                @directCan('fee-receipt-entry-paid-report')
                 <li class="menu-item {{ $current_route == 'fee-receipt-entry.paid-report' ? 'active' : '' }}">
                     <a href="{{ route('fee-receipt-entry.paid-report') }}" class="menu-link">
                         <div data-i18n="Paid Fee Report">Paid Fee Report</div>
                     </a>
                 </li>
+                @enddirectCan
+
+                @directCan('fee-receipt-entry-unpaid-report')
                 <li class="menu-item {{ $current_route == 'fee-receipt-entry.unpaid-report' ? 'active' : '' }}">
                     <a href="{{ route('fee-receipt-entry.unpaid-report') }}" class="menu-link">
                         <div data-i18n="Unpaid Report">Unpaid Report</div>
