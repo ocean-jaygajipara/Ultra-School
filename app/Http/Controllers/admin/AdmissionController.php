@@ -155,9 +155,6 @@ class AdmissionController extends Controller
 
         $modules['course-register_add'] = Helper::directCan('course-register-create');
 
-        $modules['fees-collection-create'] = Helper::directCan('fees-collection-create');
-        $modules['fees-collection-edit'] = Helper::directCan('fees-collection-edit');
-
         // $modules['permission_add'] = Helper::directCan($modules['permission_prefix'] . '-create');
 
         if (!$modules['permission_list']) {

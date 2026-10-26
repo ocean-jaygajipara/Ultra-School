@@ -178,7 +178,7 @@
 @section('content')
     <div class="d-flex justify-content-lg-between px-1">
         @include('software.includes.breadcrumb', [
-            'breadcrumbArray' => [['title' => 'Fees Collection', 'url' => ''], ['title' => $page_title, 'url' => '']],
+            'breadcrumbArray' => [['title' => 'Fee Entry', 'url' => route('fee-receipt-entry.index')], ['title' => $page_title, 'url' => '']],
             'route' => $route,
             'show_add_btn' => false,
             'show_filter_btn' => false,
@@ -318,6 +318,38 @@
                     if (json && json.total_amount_text) {
                         $('#yajra-datatables tfoot th:last').text(json.total_amount_text);
                     }
+
+                    @if ($kind === 'unpaid')
+                    // Merge Sr, GR No, Roll, Student, Std, Division for the same student
+                    var tableBody = $('#yajra-datatables tbody');
+                    var mergeCols = [0, 1, 2, 3, 4, 5]; // Sr, GR No, Roll, Student, Std, Division
+
+                    mergeCols.forEach(function (colIdx) {
+                        var prevCell = null;
+                        var prevKey = null;
+                        var rowspan = 1;
+
+                        tableBody.find('tr').each(function () {
+                            var row = $(this);
+                            var cell = row.find('td').eq(colIdx);
+                            // Student identification key from GR No (col 1) and Student Name (col 3)
+                            var studentKey = row.find('td').eq(1).text().trim() + '||' + row.find('td').eq(3).text().trim();
+
+                            if (prevCell && prevKey === studentKey && studentKey !== '' && studentKey !== '—||—') {
+                                rowspan++;
+                                prevCell.attr('rowspan', rowspan);
+                                prevCell.css('vertical-align', 'middle');
+                                cell.hide();
+                            } else {
+                                prevCell = cell;
+                                prevKey = studentKey;
+                                rowspan = 1;
+                                cell.show();
+                                cell.removeAttr('rowspan');
+                            }
+                        });
+                    });
+                    @endif
                 }
             });
         });

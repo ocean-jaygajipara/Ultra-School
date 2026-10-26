@@ -35,17 +35,45 @@
             </tr>
         </thead>
         <tbody>
-            @forelse ($rows as $row)
-                <tr>
-                    @foreach ($row['cells'] as $cell)
-                        <td class="{{ !empty($cell['end']) ? 'text-end' : '' }}">{{ $cell['text'] }}</td>
+            @if ($meta['kind'] === 'unpaid')
+                @php
+                    $grouped = $rows->groupBy(function ($row) {
+                        return $row['student_key'] ?? ($row['cells'][1]['text'] . '||' . $row['cells'][3]['text']);
+                    });
+                @endphp
+                @forelse ($grouped as $studentRows)
+                    @foreach ($studentRows as $idx => $row)
+                        <tr>
+                            @if ($idx === 0)
+                                <td rowspan="{{ $studentRows->count() }}" style="vertical-align: middle;">{{ $row['cells'][0]['text'] }}</td>
+                                <td rowspan="{{ $studentRows->count() }}" style="vertical-align: middle;">{{ $row['cells'][1]['text'] }}</td>
+                                <td rowspan="{{ $studentRows->count() }}" style="vertical-align: middle;">{{ $row['cells'][2]['text'] }}</td>
+                                <td rowspan="{{ $studentRows->count() }}" style="vertical-align: middle;">{{ $row['cells'][3]['text'] }}</td>
+                                <td rowspan="{{ $studentRows->count() }}" style="vertical-align: middle;">{{ $row['cells'][4]['text'] }}</td>
+                                <td rowspan="{{ $studentRows->count() }}" style="vertical-align: middle;">{{ $row['cells'][5]['text'] }}</td>
+                            @endif
+                            <td>{{ $row['cells'][6]['text'] }}</td>
+                            <td class="text-end">{{ $row['cells'][7]['text'] }}</td>
+                        </tr>
                     @endforeach
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="{{ count($meta['columns']) }}" class="text-center">{{ $meta['empty'] }}</td>
-                </tr>
-            @endforelse
+                @empty
+                    <tr>
+                        <td colspan="{{ count($meta['columns']) }}" class="text-center">{{ $meta['empty'] }}</td>
+                    </tr>
+                @endforelse
+            @else
+                @forelse ($rows as $row)
+                    <tr>
+                        @foreach ($row['cells'] as $cell)
+                            <td class="{{ !empty($cell['end']) ? 'text-end' : '' }}">{{ $cell['text'] }}</td>
+                        @endforeach
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="{{ count($meta['columns']) }}" class="text-center">{{ $meta['empty'] }}</td>
+                    </tr>
+                @endforelse
+            @endif
         </tbody>
         @if ($rows->isNotEmpty())
             <tfoot>

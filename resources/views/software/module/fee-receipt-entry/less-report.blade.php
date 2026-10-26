@@ -189,7 +189,7 @@
 @section('content')
     <div class="d-flex justify-content-lg-between px-1">
         @include('software.includes.breadcrumb', [
-            'breadcrumbArray' => [['title' => 'Fees Collection', 'url' => ''], ['title' => $page_title, 'url' => '']],
+            'breadcrumbArray' => [['title' => 'Fee Entry', 'url' => route('fee-receipt-entry.index')], ['title' => $page_title, 'url' => '']],
             'route' => $route,
             'show_add_btn' => false,
             'show_filter_btn' => false,

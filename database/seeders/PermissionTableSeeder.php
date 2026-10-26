@@ -83,12 +83,6 @@ class PermissionTableSeeder extends Seeder
                 'fee-receipt-entry-paid-report',
                 'fee-receipt-entry-unpaid-report',
             ],
-            'Fees-collection' => [
-                'fees-collection-list',
-                'fees-collection-create',
-                'fees-collection-edit',
-                'fees-collection-delete',
-            ],
             'Issue-certificate' => [
                 'issue-certificate-bonafide-list',
                 'issue-certificate-tc-list',

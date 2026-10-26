@@ -8,10 +8,6 @@
     $route = isset($modules['route']) ? $modules['route'] : null;
     $permisstion_prefix = isset($modules['permisstion_prefix']) ? $modules['permisstion_prefix'] : null;
     $course_register_add = isset($modules['course-register_add']) && $modules['course-register_add'] ? 'true' : 'false';
-    $fees_collection_create =
-        isset($modules['fees-collection-create']) && $modules['fees-collection-create'] ? 'true' : 'false';
-    $fees_collection_edit =
-        isset($modules['fees-collection-edit']) && $modules['fees-collection-edit'] ? 'true' : 'false';
     $exportColumns = $availableExportColumns ?? [];
     $defaultColumns = $defaultExportColumns ?? array_keys($exportColumns);
     $i = 0;

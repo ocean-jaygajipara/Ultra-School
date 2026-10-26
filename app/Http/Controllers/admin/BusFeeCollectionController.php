@@ -29,7 +29,7 @@ class BusFeeCollectionController extends Controller
             'folder_path' => 'software.module.bus-fee-collection',
             'route' => 'bus-fee-collection',
             'table_name' => (new BusFeeCollection())->getTable(),
-            'permission_prefix' => 'fees-collection',
+            'permission_prefix' => 'fee-receipt-entry',
         ];
     }
 

@@ -991,12 +991,14 @@ class FeeReceiptEntryController extends Controller
                 }
 
                 $rows->push([
+                    'student_id' => $student->id,
                     'sort_std' => $studentStd,
                     'sort_div' => (string) ($history->division ?? $student->division),
                     'sort_roll' => (string) ($history->roll_no ?? $student->roll_no),
                     'sort_name' => (string) $student->full_name,
-                    'amount' => $item['due'],
-                    'term' => $item['term'],
+                    'term_sort' => (string) $item['term'],
+                    'amount' => (float) $item['due'],
+                    'term' => (string) $item['term'],
                     'gr' => $student->gr_no ?: '—',
                     'roll' => ($history->roll_no ?? $student->roll_no) ?: '—',
                     'name' => $student->full_name ?: '—',
@@ -1006,30 +1008,41 @@ class FeeReceiptEntryController extends Controller
             }
         }
 
-        return $rows
+        $sorted = $rows
             ->sortBy([
                 ['sort_std', 'asc'],
                 ['sort_div', 'asc'],
                 ['sort_roll', 'asc'],
                 ['sort_name', 'asc'],
-                ['term', 'asc'],
+                ['term_sort', 'asc'],
             ])
-            ->values()
-            ->map(function ($row, $index) {
-                return [
-                    'amount' => $row['amount'],
-                    'cells' => [
-                        ['text' => (string) ($index + 1)],
-                        ['text' => $row['gr'], 'gr' => true],
-                        ['text' => $row['roll']],
-                        ['text' => $row['name'], 'name' => true],
-                        ['text' => $row['std']],
-                        ['text' => $row['division']],
-                        ['text' => $this->feeStatusTermLabel($row['term'])],
-                        ['text' => number_format((float) $row['amount'], 2), 'end' => true],
-                    ],
-                ];
-            });
+            ->values();
+
+        $currentStudentId = null;
+        $studentSr = 0;
+
+        return $sorted->map(function ($row) use (&$currentStudentId, &$studentSr) {
+            if ($row['student_id'] !== $currentStudentId) {
+                $currentStudentId = $row['student_id'];
+                $studentSr++;
+            }
+
+            return [
+                'student_id' => $row['student_id'],
+                'student_key' => $row['student_id'] . '|' . $row['gr'] . '|' . $row['name'],
+                'amount' => $row['amount'],
+                'cells' => [
+                    ['text' => (string) $studentSr],
+                    ['text' => $row['gr'], 'gr' => true],
+                    ['text' => $row['roll']],
+                    ['text' => $row['name'], 'name' => true],
+                    ['text' => $row['std']],
+                    ['text' => $row['division']],
+                    ['text' => $this->feeStatusTermLabel($row['term'])],
+                    ['text' => number_format((float) $row['amount'], 2), 'end' => true],
+                ],
+            ];
+        });
     }
 
     public function print($id)
