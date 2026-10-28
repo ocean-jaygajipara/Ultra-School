@@ -181,109 +181,431 @@
         .crx-empty h5 { font-weight: 700; color: var(--crx-ink); margin-bottom: 6px; }
         .crx-empty p { color: var(--crx-muted); margin: 0; }
 
+        /* --- Report Settings Modal Redesign --- */
+        #classReportSettingsModal .modal-dialog {
+            max-width: 620px;
+            margin: 1.75rem auto;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
         #classReportSettingsModal .modal-content {
-            border: 0; border-radius: 16px; overflow: hidden;
-            box-shadow: 0 24px 48px -16px rgba(15, 23, 42, .35);
+            border: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(31, 37, 128, 0.08);
+            background: #fff;
         }
-        #classReportSettingsModal .modal-header {
-            background: linear-gradient(135deg, #171c6b 0%, #2e3a9e 100%);
-            color: #fff !important; border-bottom: 0; padding: 16px 20px;
-        }
-        #classReportSettingsModal .modal-title {
-            font-weight: 700; font-size: 1.05rem;
-            display: flex; align-items: center; gap: 8px;
+
+        /* Modal Header */
+        #classReportSettingsModal .crx-modal-header {
+            background:
+                radial-gradient(circle at 90% 10%, rgba(245, 180, 0, 0.25), transparent 45%),
+                linear-gradient(135deg, #151a62 0%, #29369e 100%);
             color: #fff !important;
+            border-bottom: 0;
+            padding: 20px 24px;
+            position: relative;
         }
-        #classReportSettingsModal .modal-title i {
-            width: 32px; height: 32px; border-radius: 8px;
-            background: rgba(245, 180, 0, .2); border: 1px solid rgba(245, 180, 0, .45);
-            color: #f5b400; display: inline-flex; align-items: center; justify-content: center;
+        .crx-modal-icon-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(245, 180, 0, 0.16);
+            border: 1.5px solid rgba(245, 180, 0, 0.45);
+            color: #f5b400;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        #classReportSettingsModal .btn-close {
-            background: rgba(255,255,255,.15); opacity: 1; border-radius: 8px;
-            width: 32px; height: 32px; padding: 0;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e");
-            background-size: 12px; background-repeat: no-repeat; background-position: center;
+        .crx-modal-title {
+            color: #ffffff !important;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+            line-height: 1.3;
         }
-        #classReportSettingsModal .btn-close:hover { background-color: rgba(255,255,255,.28); }
-        #classReportSettingsModal .modal-body { padding: 22px 22px 8px; background: #fafbff; }
-        #classReportSettingsModal .modal-footer {
-            border-top: 1px solid #e8ebf5; background: #fff; padding: 14px 20px;
-            display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px;
+        .crx-modal-sub {
+            color: #d2daf5;
+            font-size: 0.8rem;
+            margin-top: 3px;
+            font-weight: 400;
         }
-        #classReportSettingsModal .modal-footer .btn {
-            min-height: 38px; padding: 8px 16px; border-radius: 10px;
-            font-weight: 600; font-size: .875rem;
+        .crx-modal-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            outline: none;
         }
-        #classReportSettingsModal .btn-reset {
-            margin-right: auto;
-            background: #fff1f1; border: 1.5px solid #f7c3c5; color: #e1141c;
-        }
-        #classReportSettingsModal .btn-reset:hover {
-            background: #e1141c; border-color: #e1141c; color: #fff;
-        }
-        #classReportSettingsModal .btn-cancel {
-            background: #fff; border: 1.5px solid #d5dae8; color: #5f6488;
-        }
-        #classReportSettingsModal .btn-cancel:hover {
-            background: #f7f8fd; border-color: #1f2580; color: #1f2580;
-        }
-        #classReportSettingsModal .btn-save {
-            background: #1f2580; border: 1.5px solid #1f2580; color: #fff !important;
-        }
-        #classReportSettingsModal .btn-save:hover {
-            background: #171c6b; border-color: #171c6b; color: #fff !important;
+        .crx-modal-close:hover {
+            background: rgba(239, 68, 68, 0.9);
+            border-color: rgba(239, 68, 68, 0.9);
+            color: #ffffff;
+            transform: rotate(90deg);
         }
 
-        .crx-set-hint {
-            font-size: .85rem; color: var(--crx-muted); margin: 0 0 16px;
-            line-height: 1.45;
+        /* Modal Body */
+        #classReportSettingsModal .crx-modal-body {
+            padding: 22px 24px 16px;
+            background: #f8faff;
         }
-        .crx-set-block {
-            background: #fff; border: 1px solid var(--crx-line);
-            border-radius: 14px; padding: 16px 16px 14px; margin-bottom: 14px;
-        }
-        .crx-set-block .crx-label { margin-bottom: 12px; }
 
+        /* Cards inside modal */
+        .crx-modal-card {
+            background: #ffffff;
+            border: 1px solid #e1e6f4;
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+        }
+        .crx-card-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--crx-ink);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .crx-card-title i {
+            font-size: 1.05rem;
+            color: var(--crx-ink-2);
+        }
+        .crx-card-desc {
+            font-size: 0.8rem;
+            color: var(--crx-muted);
+            margin: 4px 0 14px;
+            line-height: 1.4;
+        }
+
+        /* Quick links */
+        .crx-quick-links {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .crx-link-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--crx-ink-2);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            transition: color 0.15s;
+        }
+        .crx-link-btn:hover {
+            color: #171c6b;
+            text-decoration: underline;
+        }
+        .crx-sep {
+            color: #cbd5e1;
+            font-size: 0.75rem;
+        }
+
+        /* Column grid & tiles */
         .crx-col-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
         }
-        @media (max-width: 767.98px) {
-            .crx-col-grid { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 576px) {
+            .crx-col-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
+        .crx-checkbox-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+        }
         .crx-col-check {
-            display: flex; align-items: center; gap: 8px;
-            min-height: 44px; padding: 10px 12px; border-radius: 10px;
-            border: 1.5px solid var(--crx-line); background: var(--crx-soft);
-            cursor: pointer; margin: 0; user-select: none;
-            transition: border-color .15s, background .15s, box-shadow .15s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1.5px solid #e1e6f4;
+            background: #ffffff;
+            cursor: pointer;
+            margin: 0;
+            user-select: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .crx-col-check:hover {
-            border-color: #c5cce8; background: #fff;
-            box-shadow: 0 2px 8px rgba(31, 37, 128, .06);
+            border-color: #a5b4fc;
+            background: #fcfdff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(31, 37, 128, 0.06);
         }
-        .crx-col-check.is-on,
-        .crx-col-check:has(input:checked) {
-            border-color: var(--crx-ink); background: var(--crx-sky-soft);
-            box-shadow: inset 0 0 0 1px rgba(31, 37, 128, .08);
+        .crx-col-check.is-on {
+            border-color: var(--crx-ink);
+            background: #f0f4ff;
+            box-shadow: 0 2px 8px rgba(31, 37, 128, 0.1);
         }
-        .crx-col-check input {
-            width: 15px; height: 15px; accent-color: var(--crx-ink);
-            flex-shrink: 0; margin: 0;
+        .crx-col-info {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
         }
-        .crx-col-check span {
-            font-size: .82rem; font-weight: 600; color: var(--crx-ink);
-            line-height: 1.2; white-space: nowrap;
+        .crx-col-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #f1f4fb;
+            color: var(--crx-ink);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .crx-col-check.is-on .crx-col-icon {
+            background: var(--crx-ink);
+            color: #ffffff;
+        }
+        .crx-col-title {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+        .crx-col-check.is-on .crx-col-title {
+            color: var(--crx-ink);
+        }
+        .crx-col-check-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 1.5px solid #cbd5e1;
+            background: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            color: transparent;
+            transition: all 0.15s ease-in-out;
+            flex-shrink: 0;
+        }
+        .crx-col-check.is-on .crx-col-check-box {
+            border-color: var(--crx-ink);
+            background: var(--crx-ink);
+            color: #ffffff;
         }
 
-        #classReportSettingsModal .crx-input {
-            background: #fff !important;
-            border-color: #d5dae8 !important;
+        /* Extra Columns Inputs */
+        .crx-tag-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: #eef3ff;
+            color: var(--crx-ink);
+            border: 1px solid #d4defc;
         }
-        #classReportSettingsModal .crx-field > i { color: #7a82a8; }
+        .crx-input-label {
+            display: block;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 6px;
+            letter-spacing: 0.02em;
+        }
+        .crx-label-hint {
+            font-weight: 400;
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+        .crx-field-wrap {
+            position: relative;
+        }
+        .crx-field-wrap > i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7b84a9;
+            font-size: 1.05rem;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+        .crx-field-wrap:focus-within > i {
+            color: var(--crx-ink);
+        }
+        .crx-modal-input {
+            width: 100%;
+            height: 44px;
+            padding: 0 14px 0 42px;
+            border-radius: 11px;
+            border: 1.5px solid #d5daea;
+            background: #ffffff;
+            font-size: 0.88rem;
+            color: var(--crx-ink);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .crx-modal-input:focus {
+            outline: none;
+            border-color: var(--crx-ink);
+            box-shadow: 0 0 0 4px rgba(31, 37, 128, 0.1);
+            background: #ffffff;
+        }
+        .crx-modal-input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* Presets Bar */
+        .crx-presets-bar {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .crx-presets-label {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .crx-presets-label i {
+            color: #eab308;
+            font-size: 0.9rem;
+        }
+        .crx-preset-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .crx-chip {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            line-height: 1.2;
+        }
+        .crx-chip:hover {
+            background: #e2e8f0;
+            color: var(--crx-ink);
+            border-color: #cbd5e1;
+        }
+        .crx-chip.is-active {
+            background: var(--crx-ink);
+            color: #ffffff;
+            border-color: var(--crx-ink);
+        }
+        .crx-chip-clear {
+            background: #fff1f2;
+            border-color: #fecdd3;
+            color: #e11d48;
+        }
+        .crx-chip-clear:hover {
+            background: #e11d48;
+            border-color: #e11d48;
+            color: #ffffff;
+        }
+
+        /* Modal Footer */
+        #classReportSettingsModal .crx-modal-footer {
+            border-top: 1px solid #edf0f7;
+            background: #ffffff;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .crx-btn-reset {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.84rem;
+            padding: 9px 15px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .crx-btn-reset:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        .crx-btn-cancel {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.84rem;
+            padding: 9px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .crx-btn-cancel:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        .crx-btn-save {
+            background: linear-gradient(135deg, #1f2580 0%, #2e3a9e 100%);
+            border: 1.5px solid #1f2580;
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 0.84rem;
+            padding: 9px 22px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(31, 37, 128, 0.25);
+            transition: all 0.2s;
+        }
+        .crx-btn-save:hover {
+            background: linear-gradient(135deg, #181d68 0%, #242f88 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(31, 37, 128, 0.35);
+            color: #ffffff !important;
+        }
     </style>
 @endsection
 
@@ -428,63 +750,139 @@
 
     {{-- Report Settings Modal --}}
     <div class="modal fade" id="classReportSettingsModal" tabindex="-1" aria-labelledby="classReportSettingsLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 640px;">
+        <div class="modal-dialog modal-dialog-centered">
             <form method="POST" action="{{ route('class-report.settings') }}" class="modal-content crx">
                 @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="classReportSettingsLabel">
-                        <i class="ti ti-adjustments-horizontal"></i>
-                        Report Settings
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header crx-modal-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="crx-modal-icon-badge">
+                            <i class="ti ti-adjustments-horizontal"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title crx-modal-title mb-0" id="classReportSettingsLabel">Report Settings</h5>
+                            <div class="crx-modal-sub">Customize visible columns &amp; printable blank columns</div>
+                        </div>
+                    </div>
+                    <button type="button" class="crx-modal-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <p class="crx-set-hint">Choose which columns appear in the list, print and Excel export.</p>
 
-                    <div class="crx-set-block">
-                        <label class="crx-label">Show Columns</label>
+                <div class="modal-body crx-modal-body">
+                    {{-- Section 1: Show Columns --}}
+                    <div class="crx-modal-card">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="crx-card-title">
+                                <i class="ti ti-columns"></i>
+                                <span>Show Columns</span>
+                            </div>
+                            <div class="crx-quick-links">
+                                <button type="button" class="crx-link-btn" id="selectAllCols">
+                                    <i class="ti ti-check"></i> Select All
+                                </button>
+                                <span class="crx-sep">•</span>
+                                <button type="button" class="crx-link-btn" id="deselectAllCols">
+                                    <i class="ti ti-x"></i> Deselect All
+                                </button>
+                            </div>
+                        </div>
+                        <div class="crx-card-desc">Select which student data fields appear in the table, print and Excel export.</div>
+
+                        @php
+                            $columnMeta = [
+                                'roll_no'      => ['icon' => 'ti-numbers'],
+                                'student_name' => ['icon' => 'ti-user'],
+                                'gr_no'        => ['icon' => 'ti-id'],
+                                'phone'        => ['icon' => 'ti-phone'],
+                                'birth_date'   => ['icon' => 'ti-calendar'],
+                            ];
+                        @endphp
+
                         <div class="crx-col-grid">
                             @foreach ($availableColumns as $key => $label)
-                                <label class="crx-col-check {{ in_array($key, $filters['columns'], true) ? 'is-on' : '' }}">
+                                @php
+                                    $icon = $columnMeta[$key]['icon'] ?? 'ti-file-text';
+                                    $isOn = in_array($key, $filters['columns'], true);
+                                @endphp
+                                <label class="crx-col-check {{ $isOn ? 'is-on' : '' }}">
                                     <input type="checkbox" name="columns[]" value="{{ $key }}"
-                                        {{ in_array($key, $filters['columns'], true) ? 'checked' : '' }}>
-                                    <span>{{ $label }}</span>
+                                        {{ $isOn ? 'checked' : '' }} class="crx-checkbox-input">
+                                    <div class="crx-col-info">
+                                        <span class="crx-col-icon"><i class="ti {{ $icon }}"></i></span>
+                                        <span class="crx-col-title">{{ $label }}</span>
+                                    </div>
+                                    <span class="crx-col-check-box">
+                                        <i class="ti ti-check"></i>
+                                    </span>
                                 </label>
                             @endforeach
                         </div>
                     </div>
 
-                    <div class="crx-set-block mb-0">
-                        <label class="crx-label">Extra Blank Columns</label>
+                    {{-- Section 2: Extra Blank Columns --}}
+                    <div class="crx-modal-card mb-0">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <div class="crx-card-title">
+                                <i class="ti ti-layout-columns"></i>
+                                <span>Extra Blank Columns</span>
+                            </div>
+                            <span class="crx-tag-badge">For Print &amp; Marks</span>
+                        </div>
+                        <div class="crx-card-desc">Add empty columns on print and export for manual notes, signs, or grades.</div>
+
                         <div class="row g-3">
                             <div class="col-sm-4">
-                                <div class="crx-field">
+                                <label class="crx-input-label" for="extra_columns">
+                                    <i class="ti ti-hash"></i> Column Count
+                                </label>
+                                <div class="crx-field-wrap">
                                     <i class="ti ti-hash"></i>
-                                    <input type="number" id="extra_columns" name="extra_columns" class="crx-input" min="0"
+                                    <input type="number" id="extra_columns" name="extra_columns" class="crx-modal-input" min="0"
                                         max="{{ \App\Http\Controllers\admin\ClassReportController::MAX_EXTRA_COLUMNS }}"
-                                        placeholder="Count e.g. 4"
+                                        placeholder="e.g. 2"
                                         value="{{ $filters['extra_columns'] ?: '' }}">
                                 </div>
                             </div>
                             <div class="col-sm-8">
-                                <div class="crx-field">
-                                    <i class="ti ti-tags"></i>
-                                    <input type="text" id="column_names" name="column_names" class="crx-input"
-                                        placeholder="Names (optional): Sign, Remark, Attendance"
+                                <label class="crx-input-label" for="column_names">
+                                    <i class="ti ti-tag"></i> Header Titles <span class="crx-label-hint">(Optional, comma separated)</span>
+                                </label>
+                                <div class="crx-field-wrap">
+                                    <i class="ti ti-letter-case"></i>
+                                    <input type="text" id="column_names" name="column_names" class="crx-modal-input"
+                                        placeholder="e.g. Sign, Remark, Attendance"
                                         value="{{ $filters['column_names'] }}">
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Quick Presets --}}
+                        <div class="crx-presets-bar">
+                            <span class="crx-presets-label"><i class="ti ti-sparkles"></i> Quick Presets:</span>
+                            <div class="crx-preset-chips">
+                                <button type="button" class="crx-chip" data-count="2" data-names="Sign, Remark">+ Sign &amp; Remark</button>
+                                <button type="button" class="crx-chip" data-count="2" data-names="Attendance, Sign">+ Attendance &amp; Sign</button>
+                                <button type="button" class="crx-chip" data-count="1" data-names="Remark">+ Remark</button>
+                                <button type="button" class="crx-chip crx-chip-clear" id="clearExtraCols" title="Clear blank columns">
+                                    <i class="ti ti-x"></i> Clear
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-reset" id="resetReportColumns">
-                        <i class="ti ti-rotate me-1"></i> Reset Default
+
+                <div class="modal-footer crx-modal-footer">
+                    <button type="button" class="crx-btn-reset" id="resetReportColumns" title="Reset to standard default columns">
+                        <i class="ti ti-rotate"></i>
+                        <span>Reset Defaults</span>
                     </button>
-                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-save">
-                        <i class="ti ti-device-floppy me-1"></i> Save Settings
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="crx-btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="crx-btn-save">
+                            <i class="ti ti-device-floppy"></i>
+                            <span>Save Settings</span>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -509,12 +907,38 @@
 
             $('#classReportSettingsModal').on('change', 'input[name="columns[]"]', syncColCheckState);
 
+            $('#selectAllCols').on('click', function() {
+                $('#classReportSettingsModal input[name="columns[]"]').prop('checked', true);
+                syncColCheckState();
+            });
+
+            $('#deselectAllCols').on('click', function() {
+                $('#classReportSettingsModal input[name="columns[]"]').prop('checked', false);
+                syncColCheckState();
+            });
+
+            $('.crx-chip[data-count]').on('click', function() {
+                var count = $(this).data('count');
+                var names = $(this).data('names');
+                $('#extra_columns').val(count);
+                $('#column_names').val(names);
+                $('.crx-chip').removeClass('is-active');
+                $(this).addClass('is-active');
+            });
+
+            $('#clearExtraCols').on('click', function() {
+                $('#extra_columns').val('');
+                $('#column_names').val('');
+                $('.crx-chip').removeClass('is-active');
+            });
+
             $('#resetReportColumns').on('click', function() {
                 $('#classReportSettingsModal input[name="columns[]"]').each(function() {
                     $(this).prop('checked', defaultColumns.indexOf($(this).val()) !== -1);
                 });
                 $('#extra_columns').val('');
                 $('#column_names').val('');
+                $('.crx-chip').removeClass('is-active');
                 syncColCheckState();
             });
 

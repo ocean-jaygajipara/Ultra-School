@@ -17,6 +17,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -149,51 +150,153 @@ class ClassReportController extends Controller
             $title = 'Class Wise Summary';
         }
 
+        $schoolName = strtoupper($school['name'] ?? config('app.name', 'Ultra School')) . ' - KESHOD';
         $lastCol = Coordinate::stringFromColumnIndex(max(1, count($headers)));
 
-        $sheet->setCellValue('A1', $school['name'] ?? config('app.name'));
-        $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue('A2', $title);
-        $sheet->mergeCells("A2:{$lastCol}2");
-        $sheet->getStyle("A1:{$lastCol}2")->getFont()->setBold(true);
-        $sheet->getStyle('A1')->getFont()->setSize(16);
-        $sheet->getStyle('A2')->getFont()->setSize(12);
-        $sheet->getStyle("A1:{$lastCol}2")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-        $sheet->fromArray($headers, null, 'A4');
-        $sheet->getStyle("A4:{$lastCol}4")->getFont()->setBold(true);
-        $sheet->getStyle("A4:{$lastCol}4")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E7E7FF');
-
-        if ($rows) {
-            $sheet->fromArray($rows, null, 'A5', true);
+        // Locate school logo
+        $logoPath = public_path('admin/assets/images/logo-light.png');
+        if (!is_file($logoPath)) {
+            $logoPath = public_path('uploads/logo/report_logo.png');
+        }
+        if (!is_file($logoPath)) {
+            $logoPath = public_path('uploads/logo/logo.png');
         }
 
-        $lastRow = 4 + count($rows);
+        $hasLogo = is_file($logoPath) && count($headers) >= 2;
+
+        if ($hasLogo) {
+            $sheet->getRowDimension(1)->setRowHeight(30);
+            $sheet->getRowDimension(2)->setRowHeight(22);
+            $sheet->getRowDimension(3)->setRowHeight(20);
+
+            // Merge Column A rows 1-3 for logo
+            $sheet->mergeCells('A1:A3');
+            $sheet->getStyle('A1:A3')->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            // Background fill for header block
+            $sheet->getStyle("A1:{$lastCol}3")->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('FFFFFF');
+
+            // Bottom border under Row 3 to separate header from table cleanly
+            $sheet->getStyle("A3:{$lastCol}3")->getBorders()->getBottom()
+                ->setBorderStyle(Border::BORDER_MEDIUM)
+                ->getColor()->setRGB('1F2580');
+
+            $drawing = new Drawing();
+            $drawing->setName('School Logo');
+            $drawing->setDescription('School Logo');
+            $drawing->setPath($logoPath);
+            $drawing->setHeight(60);
+            $drawing->setCoordinates('A1');
+            $drawing->setOffsetX(8);
+            $drawing->setOffsetY(6);
+            $drawing->setWorksheet($sheet);
+
+            // Row 1: School Name
+            $sheet->setCellValue('B1', $schoolName);
+            $sheet->mergeCells("B1:{$lastCol}1");
+            $sheet->getStyle("B1:{$lastCol}1")->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('1F2580');
+            $sheet->getStyle("B1:{$lastCol}1")->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER)
+                ->setShrinkToFit(true);
+
+            // Row 2: Report Title & Class Name
+            $reportTitleText = $filters['standard']
+                ? 'Class Wise Student List - ' . $this->classLabel($filters)
+                : 'Class Wise Strength Summary';
+            $sheet->setCellValue('B2', $reportTitleText);
+            $sheet->mergeCells("B2:{$lastCol}2");
+            $sheet->getStyle("B2:{$lastCol}2")->getFont()->setBold(true)->setSize(11)->getColor()->setRGB('222222');
+            $sheet->getStyle("B2:{$lastCol}2")->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER)
+                ->setShrinkToFit(true);
+
+            // Row 3: Meta line (concise to prevent any overflow or clipping)
+            $metaText = $filters['standard']
+                ? 'Total Students: ' . count($rows) . '   |   Date: ' . now()->format('d-m-Y h:i A')
+                : 'Total Classes: ' . count($rows) . '   |   Date: ' . now()->format('d-m-Y h:i A');
+            $sheet->setCellValue('B3', $metaText);
+            $sheet->mergeCells("B3:{$lastCol}3");
+            $sheet->getStyle("B3:{$lastCol}3")->getFont()->setSize(9.5)->getColor()->setRGB('555555');
+            $sheet->getStyle("B3:{$lastCol}3")->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER)
+                ->setShrinkToFit(true);
+
+            $headerRowIndex = 4;
+        } else {
+            $sheet->setCellValue('A1', $schoolName);
+            $sheet->mergeCells("A1:{$lastCol}1");
+            $sheet->setCellValue('A2', $title);
+            $sheet->mergeCells("A2:{$lastCol}2");
+            $sheet->getStyle("A1:{$lastCol}2")->getFont()->setBold(true);
+            $sheet->getStyle('A1')->getFont()->setSize(15)->getColor()->setRGB('1F2580');
+            $sheet->getStyle('A2')->getFont()->setSize(11);
+            $sheet->getStyle("A1:{$lastCol}2")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            $headerRowIndex = 3;
+        }
+
+        $sheet->fromArray($headers, null, "A{$headerRowIndex}");
+        $sheet->getRowDimension($headerRowIndex)->setRowHeight(26);
+        $sheet->getStyle("A{$headerRowIndex}:{$lastCol}{$headerRowIndex}")->getFont()->setBold(true)->setSize(10.5)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle("A{$headerRowIndex}:{$lastCol}{$headerRowIndex}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('1F2580');
+        $sheet->getStyle("A{$headerRowIndex}:{$lastCol}{$headerRowIndex}")->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+
+        $dataStartRow = $headerRowIndex + 1;
+        if ($rows) {
+            $sheet->fromArray($rows, null, "A{$dataStartRow}", true);
+        }
+
+        $lastRow = $headerRowIndex + count($rows);
         if (!$filters['standard'] && $rows) {
             $lastRow++;
             $sheet->setCellValue("A{$lastRow}", 'Total');
             $sheet->mergeCells("A{$lastRow}:C{$lastRow}");
             foreach (['D', 'E', 'F', 'G'] as $col) {
-                $sheet->setCellValue("{$col}{$lastRow}", "=SUM({$col}5:{$col}" . ($lastRow - 1) . ')');
+                $sheet->setCellValue("{$col}{$lastRow}", "=SUM({$col}{$dataStartRow}:{$col}" . ($lastRow - 1) . ')');
             }
             $sheet->getStyle("A{$lastRow}:{$lastCol}{$lastRow}")->getFont()->setBold(true);
+            $sheet->getStyle("A{$lastRow}:{$lastCol}{$lastRow}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E7E7FF');
         }
 
-        $sheet->getStyle("A4:{$lastCol}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("A{$headerRowIndex}:{$lastCol}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('D0D7DE');
+
+        for ($r = $dataStartRow; $r <= $lastRow; $r++) {
+            $sheet->getRowDimension($r)->setRowHeight(20);
+            if ($r % 2 === 0) {
+                $sheet->getStyle("A{$r}:{$lastCol}{$r}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F8FAFD');
+            }
+        }
+
         $firstBlankIndex = count($headers) - $blankColumns + 1;
         for ($i = 1; $i <= count($headers); $i++) {
-            $dimension = $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i));
-            if ($blankColumns > 0 && $i >= $firstBlankIndex) {
-                $dimension->setWidth(14);
+            $colLetter = Coordinate::stringFromColumnIndex($i);
+            $dimension = $sheet->getColumnDimension($colLetter);
+
+            if ($colLetter === 'A') {
+                $dimension->setAutoSize(false)->setWidth(14);
+            } elseif ($colLetter === 'B') {
+                $dimension->setAutoSize(false)->setWidth(34);
+            } elseif ($blankColumns > 0 && $i >= $firstBlankIndex) {
+                $dimension->setAutoSize(false)->setWidth(16);
             } else {
                 $dimension->setAutoSize(true);
             }
         }
+
         if ($filters['standard']) {
-            $sheet->getStyle("A4:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("A{$dataStartRow}:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             if ($blankColumns > 0) {
                 $blankStart = Coordinate::stringFromColumnIndex($firstBlankIndex);
-                $sheet->getStyle("{$blankStart}4:{$lastCol}4")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("{$blankStart}{$headerRowIndex}:{$lastCol}{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             }
         }
 
