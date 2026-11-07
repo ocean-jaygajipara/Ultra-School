@@ -16,7 +16,16 @@ class SwitchSchoolDatabaseMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Switch to the active school's database before executing request
+        // Prefer explicit school from API header/body, then session/default.
+        $requestedCode = $request->header('X-School-Code')
+            ?? $request->header('School-Code')
+            ?? $request->input('school_key')
+            ?? $request->input('school_code');
+
+        if (is_string($requestedCode) && SchoolDatabaseManager::exists($requestedCode)) {
+            SchoolDatabaseManager::setActiveSchool($requestedCode);
+        }
+
         $activeCode = SchoolDatabaseManager::getActiveSchoolCode();
         SchoolDatabaseManager::switchDatabase($activeCode);
 

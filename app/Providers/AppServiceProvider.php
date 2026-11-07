@@ -2,12 +2,11 @@
 
 namespace App\Providers;
 
+use App\Helpers\Helper;
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 // use Laravel\Passport\Passport;
@@ -27,15 +26,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        /** This is use for Spaite Direct Permission check */
+        // Menu / blade gates — developer always sees every module (same as Helper::directCan)
         Blade::if('directCan', function ($permission) {
-            $directPermissionArray = Auth::user()->permissions->pluck('name');
-            return Auth::check() && count($directPermissionArray) > 0 && in_array($permission, $directPermissionArray->toArray());
+            return Helper::directCan($permission);
         });
 
-        /** This is use for Spaite Direct Any Permission check */
         Blade::if('directCanAny', function ($permissions) {
-            return Auth::check() && Auth::user()->permissions->whereIn('name', (array) $permissions)->isNotEmpty();
+            return Helper::directCanAny((array) $permissions);
         });
 
         // Passport::loadKeysFrom(__DIR__.'/../secrets/oauth');

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\api\AdminAuthController;
 use App\Http\Controllers\api\ApiStudentController;
 use App\Http\Controllers\api\AuthenticatedController;
 use App\Http\Controllers\api\AuthenticationController;
@@ -12,6 +13,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::any('test', function () {
     return "API Test";
+});
+
+/** Multi-school student login: school -> GR No + mobile -> OTP (send_otp table) */
+Route::get('schools', [AdminAuthController::class, 'schools']);
+Route::post('login/send-otp', [AdminAuthController::class, 'sendOtp']);
+Route::post('login/verify-otp', [AdminAuthController::class, 'verifyOtp']);
+Route::middleware('auth:student-api')->group(function () {
+    Route::match(['get', 'post'], 'me', [AdminAuthController::class, 'me']);
+    Route::post('logout', [AdminAuthController::class, 'logout']);
 });
 
 Route::controller(CommonController::class)->group(function () {

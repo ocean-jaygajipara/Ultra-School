@@ -13,6 +13,7 @@ use App\Http\Controllers\admin\master\MasterHolidayController;
 use App\Http\Controllers\admin\DocumentTypeController;
 use App\Http\Controllers\admin\BusFeeCollectionController;
 use App\Http\Controllers\admin\BusRouteStudentReportController;
+use App\Http\Controllers\admin\DailyAttendanceRegisterController;
 use App\Http\Controllers\admin\FeeReceiptEntryController;
 use App\Http\Controllers\admin\RollNumberListController;
 use App\Http\Controllers\admin\RollNumberGenerateController;
@@ -36,6 +37,8 @@ use App\Http\Controllers\admin\FacultyAttedanceController;
 use App\Http\Controllers\admin\DailyAttedanceController;
 use App\Http\Controllers\admin\BioMaxController;
 use App\Http\Controllers\admin\IssueCertificateController;
+use App\Http\Controllers\admin\LeavingCertificateEntryController;
+use App\Http\Controllers\admin\NewStudentListController;
 use App\Http\Controllers\admin\FacultyComplaintReportController;
 use App\Http\Controllers\admin\SupplierController;
 use App\Http\Controllers\admin\GoogleDriveController;
@@ -175,6 +178,10 @@ Route::post('roll-number-generate/store', [RollNumberGenerateController::class, 
 Route::get('roll-number-list', [RollNumberListController::class, 'index'])->name('roll-number-list.index');
 Route::post('roll-number-list', [RollNumberListController::class, 'filter'])->name('roll-number-list.filter');
 Route::get('roll-number-list/print', [RollNumberListController::class, 'print'])->name('roll-number-list.print');
+
+Route::get('new-student-list', [NewStudentListController::class, 'index'])->name('new-student-list.index');
+Route::get('new-student-list/print', [NewStudentListController::class, 'print'])->name('new-student-list.print');
+Route::get('new-student-list/export-excel', [NewStudentListController::class, 'exportExcel'])->name('new-student-list.export-excel');
 
 Route::get('class-promotion', [ClassPromotionController::class, 'index'])->name('class-promotion.index');
 Route::post('class-promotion', [ClassPromotionController::class, 'filter'])->name('class-promotion.filter');
@@ -447,6 +454,19 @@ Route::get('issue-certificate/letter-recommendation', [IssueCertificateControlle
 Route::get('issue-certificate/tc', [IssueCertificateController::class, 'tcIndex'])->name('issue-certificate.tc');
 Route::post('issue-certificate/history', [IssueCertificateController::class, 'storeHistory'])->name('issue-certificate.store-history');
 Route::match(['delete', 'post'], 'issue-certificate/history/{id}', [IssueCertificateController::class, 'deleteHistory'])->whereNumber('id')->name('issue-certificate.delete-history');
+
+/** Leaving Certificate Entry */
+Route::get('leaving-certificate-entry', [LeavingCertificateEntryController::class, 'index'])->name('leaving-certificate-entry.index');
+Route::get('leaving-certificate-entry/create', [LeavingCertificateEntryController::class, 'create'])->name('leaving-certificate-entry.create');
+Route::get('leaving-certificate-entry/find-student', [LeavingCertificateEntryController::class, 'findStudent'])->name('leaving-certificate-entry.find-student');
+Route::get('leaving-certificate-entry/find-entry', [LeavingCertificateEntryController::class, 'findEntry'])->name('leaving-certificate-entry.find-entry');
+Route::post('leaving-certificate-entry', [LeavingCertificateEntryController::class, 'store'])->name('leaving-certificate-entry.store');
+Route::get('leaving-certificate-entry/print-list', [LeavingCertificateEntryController::class, 'printList'])->name('leaving-certificate-entry.print-list');
+Route::get('leaving-certificate-entry/print/{id}', [LeavingCertificateEntryController::class, 'printView'])->whereNumber('id')->name('leaving-certificate-entry.print');
+Route::get('leaving-certificate-entry/{id}/edit', [LeavingCertificateEntryController::class, 'edit'])->whereNumber('id')->name('leaving-certificate-entry.edit');
+Route::put('leaving-certificate-entry/{id}', [LeavingCertificateEntryController::class, 'update'])->whereNumber('id')->name('leaving-certificate-entry.update');
+Route::post('leaving-certificate-entry/{id}', [LeavingCertificateEntryController::class, 'update'])->whereNumber('id')->name('leaving-certificate-entry.update.post');
+Route::delete('leaving-certificate-entry/{id}', [LeavingCertificateEntryController::class, 'destroy'])->whereNumber('id')->name('leaving-certificate-entry.destroy');
 Route::get('faculty-complaint-report/export-excel', [FacultyComplaintReportController::class, 'exportExcel'])->name('faculty-complaint-report.export-excel');
 Route::get('faculty-complaint-report/print', [FacultyComplaintReportController::class, 'printView'])->name('faculty-complaint-report.print');
 Route::resource('faculty-complaint-report', FacultyComplaintReportController::class);
@@ -617,5 +637,11 @@ Route::post('class-report', [\App\Http\Controllers\admin\ClassReportController::
 Route::post('class-report/settings', [\App\Http\Controllers\admin\ClassReportController::class, 'saveSettings'])->name('class-report.settings');
 Route::post('class-report/print', [\App\Http\Controllers\admin\ClassReportController::class, 'printList'])->name('class-report.print');
 Route::post('class-report/export-excel', [\App\Http\Controllers\admin\ClassReportController::class, 'exportExcel'])->name('class-report.export-excel');
+
+/** Daily Attendance Register (Ultra English School only) */
+Route::get('daily-attendance-register', [DailyAttendanceRegisterController::class, 'index'])->name('daily-attendance-register.index');
+Route::post('daily-attendance-register', [DailyAttendanceRegisterController::class, 'filter'])->name('daily-attendance-register.filter');
+Route::post('daily-attendance-register/print', [DailyAttendanceRegisterController::class, 'printList'])->name('daily-attendance-register.print');
+Route::post('daily-attendance-register/export-excel', [DailyAttendanceRegisterController::class, 'exportExcel'])->name('daily-attendance-register.export-excel');
 
 

@@ -115,9 +115,9 @@
         @enddirectCanAny
 
 
-        @directCanAny(['admission-list', 'admission-create', 'admission-edit', 'admission-delete', 'admission-import', 'student_report-list', 'roll-number-generate-list', 'roll-number-list-list', 'class-promotion-list'])
+        @directCanAny(['admission-list', 'admission-create', 'admission-edit', 'admission-delete', 'admission-import', 'student_report-list', 'new-student-list-list', 'roll-number-generate-list', 'roll-number-list-list', 'class-promotion-list'])
         <li
-            class="menu-item {{ $sidebar_active == 'admission' || $sidebar_active == 'cource-registration' || $sidebar_active == 'student_report' || $sidebar_active == 'roll-number-generate' || $sidebar_active == 'roll-number-list' || $sidebar_active == 'class-promotion' ? 'active open' : '' }}">
+            class="menu-item {{ $sidebar_active == 'admission' || $sidebar_active == 'cource-registration' || $sidebar_active == 'student_report' || $sidebar_active == 'new-student-list' || $sidebar_active == 'roll-number-generate' || $sidebar_active == 'roll-number-list' || $sidebar_active == 'class-promotion' ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-school me-2"></i>
                 <div data-i18n="Student">Student</div>
@@ -139,6 +139,15 @@
                 <li class="menu-item {{ $current_route == 'admission.index' && request()->get('view') !== 'marksheet' ? 'active' : '' }}">
                     <a href="{{ route('admission.index') }}" class="menu-link">
                         <div data-i18n="Registered Student">Registered Student</div>
+                    </a>
+                </li>
+                @enddirectCan
+
+                {{-- New Student List --}}
+                @directCan('new-student-list-list')
+                <li class="menu-item {{ $sidebar_active == 'new-student-list' ? 'active' : '' }}">
+                    <a href="{{ route('new-student-list.index') }}" class="menu-link">
+                        <div data-i18n="New Student List">New Student List</div>
                     </a>
                 </li>
                 @enddirectCan
@@ -191,8 +200,8 @@
         </li>
         @enddirectCanAny
 
-        @directCanAny(['class-report-list', 'bus-route-report-list'])
-        <li class="menu-item {{ in_array($sidebar_active, ['class-report', 'bus-route-report'], true) ? 'active open' : '' }}">
+        @directCanAny(['class-report-list', 'bus-route-report-list', 'daily-attendance-register-list'])
+        <li class="menu-item {{ in_array($sidebar_active, ['class-report', 'bus-route-report', 'daily-attendance-register'], true) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-report-analytics me-2"></i>
                 <div data-i18n="Report">Report</div>
@@ -209,6 +218,13 @@
                 <li class="menu-item {{ $sidebar_active == 'bus-route-report' ? 'active' : '' }}">
                     <a href="{{ route('bus-route-report.index') }}" class="menu-link">
                         <div data-i18n="Bus Route Wise Students">Bus Route Wise Students</div>
+                    </a>
+                </li>
+                @enddirectCan
+                @directCan('daily-attendance-register-list')
+                <li class="menu-item {{ $sidebar_active == 'daily-attendance-register' ? 'active' : '' }}">
+                    <a href="{{ route('daily-attendance-register.index') }}" class="menu-link">
+                        <div data-i18n="Daily Attendance Register">Daily Attendance Register</div>
                     </a>
                 </li>
                 @enddirectCan
@@ -346,8 +362,8 @@
         </li>
         @enddirectCanAny
 
-        @directCanAny(['issue-certificate-bonafide-list', 'issue-certificate-english-medium-list', 'issue-certificate-letter-recommendation-list', 'issue-certificate-tc-list'])
-        <li class="menu-item {{ $sidebar_active == 'issue-certificate' ? 'active open' : '' }}">
+        @directCanAny(['issue-certificate-bonafide-list', 'issue-certificate-english-medium-list', 'issue-certificate-letter-recommendation-list', 'issue-certificate-tc-list', 'leaving-certificate-entry-list'])
+        <li class="menu-item {{ in_array($sidebar_active, ['issue-certificate', 'leaving-certificate-entry'], true) || Route::is('issue-certificate.*') || Route::is('leaving-certificate-entry.*') ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-certificate me-2"></i>
                 <div data-i18n="Issue Certificate">Issue Certificate</div>
@@ -361,7 +377,15 @@
                 </li>
                 @enddirectCan
 
-                @directCan('issue-certificate-tc-list')
+                @directCan('leaving-certificate-entry-list')
+                <li class="menu-item {{ $sidebar_active == 'leaving-certificate-entry' || Route::is('leaving-certificate-entry.*') ? 'active' : '' }}">
+                    <a href="{{ route('leaving-certificate-entry.index') }}" class="menu-link">
+                        <div data-i18n="Leaving Certi. Entry">Leaving Certi. Entry</div>
+                    </a>
+                </li>
+                @enddirectCan
+
+                {{-- @directCan('issue-certificate-tc-list')
                 <li class="menu-item {{ Route::is('issue-certificate.tc') ? 'active' : '' }}">
                     <a href="{{ route('issue-certificate.tc') }}" class="menu-link">
                         <div data-i18n="Transfer Certificate">Transfer Certificate</div>
@@ -383,7 +407,7 @@
                         <div data-i18n="Letter of Recommendation">Letter of Recommendation</div>
                     </a>
                 </li>
-                @enddirectCan
+                @enddirectCan --}}
             </ul>
         </li>
         @enddirectCanAny

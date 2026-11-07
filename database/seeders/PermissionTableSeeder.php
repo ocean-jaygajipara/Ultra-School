@@ -88,6 +88,9 @@ class PermissionTableSeeder extends Seeder
                 'issue-certificate-tc-list',
                 'issue-certificate-english-medium-list',
             ],
+            'leaving-certificate-entry' => [
+                'leaving-certificate-entry-list',
+            ],
             'Faculty-complaint-report' => [
                 'faculty-complaint-report-list',
                 'faculty-complaint-report-create',
@@ -172,6 +175,9 @@ class PermissionTableSeeder extends Seeder
             'bus-route-report' => [
                 'bus-route-report-list',
             ],
+            'daily-attendance-register' => [
+                'daily-attendance-register-list',
+            ],
             'fee-master' => [
                 'fee-master-list',
                 'fee-master-create',
@@ -234,6 +240,9 @@ class PermissionTableSeeder extends Seeder
             ],
             'student_report' => [
                 'student_report-list',
+            ],
+            'new-student-list' => [
+                'new-student-list-list',
             ],
             'event' => [
                 'event-list',
