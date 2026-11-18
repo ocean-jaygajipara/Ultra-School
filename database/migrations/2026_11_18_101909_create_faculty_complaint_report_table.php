@@ -6,26 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
+        Schema::dropIfExists('faculty_complaint_report');
+
         Schema::create('faculty_complaint_report', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('academic_year_id')->nullable();
+            $table->unsignedBigInteger('standard_id')->nullable();
+            $table->string('division')->nullable();
             $table->unsignedBigInteger('admission_id')->nullable();
             $table->string('gr_no')->nullable();
             $table->date('date')->nullable();
-            $table->text('complaint')->nullable();
             $table->unsignedBigInteger('faculty_id')->nullable();
+            $table->text('complaint')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('faculty_complaint_report');

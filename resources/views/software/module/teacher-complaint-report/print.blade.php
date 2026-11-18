@@ -5,7 +5,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('admin/assets/images/favicon/favicon-32.png') }}" />
 
     <meta charset="UTF-8">
-    <title>Faculty Complaint Report</title>
+    <title>Teacher Complaint Report</title>
     <style>
         body {
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -65,7 +65,7 @@
         <button onclick="window.close()">Close</button>
     </div>
 
-    <h1>Faculty Complaint Report</h1>
+    <h1>Teacher Complaint Report</h1>
     <div class="meta">
         <div><strong>Generated On:</strong> {{ optional($generatedAt)->format('d-m-Y h:i A') }}</div>
     </div>
@@ -102,7 +102,7 @@
                                 @break
 
                                 @case('date')
-                                    {{ $record->date ? \App\Helpers\Helper::convert_date($record->date, 'Y-m-d', 'd-m-Y') : '-' }}
+                                    {{ $record->date ? (\Illuminate\Support\Carbon::parse($record->date)->format('d-m-Y')) : '-' }}
                                 @break
 
                                 @case('faculty_name')

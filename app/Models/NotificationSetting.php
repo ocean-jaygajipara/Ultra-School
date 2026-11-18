@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Master\MasterAcademicYear;
 use App\Models\Master\MasterCourse;
+use App\Models\Master\MasterStandard;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -16,7 +18,9 @@ class NotificationSetting extends Model
     protected $fillable = [
         'title',
         'body',
+        'academic_year_id',
         'course_id',
+        'standard_id',
         'batch_id',
         'class_id',
         'student_id',
@@ -29,9 +33,17 @@ class NotificationSetting extends Model
     {
         return $this->belongsTo(Admission::class, 'admission_id');
     }
+    public function academicYear()
+    {
+        return $this->belongsTo(MasterAcademicYear::class, 'academic_year_id');
+    }
     public function course()
     {
         return $this->belongsTo(MasterCourse::class, 'course_id', 'id');
+    }
+    public function standard()
+    {
+        return $this->belongsTo(MasterStandard::class, 'standard_id', 'id');
     }
     public function batch()
     {

@@ -283,52 +283,10 @@ class Helper
             return $e->getMessage();
         }
     }
+
     public static function sendPushNotification($studentId, $title, $body)
     {
-        /*
-        $factory = (new Factory)->withServiceAccount(config('services.firebase.credentials'));
-        $messaging = $factory->createMessaging();
-
-        $tokens = StudentDeviceToken::where('student_id', $studentId)->pluck('device_token')->toArray();
-
-        if (count($tokens) > 0) {
-            foreach ($tokens as $token) {
-                $message = CloudMessage::withTarget('token', $token)
-                    ->withNotification(FcmNotification::create($title, $body));
-
-                $messaging->send($message);
-            }
-        }
-        */
-    }
-
-    // <message>otp for application login is ' . $otp . '. Vrundavan Computers - Keshod for info visit - vckguj.com. mo. 9375221111 -HGE</message>
-    public static function sendOtpSms($mobileNo, $otp)
-    {
-        $xml_data = '<?xml version="1.0"?>
-            <smslist>
-            <sms>
-            <user>Vckguj</user>
-            <password>592a9ca9f2XX</password>
-            <message>otp for application login is ' . $otp . '. Vrundavan Computers - Keshod for info visit - vckguj.com. mo. 9375221111 -HGE</message>  
-            <mobiles>' . $mobileNo . '</mobiles>
-            <senderid>HGHelp</senderid>
-            <tempid>1607100000000273981</tempid>
-            </sms>
-            </smslist>';
-
-        $URL = "http://vck.mysmsapps.co.in/sendsms.jsp?"; 
-        $ch = curl_init($URL);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_ENCODING, 'UTF-8');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/xml'));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, "$xml_data");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $output = curl_exec($ch);
-        curl_close($ch);
-        return $output;
+        // Push notification disabled.
     }
 
 }

@@ -42,6 +42,7 @@
     $stdText = trim((string) ($entry->standard->name ?? ''));
     $isFirst = strtoupper((string) $entry->term) === 'FIRST';
     $isSecond = strtoupper((string) $entry->term) === 'SECOND';
+    $copyLabels = !empty($singleCopy) ? ['Student Copy'] : ['Student Copy', 'School Copy'];
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -127,7 +128,7 @@
 </head>
 <body onload="window.print()">
     <div class="sheet">
-        @foreach (['Student Copy', 'School Copy'] as $index => $copyLabel)
+        @foreach ($copyLabels as $index => $copyLabel)
             <div class="receipt">
                 <img class="wm" src="{{ asset('admin/assets/images/logo-light.png') }}" alt="">
                 <table>
@@ -207,7 +208,7 @@
                     </tr>
                 </table>
             </div>
-            @if ($index === 0)
+            @if ($index === 0 && count($copyLabels) > 1)
                 <div class="cut"></div>
             @endif
         @endforeach

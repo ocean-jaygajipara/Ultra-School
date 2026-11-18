@@ -1,0 +1,401 @@
+{
+  "info": {
+    "name": "Ultra School Student App New APIs 17-11-2026",
+    "description": "Student app APIs — folders: Auth, Profile, Home/Documents, Student Request, Fee Receipt.\n\nHeaders: school_code, Authorization Bearer {{token}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://192.168.1.12:8000/api" },
+    { "key": "token", "value": "" },
+    { "key": "school_id", "value": "ues" },
+    { "key": "admission_id", "value": "2502" },
+    { "key": "mobile", "value": "8528549049" },
+    { "key": "otp", "value": "" },
+    { "key": "request_subject_id", "value": "1" },
+    { "key": "student_request_id", "value": "1" },
+    { "key": "fee_receipt_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "1.1 Schools",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/schools"
+          }
+        },
+        {
+          "name": "1.2 Send OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && j.data) {",
+                  "    if (j.data.admission_id) pm.collectionVariables.set('admission_id', String(j.data.admission_id));",
+                  "    if (j.data.otp) pm.collectionVariables.set('otp', String(j.data.otp));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_key\": \"{{school_id}}\",\n  \"gr_no\": {{admission_id}},\n  \"mobile_no\": \"{{mobile}}\",\n  \"device_token\": \"\",\n  \"device_details\": \"Flutter App\"\n}"
+            },
+            "url": "{{base_url}}/send-otp"
+          }
+        },
+        {
+          "name": "1.3 Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && j.token) pm.collectionVariables.set('token', j.token);",
+                  "  else if (j && j.data && j.data.token) pm.collectionVariables.set('token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_key\": \"{{school_id}}\",\n  \"gr_no\": {{admission_id}},\n  \"mobile_no\": \"{{mobile}}\",\n  \"otp\": \"{{otp}}\",\n  \"device_token\": \"\",\n  \"device_details\": \"Flutter App\"\n}"
+            },
+            "url": "{{base_url}}/verify-otp",
+            "description": "Saves Bearer token automatically."
+          }
+        },
+        {
+          "name": "1.4 Auth Detail",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/auth-detail"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Profile",
+      "item": [
+        {
+          "name": "2.1 Person Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/person-details"
+          }
+        },
+        {
+          "name": "2.2 Update Person Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile_no\": \"{{mobile}}\",\n  \"parent_mobile_no\": \"8511880324\",\n  \"other_mobile_no\": \"\",\n  \"whatsapp_no\": \"\",\n  \"aadhar_card_no\": \"452721256212\",\n  \"temporary_address\": \"KESHOD\",\n  \"permanent_address\": \"KESHOD\",\n  \"occupation\": \"\",\n  \"mother_occupation\": \"\",\n  \"birth_place\": \"KESHOD\",\n  \"bank_name\": \"\",\n  \"bank_account_no\": \"\"\n}"
+            },
+            "url": "{{base_url}}/student/update-person-details"
+          }
+        },
+        {
+          "name": "2.3 Contact Us (All Schools)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/contact-details"
+          }
+        },
+        {
+          "name": "2.4 Academic Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/academic-details",
+            "description": "Standard, division, roll_no, academic year, school."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Home / Documents",
+      "item": [
+        {
+          "name": "3.1 Slider List",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/slider-list",
+            "description": "Active sliders only."
+          }
+        },
+        {
+          "name": "3.2 Document Details (Google Drive)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/document-details"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Student Request",
+      "item": [
+        {
+          "name": "4.1 Request Subject List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+                  "    pm.collectionVariables.set('request_subject_id', String(j.data[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/request-subject-list",
+            "description": "data = subject array. From web /request-subject."
+          }
+        },
+        {
+          "name": "4.2 Student Request Add",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && j.data && j.data.id) pm.collectionVariables.set('student_request_id', String(j.data.id));",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_subject_id\": {{request_subject_id}},\n  \"detail\": \"Please help with my request.\"\n}"
+            },
+            "url": "{{base_url}}/student/student-request-add"
+          }
+        },
+        {
+          "name": "4.3 Student Request Edit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{student_request_id}},\n  \"request_subject_id\": {{request_subject_id}},\n  \"detail\": \"Updated request detail.\"\n}"
+            },
+            "url": "{{base_url}}/student/student-request-edit",
+            "description": "Pending only."
+          }
+        },
+        {
+          "name": "4.4 Student Request List",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/student-request-list",
+            "description": "data = requests array directly."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Teacher Complaint Report",
+      "item": [
+        {
+          "name": "5.1 Teacher Complaint Reports",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/teacher-complaint-reports",
+            "description": "Logged-in student ni teacher complaint list. data = array of complaints (id, gr_no, academic_year, date, complaint, teacher_name, is_read)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Fee Receipt",
+      "item": [
+        {
+          "name": "6.1 Fee Receipt List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && j.data && Array.isArray(j.data.details) && j.data.details.length && j.data.details[0].id) {",
+                  "    pm.collectionVariables.set('fee_receipt_id', String(j.data.details[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/fee-receipt-list",
+            "description": "print_url always; bus_print_url only if bus route / vehicle fee."
+          }
+        },
+        {
+          "name": "6.2 Fee Receipt Print PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/pdf" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/student/fee-receipt-print/{{fee_receipt_id}}?action=view",
+              "host": ["{{base_url}}"],
+              "path": ["student", "fee-receipt-print", "{{fee_receipt_id}}"],
+              "query": [{ "key": "action", "value": "view" }]
+            },
+            "description": "Simple fee receipt PDF."
+          }
+        },
+        {
+          "name": "6.3 Fee Receipt Bus Print PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/pdf" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/student/fee-receipt-bus-print/{{fee_receipt_id}}?action=view",
+              "host": ["{{base_url}}"],
+              "path": ["student", "fee-receipt-bus-print", "{{fee_receipt_id}}"],
+              "query": [{ "key": "action", "value": "view" }]
+            },
+            "description": "Bus print PDF — only when bus route / vehicle fee exists."
+          }
+        }
+      ]
+    }
+  ]
+}

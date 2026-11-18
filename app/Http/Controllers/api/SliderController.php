@@ -147,25 +147,25 @@ class SliderController extends Controller
      */
     public function slider_list()
     {
-        $sliders = Slider::where('status', 'active')
+        $sliders = Slider::query()
+            ->where('status', 'active')
             ->orderBy('id', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($slider) {
+                $image = trim((string) ($slider->image ?? ''));
+                if ($image !== '' && !preg_match('#^https?://#i', $image)) {
+                    $image = asset(ltrim($image, '/'));
+                }
 
-        if ($sliders->isEmpty()) {
-            return $this->sendError('No sliders found.', [], [], 404);
-        }
-
-        $sliders = $sliders->map(function ($slider) {
-            unset(
-                $slider->created_by,
-                $slider->updated_by,
-                $slider->deleted_by,
-                $slider->created_at,
-                $slider->updated_at
-            );
-            $slider->image = asset($slider->image);
-            return $slider;
-        });
+                return [
+                    'id'     => (int) $slider->id,
+                    'title'  => (string) ($slider->title ?? ''),
+                    'image'  => $image,
+                    'link'   => (string) ($slider->link ?? ''),
+                    'status' => (string) ($slider->status ?? 'active'),
+                ];
+            })
+            ->values();
 
         return $this->sendResponse($sliders, 'Sliders retrieved successfully.');
     }

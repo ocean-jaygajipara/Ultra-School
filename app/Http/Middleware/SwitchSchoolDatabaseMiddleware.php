@@ -17,10 +17,11 @@ class SwitchSchoolDatabaseMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Prefer explicit school from API header/body, then session/default.
-        $requestedCode = $request->header('X-School-Code')
+        $requestedCode = $request->header('school_code')
+            ?? $request->input('school_code')
+            ?? $request->header('X-School-Code')
             ?? $request->header('School-Code')
-            ?? $request->input('school_key')
-            ?? $request->input('school_code');
+            ?? $request->input('school_key');
 
         if (is_string($requestedCode) && SchoolDatabaseManager::exists($requestedCode)) {
             SchoolDatabaseManager::setActiveSchool($requestedCode);

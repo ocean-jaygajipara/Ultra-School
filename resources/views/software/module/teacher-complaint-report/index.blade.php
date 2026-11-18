@@ -13,16 +13,30 @@
 @section('page_style_file')
     <!--datatable css-->
     <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css') }}">
+    <!--datatable responsive css-->
+    <link rel="stylesheet"
+        href="{{ asset('admin/assets/cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('admin/assets/cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css') }}">
+    <style>
+        .card .table-responsive,
+        .card-body .table-responsive {
+            overflow: visible !important;
+            overflow-x: clip !important;
+        }
+        .dataTables_wrapper {
+            overflow-x: hidden !important;
+        }
+    </style>
 @endsection
 
-@section('content')
+@section('breadcrumb')
     <div class="d-flex justify-content-lg-between px-1">
         @include('software.includes.breadcrumb', [
             'breadcrumbArray' => [['title' => $page_title, 'url' => '']],
+            'page_title' => $page_title,
+            'show_page_title' => false,
             'route' => $route,
-            'show_add_btn' => true,
+            'show_add_btn' => isset($modules) && isset($modules['permission_add']) ? $modules['permission_add'] : false,
             'show_filter_btn' => false,
             'show_export_btns' => true,
             'show_excal_btn' => true,
@@ -30,35 +44,35 @@
             'show_back_btn' => false,
         ])
     </div>
+@endsection
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <input list="search" id="search_id" name="search" class="form-control" placeholder="Search Name, GR No">
-                    <datalist id="search" class="search_by_courceregistration" data-append="search_by_courceregistration"></datalist>
+@section('content')
+    <div class="mst my-2">
+        <div class="mst-hero">
+            <div class="mst-hero-l">
+                <div class="mst-hero-icon"><i class="ti ti-message-report"></i></div>
+                <div>
+                    <h4>{{ $page_title }}</h4>
+                    <p>Manage teacher complaint reports for students.</p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="yajra-datatables" class="table table-hover dt-responsive nowrap" style="width: 100%">
-                            @if (isset($columns))
-                                <thead>
-                                    <tr>
-                                        @foreach ($columns as $item)
-                                            <th class="{{ $item?->className ?? '' }}">{{ ucfirst($item?->td_label) ?? '' }}</th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
-                            @endif
-                        </table>
-                    </div>
+        <div class="card mst-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="yajra-datatables" class="table table-hover w-100 mst-table mb-0">
+                        @if (isset($columns))
+                            <thead>
+                                <tr>
+                                    @foreach ($columns as $item)
+                                        <th class="{{ $item?->className ?? '' }}">
+                                            {{ ucfirst($item?->td_label ?? $item?->name) ?? '' }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                        @endif
+                    </table>
                 </div>
             </div>
         </div>
@@ -87,7 +101,7 @@
                                 <input class="form-check-input" type="radio" name="export_scope" id="scopeAll"
                                     value="all">
                                 <label class="form-check-label" for="scopeAll">
-                                    Export complete Faculty Complaint Report list
+                                    Export complete {{ $page_title }} list
                                 </label>
                             </div>
                         </div>
@@ -155,7 +169,7 @@
         var dtable = null;
         $(document).ready(function() {
             dtable = $('#yajra-datatables').DataTable({
-                searching: false,
+                searching: true,
                 processing: true,
                 serverSide: true,
                 order: [],
@@ -166,7 +180,7 @@
                     },
                     type: "GET",
                     data: function(data) {
-                        data.search = { value: $('input[name="search"]').val() };
+                        data.search = $('input[type="search"]').val();
                     },
                 },
                 columns: {!! json_encode($columns) !!},
@@ -176,7 +190,11 @@
             });
         });
 
-        $('input[name="search"]').on('keyup change', function() {
+        $('input[name="search"]').keyup(function() {
+            dtable.draw();
+        });
+        jQuery(document).on('change', 'select', function(event) {
+            event.preventDefault();
             dtable.draw();
         });
     </script>
@@ -244,7 +262,7 @@
                 }).get();
 
                 if (!selectedColumns.length) {
-                    alert('Please select at least one column to continue.');
+                    toastr.warning('Please select at least one column to continue.');
                     return;
                 }
 
@@ -253,7 +271,7 @@
                 params.append('scope', scope);
 
                 if (scope === 'filtered') {
-                    const searchValue = $('input[name="search"]').val();
+                    const searchValue = $('#yajra-datatables_filter input[type="search"]').val();
                     if (searchValue) {
                         params.append('search', searchValue);
                     }
@@ -279,6 +297,6 @@
         });
     </script>
 
-    @include('software.utils.getCourceRegistration')
     @include('software.includes.script-delete-record')
+    @include('software.includes.script-restore-record')
 @endsection

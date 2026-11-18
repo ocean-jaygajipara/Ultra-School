@@ -15,14 +15,12 @@ Route::any('test', function () {
     return "API Test";
 });
 
-/** Multi-school student login: school -> GR No + mobile -> OTP (send_otp table) */
+/** Schools list (shared) */
 Route::get('schools', [AdminAuthController::class, 'schools']);
-Route::post('login/send-otp', [AdminAuthController::class, 'sendOtp']);
-Route::post('login/verify-otp', [AdminAuthController::class, 'verifyOtp']);
-Route::middleware('auth:student-api')->group(function () {
-    Route::match(['get', 'post'], 'me', [AdminAuthController::class, 'me']);
-    Route::post('logout', [AdminAuthController::class, 'logout']);
-});
+
+/** Flutter / student app auth (AuthenticationController — not AdminAuth) */
+Route::post('send-otp', [AuthenticationController::class, 'appSendOtp']);
+Route::post('verify-otp', [AuthenticationController::class, 'appVerifyOtp']);
 
 Route::controller(CommonController::class)->group(function () {
 
@@ -53,19 +51,23 @@ Route::post("student/verify-otp", [AuthenticationController::class, 'studentVeri
 Route::post("student/logout", [AuthenticationController::class, 'studentLogout'])
     ->middleware('auth:student-api');
 Route::post("student/store-device-token", [AuthenticationController::class, 'storeDeviceToken']);
-Route::match(['get', 'post'], 'student/fee-receipt/{id}/download', [ApiStudentController::class, 'download_fee_receipt'])->name('student.fee-receipt.download');
-
-
 
 Route::group(['middleware' => ['auth:student-api']], function () {
 
     /** All Student API store in this prefix */
     Route::prefix('student')->group(function () {
+        Route::match(['get', 'post'], 'auth-detail', [AuthenticationController::class, 'appStudentAuthDetail']);
         Route::post('profile-detail', [AuthenticatedController::class, 'student_profile_detail']);
         Route::post('update-profile', [AuthenticatedController::class, 'student_update_profile']);
+        Route::match(['get', 'post'], 'person-details', [AuthenticatedController::class, 'person_details']);
+        Route::post('update-person-details', [AuthenticatedController::class, 'update_person_details']);
         Route::post('academic-details', [ApiStudentController::class, 'academic_details']);
         Route::match(['get', 'post'], 'timetable-details', [ApiStudentController::class, 'timetable_details']);
         Route::post('fee-details', [ApiStudentController::class, 'fee_details']);
+        Route::match(['get', 'post'], 'fee-receipt-list', [ApiStudentController::class, 'fee_details']);
+        Route::match(['get', 'post'], 'fee-receipt-print/{id}', [ApiStudentController::class, 'fee_receipt_print'])->whereNumber('id')->name('student.fee-receipt.print');
+        Route::match(['get', 'post'], 'fee-receipt-bus-print/{id}', [ApiStudentController::class, 'fee_receipt_bus_print'])->whereNumber('id')->name('student.fee-receipt.bus-print');
+        Route::match(['get', 'post'], 'fee-receipt/{id}/download', [ApiStudentController::class, 'download_fee_receipt'])->whereNumber('id')->name('student.fee-receipt.download');
         Route::post('document-details', [ApiStudentController::class, 'document_details']);
         Route::post('contact-details', [ApiStudentController::class, 'contact_details']);
         Route::post('attendance-details', [ApiStudentController::class, 'attendance_details']);
@@ -75,15 +77,20 @@ Route::group(['middleware' => ['auth:student-api']], function () {
         Route::post('assignment-details', [ApiStudentController::class, 'assignment_details'])->name('student.assignment-details');
         Route::post('notifications-list', [ApiStudentController::class, 'notifications_list']);
         Route::post('notifications-mark-read', [ApiStudentController::class, 'notifications_mark_read']);
-        Route::match(['get', 'post'], 'faculty-complaint-reports', [ApiStudentController::class, 'faculty_complaint_reports']);
+        Route::match(['get', 'post'], 'teacher-complaint-reports', [ApiStudentController::class, 'teacher_complaint_reports']);
         Route::match(['get', 'post'], 'marksheet-details', [ApiStudentController::class, 'marksheet_details']);
         Route::match(['get', 'post'], 'unread-counts', [ApiStudentController::class, 'unread_counts']);
         Route::match(['get', 'post'], 'assessment-details', [ApiStudentController::class, 'assessment_details']);
         Route::match(['get', 'post'], 'achievement-details', [ApiStudentController::class, 'achievement_details']);
         Route::match(['get', 'post'], 'holiday-list', [ApiStudentController::class, 'holiday_list']);
+        Route::match(['get', 'post'], 'slider-list', [SliderController::class, 'slider_list']);
+        Route::match(['get', 'post'], 'student-request-add', [StudentRequestController::class, 'request_form']);
+        Route::match(['get', 'post'], 'student-request-edit', [StudentRequestController::class, 'request_update']);
+        Route::match(['get', 'post'], 'student-request-list', [StudentRequestController::class, 'request_list']);
+        Route::match(['get', 'post'], 'request-subject-list', [StudentRequestController::class, 'request_subject_list']);
     });
 
-    Route::match(['get', 'post'], 'get-faculty-complaint-reports', [ApiStudentController::class, 'faculty_complaint_reports']);
+    Route::match(['get', 'post'], 'get-teacher-complaint-reports', [ApiStudentController::class, 'teacher_complaint_reports']);
 
 
     Route::controller(SliderController::class)->group(function () {
@@ -94,8 +101,9 @@ Route::group(['middleware' => ['auth:student-api']], function () {
     });
 
     Route::controller(StudentRequestController::class)->group(function () {
-        Route::post('request-form', [StudentRequestController::class, 'request_form']);
-        Route::post('request-list', [StudentRequestController::class, 'request_list']);
+        Route::post('student-request-add', [StudentRequestController::class, 'request_form']);
+        Route::post('student-request-edit', [StudentRequestController::class, 'request_update']);
+        Route::post('student-request-list', [StudentRequestController::class, 'request_list']);
         Route::post('request-subject-list', [StudentRequestController::class, 'request_subject_list']);
     });
 

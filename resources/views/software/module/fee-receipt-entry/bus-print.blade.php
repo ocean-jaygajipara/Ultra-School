@@ -26,6 +26,7 @@
     $words = preg_replace('/ (thousand|lakh|crore) /', ' $1, ', $words);
     $amountInWords = trim($words) . ' Only.';
     $stdName = $entry->standard->name ?? '—';
+    $copyCount = !empty($singleCopy) ? 1 : 2;
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -66,7 +67,7 @@
     });
 </script>
     <div class="sheet">
-        @for ($copy = 0; $copy < 2; $copy++)
+        @for ($copy = 0; $copy < $copyCount; $copy++)
             <div class="slip">
                 <table>
                     <tr>

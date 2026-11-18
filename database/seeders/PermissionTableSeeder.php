@@ -94,11 +94,11 @@ class PermissionTableSeeder extends Seeder
                 'leaving-certificate-entry-edit',
                 'leaving-certificate-entry-delete',
             ],
-            'Faculty-complaint-report' => [
-                'faculty-complaint-report-list',
-                'faculty-complaint-report-create',
-                'faculty-complaint-report-edit',
-                'faculty-complaint-report-delete',
+            'Teacher-complaint-report' => [
+                'teacher-complaint-report-list',
+                'teacher-complaint-report-create',
+                'teacher-complaint-report-edit',
+                'teacher-complaint-report-delete',
             ],
             'Supplier Contact' => [
                 'supplier-list',
@@ -320,6 +320,30 @@ class PermissionTableSeeder extends Seeder
                 'class-promotion-edit',
             ]
         ];
+
+        // US-only certificate modules — seed only on Ultra Secondary School DB.
+        $currentDb = (string) \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
+        $usDb = (string) (config('schools.list.us.database') ?: env('DB_DATABASE_US', 'ultra_school_us'));
+        if ($currentDb !== '' && $currentDb === $usDb) {
+            $permissions['name-change-form'] = [
+                'name-change-form-list',
+                'name-change-form-create',
+                'name-change-form-edit',
+                'name-change-form-delete',
+            ];
+            $permissions['trial-certificate'] = [
+                'trial-certificate-list',
+                'trial-certificate-create',
+                'trial-certificate-edit',
+                'trial-certificate-delete',
+            ];
+            $permissions['character-certificate'] = [
+                'character-certificate-list',
+                'character-certificate-create',
+                'character-certificate-edit',
+                'character-certificate-delete',
+            ];
+        }
 
         // Permission::truncate();
 

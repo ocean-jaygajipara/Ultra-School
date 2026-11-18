@@ -39,6 +39,9 @@ use App\Http\Controllers\admin\BioMaxController;
 use App\Http\Controllers\admin\IssueCertificateController;
 use App\Http\Controllers\admin\LeavingCertificateEntryController;
 use App\Http\Controllers\admin\NewStudentListController;
+use App\Http\Controllers\admin\NameChangeFormController;
+use App\Http\Controllers\admin\TrialCertificateController;
+use App\Http\Controllers\admin\CharacterCertificateController;
 use App\Http\Controllers\admin\FacultyComplaintReportController;
 use App\Http\Controllers\admin\SupplierController;
 use App\Http\Controllers\admin\GoogleDriveController;
@@ -182,6 +185,31 @@ Route::get('roll-number-list/print', [RollNumberListController::class, 'print'])
 Route::get('new-student-list', [NewStudentListController::class, 'index'])->name('new-student-list.index');
 Route::get('new-student-list/print', [NewStudentListController::class, 'print'])->name('new-student-list.print');
 Route::get('new-student-list/export-excel', [NewStudentListController::class, 'exportExcel'])->name('new-student-list.export-excel');
+
+Route::get('name-change-form', [NameChangeFormController::class, 'index'])->name('name-change-form.index');
+Route::get('name-change-form/create', [NameChangeFormController::class, 'create'])->name('name-change-form.create');
+Route::get('name-change-form/find-student', [NameChangeFormController::class, 'findStudent'])->name('name-change-form.find-student');
+Route::post('name-change-form', [NameChangeFormController::class, 'store'])->name('name-change-form.store');
+Route::get('name-change-form/print/{id}', [NameChangeFormController::class, 'print'])->whereNumber('id')->name('name-change-form.print');
+Route::get('name-change-form/{id}/edit', [NameChangeFormController::class, 'edit'])->whereNumber('id')->name('name-change-form.edit');
+Route::put('name-change-form/{id}', [NameChangeFormController::class, 'update'])->whereNumber('id')->name('name-change-form.update');
+Route::post('name-change-form/{id}', [NameChangeFormController::class, 'update'])->whereNumber('id')->name('name-change-form.update.post');
+Route::delete('name-change-form/{id}', [NameChangeFormController::class, 'destroy'])->whereNumber('id')->name('name-change-form.destroy');
+
+Route::get('trial-certificate', [TrialCertificateController::class, 'index'])->name('trial-certificate.index');
+Route::get('trial-certificate/create', [TrialCertificateController::class, 'create'])->name('trial-certificate.create');
+Route::post('trial-certificate', [TrialCertificateController::class, 'store'])->name('trial-certificate.store');
+Route::get('trial-certificate/print', [TrialCertificateController::class, 'print'])->name('trial-certificate.print');
+Route::delete('trial-certificate/{id}', [TrialCertificateController::class, 'destroy'])->whereNumber('id')->name('trial-certificate.destroy');
+
+Route::get('character-certificate', [CharacterCertificateController::class, 'index'])->name('character-certificate.index');
+Route::get('character-certificate/create', [CharacterCertificateController::class, 'create'])->name('character-certificate.create');
+Route::get('character-certificate/find-student', [CharacterCertificateController::class, 'findStudent'])->name('character-certificate.find-student');
+Route::post('character-certificate', [CharacterCertificateController::class, 'store'])->name('character-certificate.store');
+Route::get('character-certificate/print/{id}', [CharacterCertificateController::class, 'print'])->whereNumber('id')->name('character-certificate.print');
+Route::get('character-certificate/{id}/edit', [CharacterCertificateController::class, 'edit'])->whereNumber('id')->name('character-certificate.edit');
+Route::put('character-certificate/{id}', [CharacterCertificateController::class, 'update'])->whereNumber('id')->name('character-certificate.update');
+Route::delete('character-certificate/{id}', [CharacterCertificateController::class, 'destroy'])->whereNumber('id')->name('character-certificate.destroy');
 
 Route::get('class-promotion', [ClassPromotionController::class, 'index'])->name('class-promotion.index');
 Route::post('class-promotion', [ClassPromotionController::class, 'filter'])->name('class-promotion.filter');
@@ -467,11 +495,11 @@ Route::get('leaving-certificate-entry/{id}/edit', [LeavingCertificateEntryContro
 Route::put('leaving-certificate-entry/{id}', [LeavingCertificateEntryController::class, 'update'])->whereNumber('id')->name('leaving-certificate-entry.update');
 Route::post('leaving-certificate-entry/{id}', [LeavingCertificateEntryController::class, 'update'])->whereNumber('id')->name('leaving-certificate-entry.update.post');
 Route::delete('leaving-certificate-entry/{id}', [LeavingCertificateEntryController::class, 'destroy'])->whereNumber('id')->name('leaving-certificate-entry.destroy');
-Route::get('faculty-complaint-report/export-excel', [FacultyComplaintReportController::class, 'exportExcel'])->name('faculty-complaint-report.export-excel');
-Route::get('faculty-complaint-report/print', [FacultyComplaintReportController::class, 'printView'])->name('faculty-complaint-report.print');
-Route::resource('faculty-complaint-report', FacultyComplaintReportController::class);
-Route::match(['get', 'post'], 'faculty-complaint-report/restore/{id}', [FacultyComplaintReportController::class, 'restore'])->name('faculty-complaint-report.restore');
-Route::delete('faculty-complaint-report/permanent-delete/{id}', [FacultyComplaintReportController::class, 'permanentDelete'])->name('faculty-complaint-report.permanent-delete');
+Route::get('teacher-complaint-report/export-excel', [FacultyComplaintReportController::class, 'exportExcel'])->name('teacher-complaint-report.export-excel');
+Route::get('teacher-complaint-report/print', [FacultyComplaintReportController::class, 'printView'])->name('teacher-complaint-report.print');
+Route::resource('teacher-complaint-report', FacultyComplaintReportController::class);
+Route::match(['get', 'post'], 'teacher-complaint-report/restore/{id}', [FacultyComplaintReportController::class, 'restore'])->name('teacher-complaint-report.restore');
+Route::delete('teacher-complaint-report/permanent-delete/{id}', [FacultyComplaintReportController::class, 'permanentDelete'])->name('teacher-complaint-report.permanent-delete');
 Route::get('supplier/export-excel', [SupplierController::class, 'exportExcel'])->name('supplier.export-excel');
 Route::get('supplier/print', [SupplierController::class, 'printView'])->name('supplier.print');
 Route::resource('supplier', SupplierController::class);
@@ -488,13 +516,21 @@ Route::delete(
 
 
 
-Route::resource('/subject', MasterSubjectController::class);
-Route::match(['get', 'post'], 'subject/restore/{id}', [MasterSubjectController::class, 'restore'])->name('subject.restore');
-Route::match(['get', 'post'], 'subject-update-status', [MasterSubjectController::class, 'update_status'])->name('subject.status-update');
+Route::resource('/request-subject', MasterSubjectController::class)
+    ->parameters(['request-subject' => 'subject'])
+    ->names('subject');
+Route::match(['get', 'post'], 'request-subject/restore/{id}', [MasterSubjectController::class, 'restore'])->name('subject.restore');
+Route::match(['get', 'post'], 'request-subject-update-status', [MasterSubjectController::class, 'update_status'])->name('subject.status-update');
 Route::delete(
-    '/subject/permanent-delete/{id}',
+    '/request-subject/permanent-delete/{id}',
     [MasterSubjectController::class, 'permanentDelete']
 )->name('subject.permanent-delete');
+
+// Old /subject URLs → /request-subject
+Route::redirect('/subject', '/request-subject', 301);
+Route::any('/subject/{any?}', function ($any = null) {
+    return redirect('/request-subject' . ($any ? '/' . $any : ''), 301);
+})->where('any', '.*');
 
 Route::resource('/event', MasterEventController::class);
 Route::match(['get', 'post'], 'event/restore/{id}', [MasterEventController::class, 'restore'])->name('event.restore');
@@ -564,8 +600,8 @@ Route::post('/marks/store', [TestreportController::class, 'store'])->name('marks
 Route::match(['get', 'post'], 'biomax/status', [BioMaxController::class, 'biomax_status'])->name('biomax.status');
 // Notification Setting
 Route::resource('/notification_setting', NotificationSettingController::class);
-Route::get('get-students-by-course/{course_id}', [NotificationSettingController::class, 'getStudentsByCourse'])
-    ->name('get.students.by.course');
+Route::get('get-students-by-standard/{standard_id}', [NotificationSettingController::class, 'getStudentsByStandard'])
+    ->name('get.students.by.standard');
 
 // Timetable
 /** Timetable Routes */

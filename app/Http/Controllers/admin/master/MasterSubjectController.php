@@ -20,12 +20,13 @@ class MasterSubjectController extends Controller
     public function __construct()
     {
         $this->modules = [
-            'title' => 'Subject',
+            'title' => 'Request Subject',
             'folder_path' => 'software.module.master.subject',
             'route' => 'subject',
             'table_name' => (new MasterSubject())->getTable(),
             'permission_prefix' => 'subject',
         ];
+        View::share('sidebar_active', 'subject');
         // $this->middleware('permission:' . $this->modules['permisstion_prefix'] . '-list', ['only' => ['index', 'show']]);
         // $this->middleware('permission:' . $this->modules['permisstion_prefix'] . '-create', ['only' => ['create', 'store']]);
         // $this->middleware('permission:' . $this->modules['permisstion_prefix'] . '-edit', ['only' => ['edit', 'update']]);

@@ -15,6 +15,7 @@ use App\Models\SendOTP;
 use App\Models\StudentDeviceToken;
 use App\Models\User;
 use App\Models\UserDetail;
+use App\Services\SchoolDatabaseManager;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -352,19 +353,6 @@ class AuthenticationController extends Controller
                 );
             }
 
-            $hasActiveCourse = CourceRegistration::where('register_id', $student->id)
-                ->whereNotIn('status', ['Cancel', 'cancel'])
-                ->exists();
-
-            if (!$hasActiveCourse) {
-                return $this->sendError(
-                    'Your course registration has been cancelled.',
-                    [],
-                    [],
-                    422
-                );
-            }
-
             //🔹 STORE DEVICE TOKEN & DETAILS
             if ($request->filled('device_token') || $request->filled('device_details')) {
                 if ($request->filled('device_token')) {
@@ -409,14 +397,6 @@ class AuthenticationController extends Controller
                     'sms'              => 'Your One time OTP is ' . $otp,
                     'created_from'     => 'AuthenticationController => login',
                 ]);
-
-                // Send OTP SMS
-                $smsResponse = Helper::sendOtpSms($student->mobile_no, $otp);
-
-            } else {
-                // Resend the existing valid OTP
-                $smsResponse = Helper::sendOtpSms($student->mobile_no, $checkSendedOtp->verified_content);
-
             }
 
             if (Carbon::now()->greaterThan(Carbon::parse($checkSendedOtp->expire_time))) {
@@ -429,6 +409,7 @@ class AuthenticationController extends Controller
             return $this->sendResponse([
                 'admission_id' => $student->id,
                 'mobile_no'    => $student->mobile_no,
+                'otp'          => (string) $checkSendedOtp->verified_content,
             ], $message);
         } catch (\Exception $e) {
             return $this->sendError(
@@ -533,19 +514,6 @@ class AuthenticationController extends Controller
             if (in_array(strtolower($student->status), ['cancel', 'cancelled'])) {
                 return $this->sendError(
                     'Your account has been cancelled. Please contact admin.',
-                    [],
-                    [],
-                    422
-                );
-            }
-
-            $hasActiveCourse = CourceRegistration::where('register_id', $student->id)
-                ->whereNotIn('status', ['Cancel', 'cancel'])
-                ->exists();
-
-            if (!$hasActiveCourse) {
-                return $this->sendError(
-                    'Your course registration has been cancelled. Please contact admin.',
                     [],
                     [],
                     422
@@ -702,6 +670,391 @@ class AuthenticationController extends Controller
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }
+    }
+
+    /**
+     * App: POST /api/send-otp
+     * Body: school_id, mobile, admission_id (id or GR), fcm_token
+     */
+    public function appSendOtp(Request $request)
+    {
+        try {
+            $this->normalizeAppAuthRequest($request);
+
+            $validator = Validator::make($request->all(), [
+                'school_id'    => 'required|string',
+                'mobile'       => 'required|digits_between:10,15',
+                'admission_id' => 'required',
+                'fcm_token'    => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError($validator->errors()->first(), $validator->errors(), [], 422);
+            }
+
+            $schoolKey = strtolower(trim((string) $request->input('school_id')));
+            if (!SchoolDatabaseManager::exists($schoolKey)) {
+                return $this->sendError('Invalid school selected.', [], [], 422);
+            }
+
+            SchoolDatabaseManager::setActiveSchool($schoolKey);
+
+            $mobile = preg_replace('/\D+/', '', (string) $request->input('mobile'));
+            $admissionKey = trim((string) $request->input('admission_id'));
+            $student = $this->findAppStudent($admissionKey, $mobile);
+
+            if (($student['error'] ?? null) === 'mobile_mismatch') {
+                return $this->sendError('Mobile number does not match this student record.', [], [], 422);
+            }
+            if (($student['error'] ?? null) === 'inactive') {
+                return $this->sendError('Your account is inactive. Please contact the school administration.', [], [], 422);
+            }
+            if (empty($student['student'])) {
+                return $this->sendError('Student not found.', [], [], 422);
+            }
+
+            /** @var Admission $admission */
+            $admission = $student['student'];
+
+            if ($this->isAppStudentInactive($admission)) {
+                return $this->sendError('Your account is inactive. Please contact the school administration.', [], [], 422);
+            }
+
+            $deviceToken = trim((string) $request->input('fcm_token', ''));
+            if ($deviceToken !== '') {
+                StudentDeviceToken::where('device_token', $deviceToken)
+                    ->where('student_id', '!=', $admission->id)
+                    ->delete();
+
+                StudentDeviceToken::updateOrCreate(
+                    ['student_id' => $admission->id, 'device_token' => $deviceToken],
+                    ['created_by' => $admission->id]
+                );
+            }
+
+            resend_otp:
+            $checkSendedOtp = SendOTP::where('model', Admission::class)
+                ->where('model_id', $admission->id)
+                ->where('sms_type', 'otp')
+                ->whereNull('verified_at')
+                ->where('status', 'send')
+                ->orderByDesc('id')
+                ->first();
+
+            $otp = Helper::generateNumericOTP(6);
+
+            if (!$checkSendedOtp) {
+                $checkSendedOtp = SendOTP::create([
+                    'model'            => Admission::class,
+                    'model_id'         => $admission->id,
+                    'send_to'          => $admission->mobile_no,
+                    'verified_content' => $otp,
+                    'expire_time'      => Carbon::now()->addMinutes(10),
+                    'sms_type'         => 'otp',
+                    'sms'              => 'Your One time OTP is ' . $otp,
+                    'status'           => 'send',
+                    'created_from'     => 'AuthenticationController => appSendOtp',
+                ]);
+            }
+
+            if (Carbon::now()->greaterThan(Carbon::parse($checkSendedOtp->expire_time))) {
+                $checkSendedOtp->status = 'expire';
+                $checkSendedOtp->save();
+                goto resend_otp;
+            }
+
+            $school = SchoolDatabaseManager::get($schoolKey);
+
+            return $this->sendResponse([
+                'school'       => [
+                    'code'       => $schoolKey,
+                    'short_name' => $school['short_name'] ?? strtoupper($schoolKey),
+                    'name'       => $school['name'] ?? $schoolKey,
+                ],
+                // App uses admission_id in place of gr_no
+                'admission_id' => $admission->gr_no,
+                'mobile_no'    => $admission->mobile_no,
+                'otp'          => (string) $checkSendedOtp->verified_content,
+                'otp_expire'   => optional($checkSendedOtp->expire_time)->toDateTimeString()
+                    ?? Carbon::parse($checkSendedOtp->expire_time)->toDateTimeString(),
+            ], 'OTP has been sent successfully.');
+        } catch (\Throwable $e) {
+            return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
+        }
+    }
+
+    /**
+     * App: POST /api/verify-otp
+     * Body: school_id, mobile, admission_id (app uses this instead of gr_no), otp, fcm_token
+     */
+    public function appVerifyOtp(Request $request)
+    {
+        try {
+            $this->normalizeAppAuthRequest($request);
+
+            $validator = Validator::make($request->all(), [
+                'school_id'    => 'required|string',
+                'mobile'       => 'required|digits_between:10,15',
+                'admission_id' => 'required',
+                'otp'          => 'required|digits_between:4,6',
+                'fcm_token'    => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError($validator->errors()->first(), $validator->errors(), [], 422);
+            }
+
+            $schoolKey = strtolower(trim((string) $request->input('school_id')));
+            if (!SchoolDatabaseManager::exists($schoolKey)) {
+                return $this->sendError('Invalid school selected.', [], [], 422);
+            }
+
+            SchoolDatabaseManager::setActiveSchool($schoolKey);
+
+            $mobile = preg_replace('/\D+/', '', (string) $request->input('mobile'));
+            $admissionKey = trim((string) $request->input('admission_id'));
+            $otp = trim((string) $request->input('otp'));
+
+            $lookup = $this->findAppStudent($admissionKey, $mobile);
+            if (($lookup['error'] ?? null) === 'mobile_mismatch') {
+                return $this->sendError('Mobile number does not match this student record.', [], [], 422);
+            }
+            if (($lookup['error'] ?? null) === 'inactive') {
+                return $this->sendError('Your account is inactive. Please contact the school administration.', [], [], 422);
+            }
+            if (empty($lookup['student'])) {
+                return $this->sendError('Student not found for this admission_id.', [], [], 422);
+            }
+
+            /** @var Admission $admission */
+            $admission = $lookup['student'];
+            $sendTo = (string) ($admission->mobile_no ?: $mobile);
+
+            if ($this->isAppStudentInactive($admission)) {
+                return $this->sendError('Your account is inactive. Please contact the school administration.', [], [], 422);
+            }
+
+            $checkOTP = SendOTP::where('model', Admission::class)
+                ->where('model_id', $admission->id)
+                ->where('send_to', $sendTo)
+                ->where('verified_content', $otp)
+                ->where('sms_type', 'otp')
+                ->where('status', 'send')
+                ->orderByDesc('id')
+                ->first();
+
+            if (!$checkOTP) {
+                return $this->sendError('The OTP you entered is incorrect. Please try again.', [], [], 422);
+            }
+            if ($checkOTP->verified_at) {
+                return $this->sendError('OTP already used. Please resend OTP and try again.', [], [], 422);
+            }
+            if (Carbon::now()->greaterThan(Carbon::parse($checkOTP->expire_time))) {
+                $checkOTP->status = 'expire';
+                $checkOTP->save();
+
+                return $this->sendError('Your OTP has expired. Please resend OTP and login.', [], [], 422);
+            }
+
+            $checkOTP->verified_at = Carbon::now();
+            $checkOTP->status = 'expire';
+            $checkOTP->save();
+
+            $deviceToken = trim((string) $request->input('fcm_token', ''));
+            if ($deviceToken !== '') {
+                StudentDeviceToken::where('device_token', $deviceToken)
+                    ->where('student_id', '!=', $admission->id)
+                    ->delete();
+
+                StudentDeviceToken::updateOrCreate(
+                    ['student_id' => $admission->id, 'device_token' => $deviceToken],
+                    ['created_by' => $admission->id]
+                );
+            }
+
+            $tokenResult = $admission->createToken('student-api');
+            $token = $tokenResult->accessToken;
+
+            return response()->json([
+                'status'  => 'true',
+                'message' => 'OTP verified successfully.',
+                'token'   => $token,
+                'data'    => $this->buildAppStudentAuthData($admission, $schoolKey),
+            ], 200);
+        } catch (\Throwable $e) {
+            return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
+        }
+    }
+
+    /**
+     * App: POST /api/student/auth-detail  (auth required)
+     * Already logged-in student — same response shape as verify-otp.
+     */
+    public function appStudentAuthDetail(Request $request)
+    {
+        try {
+            /** @var Admission|null $admission */
+            $admission = Auth::guard('student-api')->user();
+            if (!$admission) {
+                return $this->sendError('Unauthorization.', [], [], 401);
+            }
+
+            if ($this->isAppStudentInactive($admission)) {
+                return $this->sendError('Your account is inactive. Please contact the school administration.', [], [], 422);
+            }
+
+            $schoolKey = SchoolDatabaseManager::getActiveSchoolCode()
+                ?: strtolower(trim((string) (
+                    $request->header('school_code')
+                    ?: $request->input('school_code')
+                    ?: $request->header('X-School-Code')
+                    ?: $request->input('school_id')
+                    ?: $request->input('school_key')
+                    ?: ''
+                )));
+
+            $token = $request->bearerToken() ?: '';
+
+            return response()->json([
+                'status'  => 'true',
+                'message' => 'Student details fetched successfully.',
+                'token'   => $token,
+                'data'    => $this->buildAppStudentAuthData($admission, $schoolKey),
+            ], 200);
+        } catch (\Throwable $e) {
+            return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
+        }
+    }
+
+    /**
+     * Shared student payload for verify-otp + student/auth-detail (Android same model).
+     */
+    protected function buildAppStudentAuthData(Admission $admission, string $schoolKey): array
+    {
+        $school = SchoolDatabaseManager::get($schoolKey) ?: [];
+        $admission->loadMissing(['currentStandard', 'academicYear']);
+
+        $profileRequest = new Request();
+        $profileRequest->admission_id = $admission->id;
+        $studentDetails = (array) (new AuthenticatedController())->student_profile_response($profileRequest);
+
+        $name = strtoupper(trim(preg_replace(
+            '/\s+/',
+            ' ',
+            ($admission->first_name ?? '') . ' ' . ($admission->last_name ?? '') . ' ' . ($admission->father_name ?? '')
+        )));
+
+        $profileLink = (string) ($admission->profile_pic_url ?? '');
+
+        $studentDetails = array_merge($studentDetails, [
+            'admission_id'      => $admission->gr_no,
+            'name'              => $name,
+            'roll_no'           => $admission->roll_no,
+            'division'          => $admission->division,
+            'stream'            => $admission->stream,
+            'standard'          => optional($admission->currentStandard)->name,
+            'standard_id'       => $admission->current_std_id,
+            'academic_year'     => optional($admission->academicYear)->name,
+            'academic_year_id'  => $admission->academic_year_id,
+            'admission_date'    => $admission->admission_date,
+            'pen_no'            => $admission->pen_no,
+            'religion'          => $admission->religion,
+            'house'             => $admission->house,
+            'birth_place'       => $admission->birth_place,
+            'profile_url'       => $profileLink,
+        ]);
+
+        $studentDetails['school'] = [
+            'code'       => $schoolKey,
+            'short_name' => $school['short_name'] ?? strtoupper($schoolKey),
+            'name'       => $school['name'] ?? $schoolKey,
+        ];
+
+        return $studentDetails;
+    }
+
+    protected function normalizeAppAuthRequest(Request $request): void
+    {
+        // Flutter legacy keys → API keys (admission_id in place of gr_no)
+        if ($request->filled('gr_no') && !$request->filled('admission_id')) {
+            $request->merge(['admission_id' => $request->input('gr_no')]);
+        }
+        if ($request->filled('mobile_no') && !$request->filled('mobile')) {
+            $request->merge(['mobile' => preg_replace('/\D+/', '', (string) $request->input('mobile_no'))]);
+        }
+        if ($request->filled('mobile')) {
+            $request->merge(['mobile' => preg_replace('/\D+/', '', (string) $request->input('mobile'))]);
+        }
+        if ($request->filled('school_key') && !$request->filled('school_id')) {
+            $request->merge(['school_id' => strtolower(trim((string) $request->input('school_key')))]);
+        }
+        if ($request->filled('device_token') && !$request->filled('fcm_token')) {
+            $request->merge(['fcm_token' => (string) $request->input('device_token')]);
+        }
+    }
+
+    /**
+     * App sends admission_id in place of gr_no.
+     * Resolve by gr_no first (app value), then by DB id.
+     * Includes soft-deleted so inactive students get a clear message.
+     *
+     * @return array{student:?Admission,error:?string}
+     */
+    protected function findAppStudent(string $admissionKey, string $mobile): array
+    {
+        $student = null;
+
+        // App admission_id is usually GR No.
+        if ($admissionKey !== '') {
+            $student = Admission::withTrashed()->where('gr_no', $admissionKey)->first();
+        }
+
+        // Fallback: real DB admission id
+        if (!$student && $admissionKey !== '' && ctype_digit($admissionKey)) {
+            $student = Admission::withTrashed()->where('id', (int) $admissionKey)->first();
+        }
+
+        if (!$student) {
+            return ['student' => null, 'error' => null];
+        }
+
+        $registered = array_values(array_filter([
+            preg_replace('/\D+/', '', (string) ($student->mobile_no ?? '')),
+            preg_replace('/\D+/', '', (string) ($student->parent_mobile_no ?? '')),
+            preg_replace('/\D+/', '', (string) ($student->whatsapp_no ?? '')),
+        ]));
+
+        $input = preg_replace('/\D+/', '', $mobile);
+        if ($input === '' || !in_array($input, $registered, true)) {
+            return ['student' => null, 'error' => 'mobile_mismatch'];
+        }
+
+        if ($this->isAppStudentInactive($student)) {
+            return ['student' => $student, 'error' => 'inactive'];
+        }
+
+        return ['student' => $student, 'error' => null];
+    }
+
+    protected function isAppStudentInactive(Admission $admission): bool
+    {
+        if (method_exists($admission, 'trashed') && $admission->trashed()) {
+            return true;
+        }
+
+        $status = strtolower(trim((string) ($admission->status ?? '')));
+
+        return in_array($status, [
+            'inactive',
+            'in_active',
+            'deactive',
+            'deactivated',
+            'cancel',
+            'cancelled',
+            'rejected',
+            'left',
+            'closed',
+        ], true);
     }
 }
 

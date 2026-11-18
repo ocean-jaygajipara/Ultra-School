@@ -43,7 +43,7 @@
                 <div class="mst-hero-icon"><i class="ti ti-book-2"></i></div>
                 <div>
                     <h4>{{ $page_title }}</h4>
-                    <p>Manage subjects / request subjects.</p>
+                    <p>Manage request subjects for student requests.</p>
                 </div>
             </div>
         </div>

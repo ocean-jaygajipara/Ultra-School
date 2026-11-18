@@ -12,8 +12,11 @@ use App\Models\StudentDeviceToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\Controller;
+use App\Models\Admission;
 use App\Models\NotificationSetting;
-use App\Models\Master\MasterCourse;
+use App\Models\Master\MasterAcademicYear;
+use App\Models\Master\MasterDivision;
+use App\Models\Master\MasterStandard;
 use Illuminate\Support\Facades\View;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -58,26 +61,35 @@ class NotificationSettingController extends Controller
         $columns = [
             (object)['data' => "title", 'name' => 'title', 'td_label' => 'Title'],
             (object)['data' => "body", 'name' => 'body', 'td_label' => 'Message'],
-            (object)['data' => "course_id", 'name' => 'course_id', 'td_label' => 'Course'],
-            // (object)['data' => "student_name", 'td_label' => 'Student'],
+            (object)['data' => "standard_name", 'name' => 'standard_id', 'td_label' => 'Standard'],
+            (object)['data' => "class_id", 'name' => 'class_id', 'td_label' => 'Class'],
             (object)['data' => "action", 'name' => 'action', 'td_label' => 'Action', 'orderable' => false, 'searchable' => false, 'className' => 'w-10 text-center'],
         ];
         View::share("columns", $columns);
 
         try {
             if ($request->ajax()) {
-                $data = NotificationSetting::with('course:id,course_name');
+                $data = NotificationSetting::with('standard:id,name');
                 $data = $data->orderBy('id', 'desc');
                 return DataTables::of($data)
                     ->addIndexColumn()
                     ->filter(function ($query) use ($request) {
-                        if ($request->has('search')) {
-                            $query->where('title', 'like', "%" . $request->search . "%")
-                                ->orWhere('body', 'like', "%" . $request->search . "%");
+                        $searchInput = $request->input('search');
+                        $searchValue = is_array($searchInput)
+                            ? ($searchInput['value'] ?? '')
+                            : (string) ($searchInput ?? '');
+                        $searchValue = trim($searchValue);
+
+                        if ($searchValue !== '') {
+                            $query->where(function ($q) use ($searchValue) {
+                                $q->where('title', 'like', "%{$searchValue}%")
+                                    ->orWhere('body', 'like', "%{$searchValue}%");
+                            });
                         }
                     })
                     ->addColumn('student_name', fn($row) => $row->student_names)
-                    ->editColumn('course_id', fn($row) => $row->course?->course_name ?? '-')
+                    ->addColumn('standard_name', fn($row) => $row->standard?->name ?? '-')
+                    ->editColumn('class_id', fn($row) => $row->class_id ?: '-')
                     ->editColumn('body', function ($row) {
 
                         return $row->body ?? '-';
@@ -108,15 +120,17 @@ class NotificationSettingController extends Controller
         $modules = $this->modules;
         View::share('modules', $modules);
 
-        $courses = MasterCourse::pluck('course_name', 'id');
-        $batches = [];
-        $classes = [];
+        $academicYears = MasterAcademicYear::where('status', 'active')->orderByDesc('start_date')->get();
+        $currentAcademicYear = MasterAcademicYear::current();
+        $standards = MasterStandard::where('status', 'active')->orderBy('id')->pluck('name', 'id');
+        $divisions = MasterDivision::where('status', 'active')->orderBy('name')->pluck('name');
         $students = [];
         $selectedStudents = [];
 
-        View::share('courses', $courses);
-        View::share('batches', $batches);
-        View::share('classes', $classes);
+        View::share('academicYears', $academicYears);
+        View::share('currentAcademicYear', $currentAcademicYear);
+        View::share('standards', $standards);
+        View::share('divisions', $divisions);
         View::share('students', $students);
         View::share('selectedStudents', $selectedStudents);
 
@@ -160,6 +174,8 @@ class NotificationSettingController extends Controller
 
             // Create a single NotificationSetting record for all selected students
             $notificationData = $validated;
+            $notificationData['course_id'] = null;
+            $notificationData['batch_id'] = null;
             $notificationData['student_id'] = implode(',', $studentIds);
             if (isset($validated['class_id']) && is_array($validated['class_id'])) {
                 $notificationData['class_id'] = implode(',', $validated['class_id']);
@@ -242,65 +258,29 @@ class NotificationSettingController extends Controller
 
         try {
             $edit = NotificationSetting::findOrFail($id);
-            $courses = MasterCourse::pluck('course_name', 'id');
 
+            $academicYears = MasterAcademicYear::where('status', 'active')->orderByDesc('start_date')->get();
+            $currentAcademicYear = MasterAcademicYear::current();
+            $standards = MasterStandard::where('status', 'active')->orderBy('id')->pluck('name', 'id');
+            $divisions = MasterDivision::where('status', 'active')->orderBy('name')->pluck('name');
             $selectedStudents = $edit->student_id ? explode(',', $edit->student_id) : [];
+            $selectedClasses = $edit->class_id ? array_filter(array_map('trim', explode(',', $edit->class_id))) : [];
 
             $students = [];
-            $batches = [];
-            $classes = [];
-
-            if ($edit->course_id) {
-                // Get batches for this course
-                $batches = \App\Models\Master\MasterBatch::where('course_id', $edit->course_id)
-                    ->where('status', 'active')
-                    ->pluck('batch_name', 'id')
-                    ->toArray();
-
-                // Get students for this course (with batch & class filter if they exist in DB)
-                $query = \App\Models\CourceRegistration::with('admission:id,first_name,last_name,father_name')
-                    ->where('course_id', $edit->course_id);
-
-                if ($edit->batch_id) {
-                    $query->where('batch_id', $edit->batch_id);
-
-                    // Get classes for this batch
-                    $shift = \App\Models\Master\MasterShift::select('class_id')
-                        ->where('status', 'active')
-                        ->where('batch_id', $edit->batch_id)
-                        ->groupBy('class_id')
-                        ->get();
-                    $classIds = $shift->pluck('class_id')->toArray();
-                    $classes = \App\Models\Master\MasterClass::where('status', 'active')
-                        ->whereIn('id', $classIds)
-                        ->pluck('class', 'id')
-                        ->toArray();
-                }
-
-                if ($edit->class_id) {
-                    $query->where('class_id', $edit->class_id);
-                }
-
-                $students = $query->get()
-                    ->map(function ($reg) {
-                        $first  = $reg->admission->first_name ?? '';
-                        $last   = $reg->admission->last_name ?? '';
-                        $father = $reg->admission->father_name ?? '';
-                        $fullName = trim(preg_replace('/\s+/', ' ', $first . ' ' . $last . ' ' . $father));
-                        return [
-                            'id' => $reg->admission->id ?? null,
-                            'name' => $fullName,
-                        ];
-                    })
-                    ->filter(fn($s) => $s['id'] != null)
-                    ->values()
-                    ->toArray();
+            if ($edit->standard_id) {
+                $students = $this->fetchStudentsByStandardClass(
+                    (int) $edit->standard_id,
+                    $selectedClasses,
+                    $edit->academic_year_id ? (int) $edit->academic_year_id : null
+                );
             }
 
             View::share('edit', $edit);
-            View::share('courses', $courses);
-            View::share('batches', $batches);
-            View::share('classes', $classes);
+            View::share('academicYears', $academicYears);
+            View::share('currentAcademicYear', $currentAcademicYear);
+            View::share('standards', $standards);
+            View::share('divisions', $divisions);
+            View::share('selectedClasses', $selectedClasses);
             View::share('students', $students);
             View::share('selectedStudents', $selectedStudents);
 
@@ -318,6 +298,8 @@ class NotificationSettingController extends Controller
             $notificationSetting = NotificationSetting::findOrFail($id);
 
             $studentIds = array_filter($validated['student_id'], fn($id) => $id !== 'all');
+            $validated['course_id'] = null;
+            $validated['batch_id'] = null;
             $validated['student_id'] = implode(',', $studentIds);
             if (isset($validated['class_id']) && is_array($validated['class_id'])) {
                 $validated['class_id'] = implode(',', $validated['class_id']);
@@ -406,39 +388,69 @@ class NotificationSettingController extends Controller
 
 
 
-    public function getStudentsByCourse(Request $request, $course_id)
+    public function getStudentsByStandard(Request $request, $standard_id)
     {
         try {
-            $query = \App\Models\CourceRegistration::with('student', 'admission:id,first_name,last_name,father_name')
-                ->where('course_id', $course_id)
-                ->whereNotIn('status', ['Cancel', 'cancel']);
-
-            if ($request->filled('batch_id')) {
-                $query->where('batch_id', $request->batch_id);
+            $classIds = $request->input('class_id', []);
+            if (!is_array($classIds)) {
+                $classIds = array_filter(array_map('trim', explode(',', (string) $classIds)));
             }
 
-            if ($request->filled('class_id')) {
-                $classIds = is_array($request->class_id) ? $request->class_id : explode(',', $request->class_id);
-                $query->whereIn('class_id', $classIds);
-            }
+            $academicYearId = $request->filled('academic_year_id')
+                ? (int) $request->input('academic_year_id')
+                : null;
 
-            $students = $query->get()
-                ->map(function ($reg) {
-                    $first  = $reg->admission->first_name ?? '';
-                    $last   = $reg->admission->last_name ?? '';
-                    $father = $reg->admission->father_name ?? '';
-                    $fullName = trim(preg_replace('/\s+/', ' ', $first . ' ' . $last . ' ' . $father));
-                    return [
-                        'id' => $reg->admission->id ?? null,
-                        'name' => $fullName,
-                    ];
-                })
-                ->filter(fn($s) => $s['id'] != null)
-                ->values();
+            $students = $this->fetchStudentsByStandardClass((int) $standard_id, $classIds, $academicYearId);
 
             return response()->json($students);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    private function fetchStudentsByStandardClass(int $standardId, array $divisions = [], ?int $academicYearId = null): array
+    {
+        $divisions = array_values(array_filter(array_map('trim', $divisions)));
+        if ($standardId <= 0) {
+            return [];
+        }
+
+        $query = Admission::query()
+            ->select('id', 'first_name', 'last_name', 'father_name', 'gr_no', 'division')
+            ->where('current_std_id', $standardId);
+
+        if ($academicYearId) {
+            $query->where('academic_year_id', $academicYearId);
+        }
+
+        if (!empty($divisions)) {
+            $query->whereIn('division', $divisions);
+        }
+
+        return $query
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get()
+            ->map(function ($admission) {
+                $fullName = trim(preg_replace(
+                    '/\s+/',
+                    ' ',
+                    ($admission->first_name ?? '') . ' ' . ($admission->last_name ?? '') . ' ' . ($admission->father_name ?? '')
+                ));
+                $label = $fullName !== '' ? $fullName : ('Student #' . $admission->id);
+                if (!empty($admission->gr_no)) {
+                    $label .= ' (GR: ' . $admission->gr_no . ')';
+                }
+                if (!empty($admission->division)) {
+                    $label .= ' - ' . $admission->division;
+                }
+
+                return [
+                    'id' => $admission->id,
+                    'name' => $label,
+                ];
+            })
+            ->values()
+            ->toArray();
     }
 }

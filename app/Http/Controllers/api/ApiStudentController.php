@@ -13,6 +13,7 @@ use App\Models\NotificationSetting;
 use App\Models\StudentTestMark;
 use App\Models\Timetable;
 use App\Models\Test;
+use App\Services\SchoolDatabaseManager;
 use Mpdf\Mpdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,8 +31,7 @@ class ApiStudentController extends Controller
     /**
      * Get academic details of logged-in student
      *
-     * Returns the academic information (university, course, batch, class, shift timings and timetable attachment)
-     * for the currently authenticated student.
+     * Returns school academic info (standard, class, roll_no, academic year, school).
      *
      * @authenticated
      *
@@ -39,18 +39,14 @@ class ApiStudentController extends Controller
      *   "status": "true",
      *   "message": "Academic details fetched successfully.",
      *   "data": {
-     *     "university": "Saurashtra University",
-     *     "department": "Computer Science",
-     *     "course": "BCA",
-     *     "batch": "2024-2027",
-     *     "class": "TYBCA",
-     *     "shift": "09:00 AM To 12:00 PM",
-     *     "gr_no": 123,
-     *     "enrollment_no": "ENR2024001",
-     *     "spid": "SPID12345",
-     *     "udise": "UDISE1234",
-     *     "apaar_id_abc_id": "APAR123456",
-     *     "attachment": "https://example.com/storage/timetable.pdf"
+     *     "gr_no": "2502",
+     *     "student_name": "BALAS DHIYA DINESHBHAI",
+     *     "standard": "1st",
+     *     "division": "A",
+     *     "class": "A",
+     *     "roll_no": "12",
+     *     "academic_year": "2025-26",
+     *     "school": { "code": "ues", "short_name": "UES", "name": "Ultra English School" }
      *   }
      * }
      *
@@ -66,52 +62,48 @@ class ApiStudentController extends Controller
             $student = Auth::guard('student-api')->user();
 
             if (!$student) {
-                return $this->sendError("Unauthorization.", [], [], 401);
+                return $this->sendError('Unauthorization.', [], [], 401);
             }
 
-            $courseRegistered = CourceRegistration::where('register_id', $student->id)
-                ->with(['batch', 'course', 'class', 'shift', 'admission'])
-                ->first();
-            // dd($courseRegistered);
-            if (!$courseRegistered) {
-                return $this->sendError('Your Academic Detail not found.', [], [], 422);
-            } elseif (!in_array(strtolower($courseRegistered?->status), ['running', 'active'])) {
-                return $this->sendError('Academic detail not active.', [], [], 422);
-            } else {
+            $student->loadMissing(['currentStandard', 'admissionStandard', 'academicYear']);
 
-                // Fetch timetable attachment
-                $timetable = Timetable::where('course_id', $courseRegistered->course_id)
-                    ->where('batch_id', $courseRegistered->batch_id)
-                    ->where('class_id', $courseRegistered->class_id)
-                    ->first();
+            $school = SchoolDatabaseManager::getActiveSchool() ?: [];
+            $standardName = (string) (optional($student->currentStandard)->name
+                ?: optional($student->admissionStandard)->name
+                ?: '');
 
-                // Format shift timing
-                $shiftTiming = '';
-                if ($courseRegistered->shift?->from_time && $courseRegistered->shift?->to_time) {
-                    $from = \Carbon\Carbon::parse($courseRegistered->shift->from_time)->format('h:i A');
-                    $to   = \Carbon\Carbon::parse($courseRegistered->shift->to_time)->format('h:i A');
-                    $shiftTiming = $from . ' To ' . $to;
-                }
+            $data = [
+                'gr_no'              => (string) ($student->gr_no ?? ''),
+                'biometric_id'       => (string) ($student->biometric_id ?? ''),
+                'student_name'       => strtoupper(trim(preg_replace(
+                    '/\s+/',
+                    ' ',
+                    ($student->first_name ?? '') . ' ' . ($student->father_name ?? '') . ' ' . ($student->last_name ?? '')
+                ))),
+                'standard'           => $standardName,
+                'standard_id'        => $student->current_std_id ? (int) $student->current_std_id : null,
+                'division'           => (string) ($student->division ?? ''),
+                'class'              => (string) ($student->division ?? ''),
+                'roll_no'            => (string) ($student->roll_no ?? ''),
+                'stream'             => (string) ($student->stream ?? ''),
+                'academic_year'      => (string) (optional($student->academicYear)->name ?? ''),
+                'academic_year_id'   => $student->academic_year_id ? (int) $student->academic_year_id : null,
+                'admission_date'     => (string) ($student->admission_date ?? ''),
+                'apaar_id'           => (string) ($student->apaar_id_abc_id ?? ''),
+                'udise'              => (string) ($student->udise ?? ''),
+                'spid'               => (string) ($student->spid ?? ''),
+                'aadhar_card_no'     => (string) ($student->aadhar_card_no ?? ''),
+                'pen_no'             => (string) ($student->pen_no ?? ''),
+                'status'             => (string) ($student->status ?? ''),
+                'profile_pic'        => (string) ($student->profile_pic_url ?? ''),
+                'school'             => [
+                    'code'       => (string) (SchoolDatabaseManager::getActiveSchoolCode() ?? ''),
+                    'short_name' => (string) ($school['short_name'] ?? ''),
+                    'name'       => (string) ($school['name'] ?? ''),
+                ],
+            ];
 
-                $data = [
-                    'university'        => $courseRegistered->university ?? '',
-                    'department'        => $courseRegistered->department ?? '',
-                    'course'            => $courseRegistered->course?->course_name ?? '',
-                    'batch'             => $courseRegistered->batch?->batch_name ?? '',
-                    'class'             => $courseRegistered->class?->class ?? '',
-                    'shift'             => $shiftTiming,
-                    'gr_no'             => $student->gr_no ?? '',
-                    'biometric_id'      => $student->biometric_id ?? '',
-                    'enrollment_no'     => $student->enrolment_no ?? '',
-                    'spid'              => $student->spid ?? '',
-                    'udise'             => $student->udise,
-                    'apaar_id_abc_id'   => $student->apaar_id_abc_id,
-                    'profile_pic'       => $student->profile_pic_url ?? '',
-                    'attachment'        => $timetable?->attachment ? asset($timetable->attachment) : '',
-                ];
-
-                return $this->sendResponse($data, 'Academic details fetched successfully.');
-            }
+            return $this->sendResponse($data, 'Academic details fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }
@@ -189,8 +181,7 @@ class ApiStudentController extends Controller
      *         "receipt_no": 10,
      *         "amount": 15000,
      *         "date": "2025-06-01",
-     *         "status": "Paid",
-     *         "receipt_url": "http://127.0.0.1:8000/api/student/fee-receipt/10/download"
+     *         "status": "Paid"
      *       }
      *     ]
      *   }
@@ -212,6 +203,7 @@ class ApiStudentController extends Controller
             }
 
             $feeRecordsQuery = FeeReceiptEntry::query()
+                ->with(['admission:id,bus_route_village', 'standard:id,name'])
                 ->where('admission_id', $student->id);
 
             if ($request->filled('semester') || $request->filled('term')) {
@@ -227,15 +219,26 @@ class ApiStudentController extends Controller
             $paidFees = (float) $feeRecords->sum('net_amount');
 
             $feesDetails = $feeRecords->map(function ($fee) {
+                $hasBusPrint = $this->feeReceiptHasBusPrint($fee);
+                $busRoute = $this->feeReceiptBusRoute($fee);
+
                 return [
-                    'term'        => $fee->term,
-                    'receipt_no'  => $fee->receipt_no,
-                    'amount'      => (float) $fee->net_amount,
-                    'date'        => $fee->date ? $fee->date->format('Y-m-d') : null,
-                    'status'      => 'Paid',
-                    'receipt_url' => route('fee-receipt-entry.print', ['id' => $fee->id]),
+                    'id'                => (int) $fee->id,
+                    'term'              => $fee->term,
+                    'receipt_no'        => $fee->receipt_no,
+                    'standard'          => (string) ($fee->standard->name ?? ''),
+                    'division'          => (string) ($fee->division ?? ''),
+                    'amount'            => (float) $fee->net_amount,
+                    'education_fee'     => (float) ($fee->school_fee ?? 0),
+                    'vehicle_fee'       => (float) ($fee->vehicle_fee ?? 0),
+                    'date'              => $fee->date ? $fee->date->format('Y-m-d') : null,
+                    'status'            => 'Paid',
+                    'bus_route'         => $busRoute,
+                    'has_bus_print'     => $hasBusPrint,
+                    'education_fee_url' => url('/api/student/fee-receipt-print/' . $fee->id),
+                    'vehicle_fee_url'   => $hasBusPrint ? url('/api/student/fee-receipt-bus-print/' . $fee->id) : null,
                 ];
-            });
+            })->values();
 
             $data = [
                 'total'   => $paidFees,
@@ -249,74 +252,63 @@ class ApiStudentController extends Controller
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }
     }
+
     /**
-     * Get institute contact details
-     *
-     * Returns static contact information (branches and phone numbers) for the institute.
+     * Student fee receipt simple print PDF
+     */
+    public function fee_receipt_print($id, Request $request)
+    {
+        $request->merge(['type' => 'print']);
+        return $this->download_fee_receipt($id, $request);
+    }
+
+    /**
+     * Student fee receipt bus print PDF (only when bus route / vehicle fee exists)
+     */
+    public function fee_receipt_bus_print($id, Request $request)
+    {
+        $request->merge(['type' => 'bus']);
+        return $this->download_fee_receipt($id, $request);
+    }
+    /**
+     * Get contact details of logged-in student's school
      *
      * @authenticated
      *
      * @response 200 {
      *   "status": "true",
-     *   "message": "Contact Us Information fetched successfully.",
+     *   "message": "Contact Us information fetched successfully.",
      *   "data": {
-     *     "branches": [
-     *       {
-     *         "name": "Keshod Branch",
-     *         "address": "Amrut nagar road, Keshod",
-     *         "email": "vrundavancomputerkeshod@gmail.com"
-     *       }
-     *     ],
-     *     "contacts": {
-     *       "Vrundavan Computer": {
-     *         "College mobile": "96874 51774",
-     *         "Phone": "02871-231059",
-     *         "Distance": "93752 21111"
-     *       }
-     *     }
+     *     "school_code": "ues",
+     *     "school_name": "Ultra English School",
+     *     "location": "Behind Maruti Service Center, Veraval Road, Keshod - 362220",
+     *     "email": "ultraenglishschool@gmail.com",
+     *     "mobile_number": "1234567890"
      *   }
      * }
      */
     public function contact_details(Request $request)
     {
         try {
-            // dd('hello');
             $student = Auth::guard('student-api')->user();
-
             if (!$student) {
-                return $this->sendError("Unauthorization.", [], [], 401);
+                return $this->sendError('Unauthorization.', [], [], 401);
             }
+
+            $school = SchoolDatabaseManager::getActiveSchool();
+            if (empty($school)) {
+                return $this->sendError('School not found.', [], [], 404);
+            }
+
             $data = [
-                'branches' => [
-                    [
-                        'name'    => 'Keshod Branch',
-                        'address' => 'Amrut nagar road, Keshod',
-                        'email'   => 'vrundavancomputerskeshod@gmail.com',
-                    ],
-                    [
-                        'name'    => 'Vapi Branch',
-                        'address' => '134, Tirupati Plaza, Daman Rd, Chala, Vapi, Gujarat - 396191',
-                        'email'   => 'vrundavancomputersvapi@gmail.com',
-                    ],
-                    [
-                        'name'    => 'BCA College',
-                        'address' => 'PVM Campus, Veraval Road, Keshod',
-                        'email'   => 'pvmsciencecollagekeshod@gmail.com',
-                    ]
-                ],
-                'contacts' => [
-
-                    'Vrundavan Computer' => [
-                        'College mobile'        => '96874 51774',
-                        'School Number'         => '96246 51774',
-                        'Phone'         => '02871-231059',
-                        'Distance' => '93752 21111',
-                    ]
-
-                ]
+                'school_code'   => (string) ($school['code'] ?? SchoolDatabaseManager::getActiveSchoolCode() ?? ''),
+                'school_name'   => (string) ($school['name'] ?? ''),
+                'location'      => (string) ($school['location'] ?? ''),
+                'email'         => (string) ($school['email'] ?? ''),
+                'mobile_number' => (string) ($school['mobile'] ?? ''),
             ];
 
-            return $this->sendResponse($data, 'Contact Us Information fetched successfully.');
+            return $this->sendResponse($data, 'Contact Us information fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }
@@ -615,17 +607,21 @@ class ApiStudentController extends Controller
                 return $this->sendError("Unauthorized.", [], [], 401);
             }
 
-            $gdriveUrl = $student->gdrivefolderurl ?? null;
+            $gdriveUrl = trim((string) ($student->gdrivefolderurl ?? ''));
 
-            if (empty($gdriveUrl)) {
-                return $this->sendError("No Google Drive folder found.", [], [], 422);
+            if ($gdriveUrl === '') {
+                return $this->sendError('No Google Drive folder found.', [], [], 422);
             }
 
-            if (!preg_match('/^https?:\/\/drive\.google\.com\/drive\/folders\/[a-zA-Z0-9_\-]+/', $gdriveUrl)) {
-                return $this->sendError("Invalid Google Drive folder URL.", [], [], 422);
+            if (!preg_match('#^https?://drive\.google\.com/drive/folders/[a-zA-Z0-9_\-]+#', $gdriveUrl)) {
+                return $this->sendError('Invalid Google Drive folder URL.', [], [], 422);
             }
 
-            return $this->sendResponse(['gdrive_url' => $gdriveUrl], 'Google Drive folder link fetched successfully.');
+            return $this->sendResponse([
+                'gdrive_url'        => $gdriveUrl,
+                'gdrivefolderid'    => (string) ($student->gdrivefolderid ?? ''),
+                'gdrivefoldername'  => (string) ($student->gdrivefoldername ?? ''),
+            ], 'Google Drive folder link fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }
@@ -1092,29 +1088,28 @@ class ApiStudentController extends Controller
     }
 
     /**
-     * Get faculty complaint reports of student
+     * Get teacher complaint reports of logged-in student
      *
-     * Returns list of faculty complaints for student.
+     * @authenticated
      *
      * @response 200 {
      *   "status": "true",
-     *   "message": "Faculty complaint reports fetched successfully.",
+     *   "message": "Teacher complaint reports fetched successfully.",
      *   "data": [
      *     {
      *       "id": 1,
      *       "admission_id": 1,
      *       "gr_no": "229",
+     *       "academic_year": "2025-26",
      *       "date": "21-07-2026",
      *       "complaint": "Complaint text",
-     *       "faculty_id": 4,
-     *       "faculty_name": "Jignesh Parmar",
-     *       "faculty_email": "jignesh@gmail.com",
-     *       "created_at": "2026-07-21 15:30:00"
+     *       "teacher_name": "Jignesh Parmar",
+     *       "is_read": false
      *     }
      *   ]
      * }
      */
-    public function faculty_complaint_reports(Request $request)
+    public function teacher_complaint_reports(Request $request)
     {
         try {
             $student = Auth::guard('student-api')->user();
@@ -1124,40 +1119,53 @@ class ApiStudentController extends Controller
                 return $this->sendError("Unauthorization.", [], [], 401);
             }
 
-            // Automatically mark all complaints for this student as read
-            if ($studentId) {
+            $complaintTable = (new \App\Models\FacultyComplaintReport())->getTable();
+            $hasIsRead = \Illuminate\Support\Facades\Schema::hasColumn($complaintTable, 'is_read');
+
+            if ($studentId && $hasIsRead) {
                 \App\Models\FacultyComplaintReport::where('admission_id', $studentId)
                     ->where('is_read', false)
                     ->update(['is_read' => true]);
             }
 
-            $query = \App\Models\FacultyComplaintReport::with(['faculty:id,name,email']);
+            $query = \App\Models\FacultyComplaintReport::with([
+                'faculty:id,name,email',
+                'academicYear:id,name',
+            ]);
 
             if ($studentId) {
                 $query->where('admission_id', $studentId);
             }
 
-            if ($request->has('gr_no') && !empty($request->gr_no)) {
+            if ($request->filled('gr_no')) {
                 $query->where('gr_no', $request->gr_no);
             }
 
-            $reports = $query->orderBy('date', 'desc')
-                ->orderBy('id', 'desc')
+            $reports = $query->orderByDesc('date')
+                ->orderByDesc('id')
                 ->get()
-                ->map(function ($report) {
-                    return [
-                        'id'           => $report->id,
-                        'admission_id' => $report->admission_id,
-                        'gr_no'        => $report->gr_no,
-                        'date'         => $report->date ? \App\Helpers\Helper::convert_date($report->date, 'Y-m-d', 'd-m-Y') : '',
-                        'complaint'    => $report->complaint,
-                        'faculty_id'   => $report->faculty_id,
-                        'faculty_name' => $report->faculty?->name ?? '',
-                        'is_read'      => (bool) ($report->is_read ?? false),
-                    ];
-                });
+                ->map(function ($report) use ($hasIsRead) {
+                    $dateValue = $report->date;
+                    if ($dateValue instanceof \Carbon\CarbonInterface) {
+                        $dateValue = $dateValue->format('Y-m-d');
+                    }
 
-            return $this->sendResponse($reports, 'Faculty complaint reports fetched successfully.');
+                    $academicYearName = $report->academicYear?->name ?? '';
+
+                    return [
+                        'id'             => $report->id,
+                        'admission_id'   => $report->admission_id,
+                        'gr_no'          => $report->gr_no,
+                        'academic_year'  => $academicYearName,
+                        'date'           => $dateValue ? \App\Helpers\Helper::convert_date($dateValue, 'Y-m-d', 'd-m-Y') : '',
+                        'complaint'      => $report->complaint,
+                        'teacher_name'   => $report->faculty?->name ?? '',
+                        'is_read'        => $hasIsRead ? (bool) ($report->is_read ?? false) : true,
+                    ];
+                })
+                ->values();
+
+            return $this->sendResponse($reports, 'Teacher complaint reports fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }
@@ -1211,22 +1219,17 @@ class ApiStudentController extends Controller
                 return $this->sendError("Unauthorization.", [], [], 401);
             }
 
-            $unreadComplaints = \App\Models\FacultyComplaintReport::where('admission_id', $student->id)
-                ->where('is_read', false)
-                ->count();
+            $unreadComplaints = 0;
+            $complaintTable = (new \App\Models\FacultyComplaintReport())->getTable();
+            if (\Illuminate\Support\Facades\Schema::hasColumn($complaintTable, 'is_read')) {
+                $unreadComplaints = \App\Models\FacultyComplaintReport::where('admission_id', $student->id)
+                    ->where('is_read', false)
+                    ->count();
+            }
 
-            $marksheetCount = \App\Models\StudentMarksheetIssue::where('admission_id', $student->id)
-                ->count();
-
-            $assessmentCount = \App\Models\Assessment::where('admission_id', $student->id)
-                ->where('is_read', false)
-                ->count();
-
-            return $this->sendResponse([[
+            return $this->sendResponse([
                 'unread_complaints' => $unreadComplaints,
-                'marksheet_count' => $marksheetCount,
-                'unread_assessment' => $assessmentCount,
-            ]], 'Unread counts fetched successfully.');
+            ], 'Unread counts fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }
@@ -1368,21 +1371,51 @@ class ApiStudentController extends Controller
     public function download_fee_receipt($id, Request $request)
     {
         try {
-            $entry = FeeReceiptEntry::with(['standard', 'academicYear', 'admission'])->find($id);
+            $student = Auth::guard('student-api')->user();
+            if (!$student) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized.',
+                ], 401);
+            }
+
+            $entry = FeeReceiptEntry::with(['standard', 'academicYear', 'admission'])
+                ->where('id', $id)
+                ->where('admission_id', $student->id)
+                ->first();
 
             if (!$entry) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Receipt not found.'
+                    'message' => 'Receipt not found.',
                 ], 404);
             }
 
-            $school = \App\Services\SchoolDatabaseManager::getActiveSchool();
-            $modules = ['title' => 'Fee Receipt Entry'];
-            $html = view('software.module.fee-receipt-entry.print', compact('entry', 'school', 'modules'))->render();
-            $totalFee = (float) $entry->net_amount;
-            $amountInWords = $this->numberToWords($totalFee);
-            $logo_src = $this->getPdfImageSrc('uploads/logo/logo.png');
+            $type = strtolower((string) $request->get('type', 'print'));
+            $isBus = in_array($type, ['bus', 'bus-print', 'bus_print'], true);
+
+            if ($isBus && !$this->feeReceiptHasBusPrint($entry)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Bus print not available. Bus route / vehicle fee not found for this receipt.',
+                ], 422);
+            }
+
+            $school = SchoolDatabaseManager::getActiveSchool();
+
+            if ($isBus) {
+                $lines = [[
+                    'description' => 'Vehicle Fee',
+                    'amount' => (float) $entry->vehicle_fee,
+                ]];
+                $html = view('software.module.fee-receipt-entry.bus-print-api', compact('entry', 'lines', 'school'))->render();
+                $titlePrefix = 'Bus_Fee_Receipt';
+                $pdfTitle = 'Bus Fee Receipt - #' . $entry->receipt_no;
+            } else {
+                $html = view('software.module.fee-receipt-entry.print-api', compact('entry', 'school'))->render();
+                $titlePrefix = 'Fee_Receipt';
+                $pdfTitle = 'Fee Receipt - #' . $entry->receipt_no;
+            }
 
             $mpdf = new Mpdf([
                 'mode' => 'utf-8',
@@ -1395,14 +1428,7 @@ class ApiStudentController extends Controller
                 'autoPageBreak' => true,
             ]);
 
-            $logoLocal = public_path('uploads/logo/logo.png');
-            if (file_exists($logoLocal)) {
-                $mpdf->SetWatermarkImage($logoLocal, 0.08, [80, 80], [65, 45]);
-                $mpdf->showWatermarkImage = true;
-                $mpdf->watermarkImgBehind = true;
-            }
-
-            $mpdf->SetTitle('Fee Receipt - #' . $entry->receipt_no);
+            $mpdf->SetTitle($pdfTitle);
             $mpdf->WriteHTML($html);
 
             $rawStudentName = $entry->student_name ?? 'Student';
@@ -1410,7 +1436,7 @@ class ApiStudentController extends Controller
             $safeStudentName = trim($safeStudentName, '_');
             $semesterStr = !empty($entry->term) ? $entry->term : 'Receipt';
 
-            $fileName = 'Fee_Receipt_' . $entry->receipt_no . '_' . $safeStudentName . '_' . $semesterStr . '.pdf';
+            $fileName = $titlePrefix . '_' . $entry->receipt_no . '_' . $safeStudentName . '_' . $semesterStr . '.pdf';
             $pdfContent = $mpdf->Output($fileName, 'S');
 
             $disposition = ($request->get('action') === 'view' || $request->get('action') === 'stream') ? 'inline' : 'attachment';
@@ -1421,9 +1447,32 @@ class ApiStudentController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Could not generate receipt PDF: ' . $e->getMessage()
+                'message' => 'Could not generate receipt PDF: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function feeReceiptHasBusPrint(FeeReceiptEntry $entry): bool
+    {
+        if ((float) ($entry->vehicle_fee ?? 0) > 0) {
+            return true;
+        }
+
+        return $this->feeReceiptBusRoute($entry) !== '';
+    }
+
+    private function feeReceiptBusRoute(FeeReceiptEntry $entry): string
+    {
+        $snapshotRoute = '';
+        if (is_array($entry->fee_snapshot ?? null)) {
+            $snapshotRoute = trim((string) ($entry->fee_snapshot['bus_route'] ?? ''));
+        }
+
+        if ($snapshotRoute !== '') {
+            return $snapshotRoute;
+        }
+
+        return trim((string) ($entry->admission->bus_route_village ?? ''));
     }
 
     private function numberToWords($num)

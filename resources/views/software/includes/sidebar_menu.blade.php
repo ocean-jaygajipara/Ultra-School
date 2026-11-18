@@ -362,8 +362,8 @@
         </li>
         @enddirectCanAny
 
-        @directCanAny(['issue-certificate-bonafide-list', 'issue-certificate-english-medium-list', 'issue-certificate-letter-recommendation-list', 'issue-certificate-tc-list', 'leaving-certificate-entry-list'])
-        <li class="menu-item {{ in_array($sidebar_active, ['issue-certificate', 'leaving-certificate-entry'], true) || Route::is('issue-certificate.*') || Route::is('leaving-certificate-entry.*') ? 'active open' : '' }}">
+        @directCanAny(['issue-certificate-bonafide-list', 'issue-certificate-english-medium-list', 'issue-certificate-letter-recommendation-list', 'issue-certificate-tc-list', 'leaving-certificate-entry-list', 'name-change-form-list', 'trial-certificate-list', 'character-certificate-list'])
+        <li class="menu-item {{ in_array($sidebar_active, ['issue-certificate', 'leaving-certificate-entry', 'name-change-form', 'trial-certificate', 'character-certificate'], true) || Route::is('issue-certificate.*') || Route::is('leaving-certificate-entry.*') || Route::is('name-change-form.*') || Route::is('trial-certificate.*') || Route::is('character-certificate.*') ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-certificate me-2"></i>
                 <div data-i18n="Issue Certificate">Issue Certificate</div>
@@ -384,6 +384,32 @@
                     </a>
                 </li>
                 @enddirectCan
+
+                @if ((\App\Services\SchoolDatabaseManager::getActiveSchoolCode() ?? '') === 'us')
+                    @directCan('name-change-form-list')
+                    <li class="menu-item {{ $sidebar_active == 'name-change-form' || Route::is('name-change-form.*') ? 'active' : '' }}">
+                        <a href="{{ route('name-change-form.index') }}" class="menu-link">
+                            <div data-i18n="Name Change Form">Name Change Form</div>
+                        </a>
+                    </li>
+                    @enddirectCan
+
+                    @directCan('trial-certificate-list')
+                    <li class="menu-item {{ $sidebar_active == 'trial-certificate' || Route::is('trial-certificate.*') ? 'active' : '' }}">
+                        <a href="{{ route('trial-certificate.index') }}" class="menu-link">
+                            <div data-i18n="Trial Certificate">Trial Certificate</div>
+                        </a>
+                    </li>
+                    @enddirectCan
+
+                    @directCan('character-certificate-list')
+                    <li class="menu-item {{ $sidebar_active == 'character-certificate' || Route::is('character-certificate.*') ? 'active' : '' }}">
+                        <a href="{{ route('character-certificate.index') }}" class="menu-link">
+                            <div data-i18n="Character Certificate">Character Certificate</div>
+                        </a>
+                    </li>
+                    @enddirectCan
+                @endif
 
                 {{-- @directCan('issue-certificate-tc-list')
                 <li class="menu-item {{ Route::is('issue-certificate.tc') ? 'active' : '' }}">
@@ -413,8 +439,8 @@
         @enddirectCanAny
 
         @directCanAny([
-            'faculty-complaint-report-list',
-            'faculty-complaint-report-create',
+            'teacher-complaint-report-list',
+            'teacher-complaint-report-create',
             'marksheet-issue-list',
             'notification-setting-list',
             'notification-setting-create',
@@ -426,16 +452,16 @@
             'task-list',
             'achievement-list'
         ])
-        <li class="menu-item {{ in_array($sidebar_active, ['faculty-complaint-report', 'marksheet-issue', 'notification_setting', 'assessment', 'assignment', 'combined-report', 'task', 'achievement']) ? 'active open' : '' }}">
+        <li class="menu-item {{ in_array($sidebar_active, ['teacher-complaint-report', 'marksheet-issue', 'notification_setting', 'assessment', 'assignment', 'combined-report', 'task', 'achievement']) ? 'active open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="ti ti-messages me-2"></i>
                 <div data-i18n="Communication">Communication</div>
             </a>
             <ul class="menu-sub">
-                @directCan('faculty-complaint-report-list')
-                <li class="menu-item {{ $sidebar_active == 'faculty-complaint-report' ? 'active' : '' }}">
-                    <a href="{{ route('faculty-complaint-report.index') }}" class="menu-link">
-                        <div data-i18n="Faculty Complaint Report">Faculty Complaint Report</div>
+                @directCan('teacher-complaint-report-list')
+                <li class="menu-item {{ $sidebar_active == 'teacher-complaint-report' ? 'active' : '' }}">
+                    <a href="{{ route('teacher-complaint-report.index') }}" class="menu-link">
+                        <div data-i18n="Teacher Complaint Report">Teacher Complaint Report</div>
                     </a>
                 </li>
                 @enddirectCan
