@@ -151,6 +151,11 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label class="crx-label" for="class_teacher">Class Teacher</label>
+                        <input type="text" id="class_teacher" name="class_teacher" class="crx-input"
+                               value="{{ $filters['class_teacher'] ?? '' }}" placeholder="Teacher name">
+                    </div>
                     <div class="col-md-2 col-sm-6 d-flex gap-2">
                         <button type="submit" class="btn btn-primary" style="height:46px;border-radius:12px;font-weight:600;">
                             <i class="ti ti-search"></i> Show

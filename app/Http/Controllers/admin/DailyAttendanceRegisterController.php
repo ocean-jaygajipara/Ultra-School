@@ -18,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -99,12 +100,13 @@ class DailyAttendanceRegisterController extends Controller
         $report = $this->buildReport($filters);
         $school = SchoolDatabaseManager::getActiveSchool();
 
-        $dayCols = (int) $report['days_in_month'];
+        // Match print layout: always 31 day columns
+        $dayCols = 31;
         $firstDayCol = 6;
-        $lastDayCol = $firstDayCol + $dayCols - 1;
-        $thisMonthCol = $lastDayCol + 1;
-        $prevMonthCol = $thisMonthCol + 1;
-        $endMonthCol = $prevMonthCol + 1;
+        $lastDayCol = $firstDayCol + $dayCols - 1; // 36
+        $thisMonthCol = $lastDayCol + 1;           // 37
+        $prevMonthCol = $thisMonthCol + 1;         // 38
+        $endMonthCol = $prevMonthCol + 1;          // 39
         $lastCol = $endMonthCol;
         $col = fn (int $i) => Coordinate::stringFromColumnIndex($i);
         $last = $col($lastCol);
@@ -128,12 +130,33 @@ class DailyAttendanceRegisterController extends Controller
                 ],
             ],
         ];
+        $sundayFill = [
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'F3F3F3'],
+            ],
+        ];
+        $headerFill = [
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'EEF0FA'],
+            ],
+        ];
 
         $schoolName = strtoupper($school['name'] ?? 'Ultra School');
         if (SchoolDatabaseManager::getActiveSchoolCode() === 'ues') {
             $schoolName .= '-KESHOD';
         }
-        $classLabel = $filters['division'] !== '' ? $filters['division'] : '-';
+        $classLabel = $filters['division'] !== '' ? $filters['division'] : '';
+        $classTeacher = trim((string) ($filters['class_teacher'] ?? ''));
+        $daysByNum = collect($report['days'])->keyBy('day');
+        $sundayCols = [];
+        for ($day = 1; $day <= $dayCols; $day++) {
+            $metaDay = $daysByNum->get($day);
+            if ($metaDay && !empty($metaDay['is_sunday'])) {
+                $sundayCols[] = $firstDayCol + $day - 1;
+            }
+        }
 
         $maxNameLen = 18;
         $maxCasteLen = 10;
@@ -141,60 +164,60 @@ class DailyAttendanceRegisterController extends Controller
             $maxNameLen = max($maxNameLen, mb_strlen((string) $s['name']));
             $maxCasteLen = max($maxCasteLen, mb_strlen((string) $s['caste']));
         }
-        // One-line names like paper register; width from longest name
-        $nameWidth = min(32, max(22, $maxNameLen * 1.05));
-        $casteWidth = min(16, max(12, $maxCasteLen * 1.05));
+        $nameWidth = min(34, max(22, $maxNameLen * 1.05));
+        $casteWidth = min(16, max(11, $maxCasteLen * 1.05));
 
-        // Row 1 — School
+        // Row 1 — School title (print blue)
         $sheet->mergeCells("A1:{$last}1");
         $sheet->setCellValue('A1', $schoolName);
-        $sheet->getRowDimension(1)->setRowHeight(22);
-        $sheet->getStyle("A1:{$last}1")->getFont()->setBold(true)->setSize(14);
+        $sheet->getRowDimension(1)->setRowHeight(24);
+        $sheet->getStyle("A1:{$last}1")->getFont()
+            ->setBold(true)->setSize(16)->setColor(new Color('FF1F2580'));
         $sheet->getStyle("A1:{$last}1")->getAlignment()->setHorizontal($center)->setVertical($middle);
 
-        // Row 2 — Title + Date
-        $midMeta = max(10, (int) floor(($lastCol + 1) / 2));
+        // Row 2 — Title (red) + Date
+        $midMeta = 18;
         $sheet->mergeCells('A2:' . $col($midMeta) . '2');
         $sheet->setCellValue('A2', 'Daily Attendance Register');
-        $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
-        $sheet->getStyle('A2')->getAlignment()->setVertical($middle);
+        $sheet->getStyle('A2')->getFont()
+            ->setBold(true)->setSize(12)->setColor(new Color('FFE1141C'));
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal($left)->setVertical($middle);
 
         $sheet->mergeCells($col($midMeta + 1) . '2:' . $last . '2');
-        $sheet->setCellValue($col($midMeta + 1) . '2', now()->format('d-m-Y'));
+        $sheet->setCellValue($col($midMeta + 1) . '2', $report['report_date'] ?? now()->format('d-m-Y'));
         $sheet->getStyle($col($midMeta + 1) . '2:' . $last . '2')->getFont()->setBold(true)->setSize(10);
         $sheet->getStyle($col($midMeta + 1) . '2:' . $last . '2')->getAlignment()->setHorizontal($right)->setVertical($middle);
-        $sheet->getRowDimension(2)->setRowHeight(17);
+        $sheet->getRowDimension(2)->setRowHeight(18);
 
-        // Row 3 — Meta
+        // Row 3 — Meta (Month / Year / Standard / Class / Class Teacher)
         $sheet->mergeCells("A3:{$last}3");
         $sheet->setCellValue(
             'A3',
-            'Month : ' . $report['month_name']
-            . '     Year : ' . $filters['year']
-            . '     Standard : ' . $report['standard_label']
-            . '     Class : ' . $classLabel
+            'Month: ' . $report['month_name']
+            . '          Year: ' . $filters['year']
+            . '          Standard: ' . $report['standard_label']
+            . '          Class: ' . $classLabel
+            . '          Class Teacher: ' . $classTeacher
         );
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(10);
-        $sheet->getStyle('A3')->getAlignment()->setVertical($middle);
-        $sheet->getRowDimension(3)->setRowHeight(17);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal($left)->setVertical($middle);
+        $sheet->getRowDimension(3)->setRowHeight(18);
 
-        // Rows 5-6 — Headers
+        // Rows 5-6 — Headers (print style)
         $headerTop = 5;
         $headerBottom = 6;
-        foreach (['Roll No.', 'GR No.', 'Name of Student', 'Caste', 'Birthdate'] as $i => $label) {
+        foreach (["Roll\nNo.", "GR\nNo.", 'Name of Student', 'Caste', 'Birthdate'] as $i => $label) {
             $c = $col($i + 1);
             $sheet->mergeCells("{$c}{$headerTop}:{$c}{$headerBottom}");
             $sheet->setCellValue("{$c}{$headerTop}", $label);
         }
 
-        $daysByNum = collect($report['days'])->keyBy('day');
         for ($day = 1; $day <= $dayCols; $day++) {
             $c = $col($firstDayCol + $day - 1);
             $metaDay = $daysByNum->get($day);
             $sheet->setCellValue($c . $headerTop, $metaDay['dow'] ?? '');
-            $sheet->setCellValue($c . $headerBottom, $day);
-            // Wide enough for SUN/MON without wrap; uniform for all days
-            $sheet->getColumnDimension($c)->setWidth(4.2);
+            $sheet->setCellValue($c . $headerBottom, $metaDay['day'] ?? '');
+            $sheet->getColumnDimension($c)->setWidth(3.6);
         }
 
         foreach ([
@@ -208,15 +231,16 @@ class DailyAttendanceRegisterController extends Controller
             $sheet->getColumnDimension($c)->setWidth(11);
         }
 
-        $sheet->getRowDimension($headerTop)->setRowHeight(16);
-        $sheet->getRowDimension($headerBottom)->setRowHeight(14);
+        $sheet->getRowDimension($headerTop)->setRowHeight(28);
+        $sheet->getRowDimension($headerBottom)->setRowHeight(16);
 
-        // Info headers: wrap OK
+        $headerRange = "A{$headerTop}:{$last}{$headerBottom}";
+        $sheet->getStyle($headerRange)->applyFromArray($thinBorder);
+        $sheet->getStyle($headerRange)->applyFromArray($headerFill);
         $sheet->getStyle("A{$headerTop}:E{$headerBottom}")->getFont()->setBold(true)->setSize(8);
         $sheet->getStyle("A{$headerTop}:E{$headerBottom}")->getAlignment()
             ->setHorizontal($center)->setVertical($middle)->setWrapText(true);
 
-        // Day headers: NO wrap (prevents SUN → SU/N), small font fits 4.2 width
         $dayRange = $col($firstDayCol) . $headerTop . ':' . $col($lastDayCol) . $headerBottom;
         $sheet->getStyle($col($firstDayCol) . $headerTop . ':' . $col($lastDayCol) . $headerTop)
             ->getFont()->setBold(true)->setSize(7);
@@ -225,13 +249,17 @@ class DailyAttendanceRegisterController extends Controller
         $sheet->getStyle($dayRange)->getAlignment()
             ->setHorizontal($center)->setVertical($middle)->setWrapText(false)->setShrinkToFit(true);
 
-        // Atten headers: wrap + taller visual via merged rows
         $attenRange = $col($thisMonthCol) . $headerTop . ':' . $col($endMonthCol) . $headerBottom;
         $sheet->getStyle($attenRange)->getFont()->setBold(true)->setSize(8);
         $sheet->getStyle($attenRange)->getAlignment()
             ->setHorizontal($center)->setVertical($middle)->setWrapText(true);
 
-        // Student rows — single line, no overflow into next col
+        foreach ($sundayCols as $sunIdx) {
+            $c = $col($sunIdx);
+            $sheet->getStyle("{$c}{$headerTop}:{$c}{$headerBottom}")->applyFromArray($sundayFill);
+        }
+
+        // Student rows
         $dataStart = 7;
         $row = $dataStart;
         foreach ($report['students'] as $student) {
@@ -240,11 +268,30 @@ class DailyAttendanceRegisterController extends Controller
             $sheet->setCellValue('C' . $row, $student['name']);
             $sheet->setCellValue('D' . $row, $student['caste']);
             $sheet->setCellValue('E' . $row, $student['birthdate']);
+
+            for ($day = 1; $day <= $dayCols; $day++) {
+                $c = $col($firstDayCol + $day - 1);
+                $metaDay = $daysByNum->get($day);
+                $mark = ($metaDay && isset($student['marks'][$day])) ? $student['marks'][$day] : '';
+                $sheet->setCellValue($c . $row, $mark);
+            }
+
+            $sheet->setCellValue($col($thisMonthCol) . $row, $student['this_month'] ?? '');
+            $sheet->setCellValue($col($prevMonthCol) . $row, $student['pre_month'] ?? '');
+            $sheet->setCellValue($col($endMonthCol) . $row, $student['end_month'] ?? '');
             $sheet->getRowDimension($row)->setRowHeight(16);
             $row++;
         }
-        $dataEnd = max($dataStart, $row - 1);
 
+        if (!$report['students']) {
+            $sheet->mergeCells("A{$row}:{$last}{$row}");
+            $sheet->setCellValue("A{$row}", 'No students found for this class.');
+            $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal($center)->setVertical($middle);
+            $sheet->getRowDimension($row)->setRowHeight(20);
+            $row++;
+        }
+
+        $dataEnd = max($dataStart, $row - 1);
         if ($report['students']) {
             $sheet->getStyle("A{$dataStart}:B{$dataEnd}")->getAlignment()->setHorizontal($center)->setVertical($middle);
             $sheet->getStyle("C{$dataStart}:C{$dataEnd}")->getAlignment()
@@ -252,33 +299,50 @@ class DailyAttendanceRegisterController extends Controller
             $sheet->getStyle("D{$dataStart}:D{$dataEnd}")->getAlignment()
                 ->setHorizontal($left)->setVertical($middle)->setWrapText(false)->setShrinkToFit(true);
             $sheet->getStyle("E{$dataStart}:{$last}{$dataEnd}")->getAlignment()->setHorizontal($center)->setVertical($middle);
-            $sheet->getStyle("C{$dataStart}:D{$dataEnd}")->getFont()->setSize(8);
+            $sheet->getStyle("C{$dataStart}:C{$dataEnd}")->getFont()->setBold(true)->setSize(8);
+            $sheet->getStyle("D{$dataStart}:D{$dataEnd}")->getFont()->setSize(8);
         }
 
-        // Footer totals
+        // Footer totals (print labels + day cells)
+        $footerRows = [
+            'Total Present Boys'  => 'present_boys',
+            'Total Absent Boys'   => 'absent_boys',
+            'Total Present Girls' => 'present_girls',
+            'Total Absent Girls'  => 'absent_girls',
+            'Total Present'       => 'present_total',
+            'Total Absent'        => 'absent_total',
+            'Total'               => 'strength',
+        ];
         $footerStart = $row;
-        foreach ([
-            'Total Present Boys',
-            'Total Absent Boys',
-            'Total Present Girls',
-            'Total Absent Girls',
-            'Total Present',
-            'Total Absent',
-            'Total',
-        ] as $label) {
+        foreach ($footerRows as $label => $key) {
             $sheet->mergeCells("A{$row}:E{$row}");
             $sheet->setCellValue("A{$row}", $label);
-            $sheet->getRowDimension($row)->setRowHeight(14);
+            for ($day = 1; $day <= $dayCols; $day++) {
+                $c = $col($firstDayCol + $day - 1);
+                $metaDay = $daysByNum->get($day);
+                $val = $metaDay ? ($report['daily_totals'][$day][$key] ?? '') : '';
+                if ($val === 0 && $key !== 'strength') {
+                    $val = '';
+                }
+                $sheet->setCellValue($c . $row, $val);
+            }
+            $sheet->getRowDimension($row)->setRowHeight(15);
             $row++;
         }
         $footerEnd = $row - 1;
-        $sheet->getStyle("A{$footerStart}:E{$footerEnd}")->getFont()->setBold(true)->setSize(9);
+
+        $sheet->getStyle("A{$footerStart}:E{$footerEnd}")->getFont()->setBold(true)->setSize(8);
         $sheet->getStyle("A{$footerStart}:E{$footerEnd}")->getAlignment()->setHorizontal($left)->setVertical($middle);
         $sheet->getStyle($col($firstDayCol) . $footerStart . ':' . $last . $footerEnd)
             ->getAlignment()->setHorizontal($center)->setVertical($middle);
         $sheet->getStyle("A{$headerTop}:{$last}{$footerEnd}")->applyFromArray($thinBorder);
 
-        // Avg. Attendance — labels A:B merged so text is fully visible
+        foreach ($sundayCols as $sunIdx) {
+            $c = $col($sunIdx);
+            $sheet->getStyle("{$c}{$dataStart}:{$c}{$footerEnd}")->applyFromArray($sundayFill);
+        }
+
+        // Avg. Attendance box (print)
         $avgTop = $footerEnd + 2;
         $avgHdr = $avgTop;
         $avgVal = $avgTop + 1;
@@ -291,6 +355,10 @@ class DailyAttendanceRegisterController extends Controller
         $sheet->setCellValue("D{$avgHdr}", 'Girls');
         $sheet->setCellValue("E{$avgHdr}", 'Total');
         $sheet->mergeCells("A{$avgVal}:B{$avgVal}");
+        $sheet->setCellValue("A{$avgVal}", '1. Boys / 2. Girls / 3. Total');
+        $sheet->setCellValue("C{$avgVal}", $report['avg']['boys'] ?? '');
+        $sheet->setCellValue("D{$avgVal}", $report['avg']['girls'] ?? '');
+        $sheet->setCellValue("E{$avgVal}", $report['avg']['total'] ?? '');
 
         $sheet->mergeCells("A{$pctHdr}:B{$pctHdr}");
         $sheet->setCellValue("A{$pctHdr}", '% of Avg. Attendance');
@@ -298,29 +366,45 @@ class DailyAttendanceRegisterController extends Controller
         $sheet->setCellValue("D{$pctHdr}", 'Girls');
         $sheet->setCellValue("E{$pctHdr}", 'Total');
         $sheet->mergeCells("A{$pctVal}:B{$pctVal}");
+        $sheet->setCellValue("A{$pctVal}", '1. Boys / 2. Girls / 3. Total');
+        $sheet->setCellValue("C{$pctVal}", $report['avg_pct']['boys'] ?? '');
+        $sheet->setCellValue("D{$pctVal}", $report['avg_pct']['girls'] ?? '');
+        $sheet->setCellValue("E{$pctVal}", $report['avg_pct']['total'] ?? '');
 
         $sheet->getStyle("A{$avgHdr}:E{$pctVal}")->applyFromArray($thinBorder);
         $sheet->getStyle("A{$avgHdr}:E{$pctVal}")->getAlignment()->setHorizontal($center)->setVertical($middle);
+        $sheet->getStyle("A{$avgHdr}:B{$avgHdr}")->applyFromArray($headerFill);
+        $sheet->getStyle("A{$pctHdr}:B{$pctHdr}")->applyFromArray($headerFill);
+        $sheet->getStyle("C{$avgHdr}:E{$avgHdr}")->applyFromArray($headerFill);
+        $sheet->getStyle("C{$pctHdr}:E{$pctHdr}")->applyFromArray($headerFill);
         $sheet->getStyle("A{$avgHdr}")->getFont()->setBold(true)->setSize(9);
         $sheet->getStyle("A{$pctHdr}")->getFont()->setBold(true)->setSize(9);
-        $sheet->getStyle("A{$avgHdr}")->getAlignment()->setHorizontal($left)->setVertical($middle);
-        $sheet->getStyle("A{$pctHdr}")->getAlignment()->setHorizontal($left)->setVertical($middle);
+        $sheet->getStyle("A{$avgHdr}:B{$avgVal}")->getAlignment()->setHorizontal($left)->setVertical($middle);
+        $sheet->getStyle("A{$pctHdr}:B{$pctVal}")->getAlignment()->setHorizontal($left)->setVertical($middle);
         $sheet->getStyle("C{$avgHdr}:E{$avgHdr}")->getFont()->setBold(true);
         $sheet->getStyle("C{$pctHdr}:E{$pctHdr}")->getFont()->setBold(true);
 
-        // Strength box (right)
-        $sheet->setCellValue($col($thisMonthCol) . $avgHdr, 'Boys');
-        $sheet->setCellValue($col($thisMonthCol) . $avgVal, 'Girls');
-        $sheet->setCellValue($col($thisMonthCol) . $pctHdr, 'Total');
-        $sheet->getStyle($col($thisMonthCol) . $avgHdr . ':' . $col($prevMonthCol) . $pctHdr)->applyFromArray($thinBorder);
-        $sheet->getStyle($col($thisMonthCol) . $avgHdr . ':' . $col($prevMonthCol) . $pctHdr)
+        // Strength / count box (print right side)
+        $countLabelCol = $thisMonthCol;
+        $countValueCol = $prevMonthCol;
+        $sheet->setCellValue($col($countLabelCol) . $avgHdr, 'Boys');
+        $sheet->setCellValue($col($countValueCol) . $avgHdr, $report['counts']['boys'] ?? '');
+        $sheet->setCellValue($col($countLabelCol) . $avgVal, 'Girls');
+        $sheet->setCellValue($col($countValueCol) . $avgVal, $report['counts']['girls'] ?? '');
+        $sheet->setCellValue($col($countLabelCol) . $pctHdr, 'Total');
+        $sheet->setCellValue($col($countValueCol) . $pctHdr, $report['counts']['total'] ?? '');
+        $sheet->getStyle($col($countLabelCol) . $avgHdr . ':' . $col($countValueCol) . $pctHdr)->applyFromArray($thinBorder);
+        $sheet->getStyle($col($countLabelCol) . $avgHdr . ':' . $col($countValueCol) . $pctHdr)
             ->getAlignment()->setHorizontal($center)->setVertical($middle);
-        $sheet->getStyle($col($thisMonthCol) . $avgHdr . ':' . $col($thisMonthCol) . $pctHdr)->getFont()->setBold(true);
+        $sheet->getStyle($col($countLabelCol) . $avgHdr . ':' . $col($countLabelCol) . $pctHdr)
+            ->getFont()->setBold(true);
+        $sheet->getStyle($col($countLabelCol) . $avgHdr . ':' . $col($countLabelCol) . $pctHdr)
+            ->applyFromArray($headerFill);
 
         // Signatures
         $signRow = $pctVal + 3;
-        $teacherStart = max($firstDayCol, $lastDayCol - 9);
-        $teacherEnd = min($lastDayCol, $teacherStart + 4);
+        $teacherStart = max($firstDayCol, $lastDayCol - 10);
+        $teacherEnd = min($lastDayCol, $teacherStart + 5);
         $sheet->setCellValue($col($teacherStart) . $signRow, 'Sign of Teacher');
         $sheet->mergeCells($col($teacherStart) . $signRow . ':' . $col($teacherEnd) . $signRow);
         $sheet->setCellValue($col($thisMonthCol) . $signRow, 'Sign of Principal');
@@ -328,10 +412,14 @@ class DailyAttendanceRegisterController extends Controller
         $sheet->getStyle($col($teacherStart) . $signRow . ':' . $last . $signRow)->getFont()->setBold(true)->setSize(10);
         $sheet->getStyle($col($teacherStart) . $signRow . ':' . $last . $signRow)
             ->getAlignment()->setHorizontal($center)->setVertical($middle);
-        $sheet->getRowDimension($signRow)->setRowHeight(18);
+        $sheet->getRowDimension($signRow)->setRowHeight(20);
+        $sheet->getStyle($col($teacherStart) . $signRow . ':' . $col($teacherEnd) . $signRow)
+            ->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle($col($thisMonthCol) . $signRow . ':' . $last . $signRow)
+            ->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
 
         // Column widths
-        $sheet->getColumnDimension('A')->setWidth(7.5);
+        $sheet->getColumnDimension('A')->setWidth(7);
         $sheet->getColumnDimension('B')->setWidth(8);
         $sheet->getColumnDimension('C')->setWidth($nameWidth);
         $sheet->getColumnDimension('D')->setWidth($casteWidth);
@@ -345,8 +433,9 @@ class DailyAttendanceRegisterController extends Controller
             ->setFitToHeight(0)
             ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
             ->setHorizontalCentered(true);
-        $sheet->getPageMargins()->setTop(0.3)->setBottom(0.3)->setLeft(0.2)->setRight(0.2);
+        $sheet->getPageMargins()->setTop(0.25)->setBottom(0.25)->setLeft(0.2)->setRight(0.2);
         $sheet->getPageSetup()->setPrintArea("A1:{$last}{$signRow}");
+        $sheet->getHeaderFooter()->setOddFooter('&CDaily Attendance Register - ' . $schoolName);
 
         $fileName = 'Daily_Attendance_Register_' . $report['standard_label'] . '_' . ($filters['division'] ?: 'All')
             . '_' . $report['month_name'] . '_' . $filters['year'] . '.xlsx';
@@ -415,7 +504,8 @@ class DailyAttendanceRegisterController extends Controller
             $days[] = [
                 'day'        => $day,
                 'date'       => $dateStr,
-                'dow'        => strtoupper($date->format('D')),
+                'dow'        => strtoupper(substr($date->format('D'), 0, 1)), // T/F/S/S/M/T/W
+                'dow_full'   => strtoupper($date->format('D')),
                 'is_sunday'  => $isSunday,
                 'is_holiday' => $isHoliday,
                 'is_working' => $isWorking,

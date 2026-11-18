@@ -3,11 +3,11 @@
     if ((\App\Services\SchoolDatabaseManager::getActiveSchoolCode() ?? '') === 'ues') {
         $schoolName .= '-KESHOD';
     }
-    $daysInMonth = $report['days_in_month'];
     $dayCols = 31;
     $infoCols = 5;
     $summaryCols = 3;
     $totalCols = $infoCols + $dayCols + $summaryCols;
+    $classTeacher = $filters['class_teacher'] ?? '';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -66,11 +66,11 @@
 
         .school-title {
             text-align: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             color: #1f2580;
             letter-spacing: 0.4px;
-            margin: 0 0 2px;
+            margin: 0 0 4px;
             line-height: 1.2;
         }
 
@@ -78,37 +78,43 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
         .report-title {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
             color: #e1141c;
             margin: 0;
         }
 
         .report-date {
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
         }
 
         .meta-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 18px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 6px;
+            gap: 22px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            align-items: baseline;
         }
 
         .meta-row span em {
             font-style: normal;
             font-weight: 400;
             border-bottom: 1px solid #000;
-            min-width: 90px;
+            min-width: 70px;
             display: inline-block;
             padding: 0 4px;
+            margin-left: 4px;
+        }
+
+        .meta-row .teacher em {
+            min-width: 160px;
         }
 
         table.register {
@@ -135,20 +141,20 @@
 
         table.register .col-roll { width: 28px; }
         table.register .col-gr { width: 36px; }
-        table.register .col-name { width: 145px; text-align: left; padding-left: 4px; }
+        table.register .col-name { width: 150px; text-align: left; padding-left: 4px; }
         table.register .col-caste { width: 78px; text-align: left; padding-left: 3px; }
         table.register .col-dob { width: 58px; }
         table.register .col-day { width: 14px; padding: 0; }
-        table.register .col-sum { width: 42px; font-size: 7px; }
+        table.register .col-sum { width: 44px; font-size: 7px; }
 
         .dow {
             writing-mode: vertical-rl;
             transform: rotate(180deg);
-            font-size: 7px;
+            font-size: 8px;
             font-weight: 700;
             letter-spacing: 0;
             line-height: 1;
-            height: 28px;
+            height: 22px;
             display: inline-block;
         }
 
@@ -158,6 +164,7 @@
         .name-cell { text-align: left !important; white-space: nowrap; overflow: hidden; font-weight: 600; font-size: 8.5px; }
         .caste-cell { text-align: left !important; font-size: 7.5px; white-space: nowrap; overflow: hidden; }
         .mark { font-weight: 700; font-size: 10px; }
+        .sum-val { font-weight: 700; font-size: 9px; }
 
         .footer-label {
             text-align: left !important;
@@ -168,14 +175,14 @@
 
         .bottom-wrap {
             display: flex;
-            gap: 12px;
-            margin-top: 8px;
+            gap: 16px;
+            margin-top: 10px;
             align-items: flex-start;
         }
 
         .avg-box {
             border: 1px solid #000;
-            width: 260px;
+            width: 280px;
             flex-shrink: 0;
         }
 
@@ -203,27 +210,10 @@
             width: 55%;
         }
 
-        .sign-row {
-            margin-left: auto;
-            display: flex;
-            gap: 60px;
-            align-items: flex-end;
-            padding-top: 36px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .sign-item {
-            text-align: center;
-            min-width: 140px;
-            border-top: 1px solid #000;
-            padding-top: 4px;
-        }
-
         .count-box {
             border: 1px solid #000;
             margin-left: auto;
-            min-width: 120px;
+            min-width: 130px;
         }
 
         .count-box table {
@@ -233,10 +223,27 @@
 
         .count-box td {
             border: 1px solid #000;
-            padding: 3px 6px;
-            font-size: 10px;
+            padding: 4px 8px;
+            font-size: 11px;
             font-weight: 700;
             text-align: center;
+        }
+
+        .sign-row {
+            margin-left: 20px;
+            display: flex;
+            gap: 50px;
+            align-items: flex-end;
+            padding-top: 40px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .sign-item {
+            text-align: center;
+            min-width: 140px;
+            border-top: 1px solid #000;
+            padding-top: 4px;
         }
 
         @media print {
@@ -264,6 +271,7 @@
         <span>Year: <em>{{ $filters['year'] }}</em></span>
         <span>Standard: <em>{{ $report['standard_label'] }}</em></span>
         <span>Class: <em>{{ $filters['division'] ?: '' }}</em></span>
+        <span class="teacher">Class Teacher: <em>{{ $classTeacher }}</em></span>
     </div>
 
     <table class="register">
@@ -315,9 +323,9 @@
                         @endphp
                         <td class="col-day {{ $sun ? 'sun-col' : '' }}"><span class="mark">{{ $mark }}</span></td>
                     @endfor
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td class="sum-val">{{ $student['this_month'] !== '' ? $student['this_month'] : '' }}</td>
+                    <td class="sum-val">{{ $student['pre_month'] !== '' ? $student['pre_month'] : '' }}</td>
+                    <td class="sum-val">{{ $student['end_month'] !== '' ? $student['end_month'] : '' }}</td>
                 </tr>
             @empty
                 <tr>
@@ -369,9 +377,9 @@
                 </tr>
                 <tr>
                     <td class="lbl">1. Boys / 2. Girls / 3. Total</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td>{{ $report['avg']['boys'] ?? '' }}</td>
+                    <td>{{ $report['avg']['girls'] ?? '' }}</td>
+                    <td>{{ $report['avg']['total'] ?? '' }}</td>
                 </tr>
                 <tr>
                     <th class="lbl">% of Avg. Attendance</th>
@@ -381,18 +389,18 @@
                 </tr>
                 <tr>
                     <td class="lbl">1. Boys / 2. Girls / 3. Total</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td>{{ $report['avg_pct']['boys'] ?? '' }}</td>
+                    <td>{{ $report['avg_pct']['girls'] ?? '' }}</td>
+                    <td>{{ $report['avg_pct']['total'] ?? '' }}</td>
                 </tr>
             </table>
         </div>
 
         <div class="count-box">
             <table>
-                <tr><td>Boys</td><td></td></tr>
-                <tr><td>Girls</td><td></td></tr>
-                <tr><td>Total</td><td></td></tr>
+                <tr><td>Boys</td><td>{{ $report['counts']['boys'] ?? '' }}</td></tr>
+                <tr><td>Girls</td><td>{{ $report['counts']['girls'] ?? '' }}</td></tr>
+                <tr><td>Total</td><td>{{ $report['counts']['total'] ?? '' }}</td></tr>
             </table>
         </div>
 
