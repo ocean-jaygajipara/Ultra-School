@@ -18,7 +18,7 @@
             'page_title' => $page_title,
             'show_page_title' => false,
             'route' => $route,
-            'show_add_btn' => true,
+            'show_add_btn' => !empty($modules['permission_add']),
             'show_filter_btn' => false,
             'show_export_btns' => true,
             'show_excal_btn' => false,
@@ -74,12 +74,15 @@
                                     <td class="text-center"></td>
                                     <td class="text-center">
                                         <div class="d-inline-flex gap-1 justify-content-center">
+                                            @if (!empty($modules['permission_edit']))
                                             <a href="{{ route($route . '.edit', $row->id) }}" class="btn btn-info btn-icon btn-sm" title="Edit">
                                                 <i class="ti ti-edit"></i>
                                             </a>
+                                            @endif
                                             <a href="{{ route($route . '.print', $row->id) }}" target="_blank" class="btn btn-primary btn-icon btn-sm" title="Print">
                                                 <i class="ti ti-printer"></i>
                                             </a>
+                                            @if (!empty($modules['permission_delete']))
                                             <a href="javascript:void(0)"
                                                data-id="{{ $row->id }}"
                                                data-did="{{ route($route . '.destroy', $row->id) }}"
@@ -87,6 +90,7 @@
                                                title="Delete">
                                                 <i class="ti ti-trash"></i>
                                             </a>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

@@ -33,7 +33,7 @@ class LeavingCertificateEntryController extends Controller
     public function index(Request $request)
     {
         $this->authorizeList();
-        $modules = $this->modules;
+        $modules = $this->withPermissionFlags($this->modules);
         View::share('modules', $modules);
         View::share('sidebar_active', 'leaving-certificate-entry');
 
@@ -63,11 +63,19 @@ class LeavingCertificateEntryController extends Controller
 
     public function create()
     {
+        if (!Helper::directCan('leaving-certificate-entry-create') && !Helper::directCan('leaving-certificate-entry-list')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         return $this->formView();
     }
 
     public function edit($id)
     {
+        if (!Helper::directCan('leaving-certificate-entry-edit') && !Helper::directCan('leaving-certificate-entry-list')) {
+            abort(403, 'User does not have the right permissions.');
+        }
+
         $entry = LeavingCertificateEntry::findOrFail($id);
 
         return $this->formView($entry);
@@ -82,7 +90,12 @@ class LeavingCertificateEntryController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $this->authorizeList();
+        if (!Helper::directCan('leaving-certificate-entry-delete') && !Helper::directCan('leaving-certificate-entry-list')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User does not have the right permissions.',
+            ], 403);
+        }
 
         try {
             $entry = LeavingCertificateEntry::findOrFail($id);
@@ -103,7 +116,7 @@ class LeavingCertificateEntryController extends Controller
     protected function formView(?LeavingCertificateEntry $entry = null)
     {
         $this->authorizeList();
-        $modules = $this->modules;
+        $modules = $this->withPermissionFlags($this->modules);
         $isEdit = !empty($entry?->id);
         View::share('modules', $modules);
         View::share('sidebar_active', 'leaving-certificate-entry');
@@ -573,5 +586,18 @@ class LeavingCertificateEntryController extends Controller
         if (!Helper::directCan('leaving-certificate-entry-list')) {
             abort(403, 'User does not have the right permissions.');
         }
+    }
+
+    protected function withPermissionFlags(array $modules): array
+    {
+        $modules['permission_list'] = Helper::directCan('leaving-certificate-entry-list');
+        $modules['permission_add'] = Helper::directCan('leaving-certificate-entry-create')
+            || Helper::directCan('leaving-certificate-entry-list');
+        $modules['permission_edit'] = Helper::directCan('leaving-certificate-entry-edit')
+            || Helper::directCan('leaving-certificate-entry-list');
+        $modules['permission_delete'] = Helper::directCan('leaving-certificate-entry-delete')
+            || Helper::directCan('leaving-certificate-entry-list');
+
+        return $modules;
     }
 }

@@ -90,6 +90,9 @@ class PermissionTableSeeder extends Seeder
             ],
             'leaving-certificate-entry' => [
                 'leaving-certificate-entry-list',
+                'leaving-certificate-entry-create',
+                'leaving-certificate-entry-edit',
+                'leaving-certificate-entry-delete',
             ],
             'Faculty-complaint-report' => [
                 'faculty-complaint-report-list',

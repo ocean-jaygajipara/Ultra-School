@@ -79,12 +79,13 @@
         }
         .school-name {
             margin: 0;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
-            letter-spacing: .04em;
+            letter-spacing: .03em;
             color: #0d1b5e;
             text-transform: uppercase;
-            line-height: 1.2;
+            line-height: 1.15;
+            white-space: nowrap;
         }
         .school-place {
             margin: 2px 0 0;
