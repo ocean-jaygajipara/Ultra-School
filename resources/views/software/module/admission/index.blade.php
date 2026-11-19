@@ -1778,8 +1778,12 @@
             $.ajax({
                 type: 'POST',
                 url: "{{ route('get-all-admission') }}",
+                data: {
+                    school_code: @json(\App\Services\SchoolDatabaseManager::getActiveSchoolCode())
+                },
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-School-Code': @json(\App\Services\SchoolDatabaseManager::getActiveSchoolCode())
                 },
                 success: function(response) {
                     if (response.status) {

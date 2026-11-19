@@ -114,6 +114,16 @@
 
     <script src="{{ asset('admin/assets/vendor/libs/jquery/jquery.js') }}"></script>
     {{-- <script src="https://code.jquery.com/jquery-3.5.1.js"></script> --}}
+    <script>
+        // Ensure /api AJAX from panel uses the logged-in school DB.
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-School-Code': @json(\App\Services\SchoolDatabaseManager::getActiveSchoolCode()),
+                'school_code': @json(\App\Services\SchoolDatabaseManager::getActiveSchoolCode())
+            }
+        });
+    </script>
     <script src="{{ asset('admin/assets/vendor/libs/popper/popper.js') }}"></script>
     <script src="{{ asset('admin/assets/vendor/js/bootstrap.js') }}"></script>
     <script src="{{ asset('admin/assets/vendor/libs/node-waves/node-waves.js') }}"></script>
