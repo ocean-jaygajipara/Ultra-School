@@ -230,13 +230,19 @@ class NotificationSettingController extends Controller
                                     'pdf'        => $pdfUrl ?? '',
                                 ]);
 
-                            /*
                             try {
                                 app('firebase.messaging')->send($message);
+                                \Log::info('FCM sent', [
+                                    'student_id' => $sid,
+                                    'token' => substr((string) $token, 0, 20) . '...',
+                                ]);
                             } catch (\Exception $e) {
-                                \Log::error("Failed to send push notification to device token: {$token}. Error: " . $e->getMessage());
+                                \Log::error('FCM failed', [
+                                    'student_id' => $sid,
+                                    'token' => substr((string) $token, 0, 20) . '...',
+                                    'error' => $e->getMessage(),
+                                ]);
                             }
-                            */
                         }
                     }
                 }
