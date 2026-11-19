@@ -4,7 +4,15 @@
     $page_title = isset($modules['title']) ? $modules['title'] : null;
     $folder_path = isset($modules['folder_path']) ? $modules['folder_path'] : null;
     $route = isset($modules['route']) ? $modules['route'] : null;
-    $selectedClasses = $selectedClasses ?? (isset($edit) && $edit->class_id ? array_filter(array_map('trim', explode(',', $edit->class_id))) : []);
+    $selectedClasses = old('class_id', $selectedClasses ?? (isset($edit) && $edit->class_id ? array_filter(array_map('trim', explode(',', $edit->class_id))) : []));
+    if (!is_array($selectedClasses)) {
+        $selectedClasses = [];
+    }
+    $selectedStudents = old('student_id', $selectedStudents ?? []);
+    if (!is_array($selectedStudents)) {
+        $selectedStudents = $selectedStudents !== null && $selectedStudents !== '' ? [(string) $selectedStudents] : [];
+    }
+    $selectedStudents = array_values(array_filter(array_map('strval', $selectedStudents), fn ($id) => $id !== '' && $id !== 'all'));
 @endphp
 
 @section('title', $page_title)
@@ -92,7 +100,7 @@
                                 @forelse ($divisions as $division_name)
                                     <div class="form-check form-check-inline mb-0 me-3">
                                         <input class="form-check-input class-checkbox" type="checkbox" name="class_id[]" value="{{ $division_name }}" id="class_chk_{{ Str::slug($division_name) }}"
-                                            {{ in_array($division_name, $selectedClasses) || (is_array(old('class_id')) && in_array($division_name, old('class_id'))) ? 'checked' : '' }}>
+                                            {{ in_array($division_name, $selectedClasses) ? 'checked' : '' }}>
                                         <label class="form-check-label fw-semibold" for="class_chk_{{ Str::slug($division_name) }}">{{ $division_name }}</label>
                                     </div>
                                 @empty
@@ -213,14 +221,29 @@
             var studentDropdown = $('#studentDropdown');
             var academicYearSelect = $('#academicYearSelect');
             var standardSelect = $('#standardSelect');
+            // Validation fail / edit pe old selected students preserve
+            var forcedSelectedStudents = @json($selectedStudents);
 
-            function fetchStudents() {
+            function fetchStudents(autoSelect) {
                 let academicYearId = academicYearSelect.val();
                 let standardId = standardSelect.val();
                 let classIds = [];
                 $('.class-checkbox:checked').each(function() {
                     classIds.push($(this).val());
                 });
+
+                // Keep already selected students (validation fail / class bhooli jaye to pan)
+                var previousSelected = (studentDropdown.val() || []).map(String).filter(function(id) {
+                    return id && id !== 'all';
+                });
+                if ((!previousSelected || previousSelected.length === 0) && forcedSelectedStudents.length) {
+                    previousSelected = forcedSelectedStudents.slice();
+                }
+
+                // Class selected → auto select class students; else keep previous
+                if (typeof autoSelect === 'undefined') {
+                    autoSelect = classIds.length > 0;
+                }
 
                 if (!academicYearId || !standardId) {
                     studentDropdown.empty().append('<option value="all">Select All</option>').val(null).trigger('change.select2');
@@ -243,7 +266,25 @@
                             studentDropdown.append('<option value="' + student.id + '">' + student.name + '</option>');
                             allIds.push(String(student.id));
                         });
-                        studentDropdown.val(allIds).trigger('change.select2');
+
+                        if (autoSelect && classIds.length > 0 && forcedSelectedStudents.length === 0) {
+                            // Class select → ae class na students select
+                            studentDropdown.val(allIds).trigger('change.select2');
+                        } else {
+                            // Validation fail / pehla select → keep selected students
+                            var keep = previousSelected.filter(function(id) {
+                                return allIds.indexOf(id) !== -1;
+                            });
+                            // If forced old students exist, prefer them
+                            if (forcedSelectedStudents.length) {
+                                keep = forcedSelectedStudents.filter(function(id) {
+                                    return allIds.indexOf(id) !== -1;
+                                });
+                                // use once after restore
+                                forcedSelectedStudents = [];
+                            }
+                            studentDropdown.val(keep.length ? keep : null).trigger('change.select2');
+                        }
                     },
                     error: function() {
                         studentDropdown.empty().append('<option value="">Error loading students</option>');
@@ -252,21 +293,38 @@
             }
 
             academicYearSelect.on('change', function() {
+                forcedSelectedStudents = [];
                 studentDropdown.empty().append('<option value="all">Select All</option>').val(null).trigger('change.select2');
-                fetchStudents();
+                fetchStudents(false);
             });
 
             standardSelect.on('change', function() {
+                forcedSelectedStudents = [];
+                // Uncheck classes when standard changes
+                $('.class-checkbox').prop('checked', false);
                 studentDropdown.empty().append('<option value="all">Select All</option>').val(null).trigger('change.select2');
-                fetchStudents();
+                fetchStudents(false);
             });
 
             $(document).on('change', '.class-checkbox', function() {
-                fetchStudents();
+                var hasClass = $('.class-checkbox:checked').length > 0;
+                // Class select → auto select; class uncheck → keep previous selected
+                // If restoring from validation, don't wipe selection
+                if (forcedSelectedStudents.length) {
+                    fetchStudents(false);
+                } else {
+                    fetchStudents(hasClass);
+                }
             });
 
             if (academicYearSelect.val() && standardSelect.val()) {
-                fetchStudents();
+                // After validation error: restore selected students, don't auto-select all
+                if (forcedSelectedStudents.length) {
+                    fetchStudents(false);
+                } else {
+                    var hasClass = $('.class-checkbox:checked').length > 0;
+                    fetchStudents(hasClass);
+                }
             }
 
             $('#clearStudentsBtn').on('click', function() {

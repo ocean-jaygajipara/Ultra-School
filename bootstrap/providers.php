@@ -3,5 +3,6 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\RouteServiceProvider::class,
+    App\Providers\FirebaseServiceProvider::class,
     Yajra\DataTables\DataTablesServiceProvider::class,
 ];
