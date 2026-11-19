@@ -33,8 +33,12 @@ class RoleController extends Controller
         $this->middleware('permission:'.$this->modules['permisstion_prefix'].'-create', ['only' => ['create','store']]);
         $this->middleware('permission:'.$this->modules['permisstion_prefix'].'-edit', ['only' => ['edit','update']]);
         $this->middleware('permission:'.$this->modules['permisstion_prefix'].'-delete', ['only' => ['destroy']]);
+    }
 
-        View::share("permissions", Permission::get());
+    protected function sharePermissions(): void
+    {
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        View::share('permissions', Permission::query()->orderBy('group')->orderBy('name')->get());
     }
 
     public function index(Request $request)
@@ -104,6 +108,7 @@ class RoleController extends Controller
     public function create()
     {
         $modules = $this->modules;
+        $this->sharePermissions();
 
         return view($modules['folder_path'].'.form', compact('modules'));
     }
@@ -153,10 +158,9 @@ class RoleController extends Controller
     public function edit(string $id)
     {
         $modules = $this->modules;
+        $this->sharePermissions();
 
         $edit = Role::findOrFail($id);
-        // return Permission::get();
-        // return
         $rolePermissions = DB::table("role_has_permissions")->where("role_has_permissions.role_id",$id)
         ->pluck('role_has_permissions.permission_id','role_has_permissions.permission_id')
         ->all();

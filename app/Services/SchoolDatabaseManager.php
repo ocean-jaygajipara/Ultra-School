@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Spatie\Permission\PermissionRegistrar;
 
 class SchoolDatabaseManager
 {
@@ -110,6 +111,13 @@ class SchoolDatabaseManager
 
         DB::purge('mysql');
         DB::reconnect('mysql');
+
+        // Spatie caches permissions globally; clear so each school DB list is fresh.
+        try {
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        } catch (\Throwable $e) {
+            // Registrar may be unavailable during early bootstrap.
+        }
     }
 
     /**
