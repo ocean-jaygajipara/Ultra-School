@@ -92,6 +92,28 @@ class TrialCertificateController extends Controller
                 ->with('error', 'Please select at least one student.');
         }
 
+        $trial = trim((string) $validated['trial']);
+        $alreadyIds = TrialCertificate::query()
+            ->where('trial', $trial)
+            ->whereIn('admission_id', $students->pluck('id')->all())
+            ->pluck('admission_id')
+            ->unique()
+            ->all();
+
+        if (!empty($alreadyIds)) {
+            $names = $students
+                ->whereIn('id', $alreadyIds)
+                ->map(fn ($s) => $this->boardStudentName($s))
+                ->filter()
+                ->values()
+                ->all();
+
+            $label = $names ? implode(', ', $names) : 'selected student(s)';
+
+            return redirect()->back()->withInput()
+                ->with('error', 'Trial ' . $trial . ' certificate already exists for ' . $label . '.');
+        }
+
         $standard = MasterStandard::find($standardId);
         $printDate = trim((string) ($validated['print_date'] ?? ''));
         if ($printDate === '') {

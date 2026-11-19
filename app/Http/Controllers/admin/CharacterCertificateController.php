@@ -254,6 +254,26 @@ class CharacterCertificateController extends Controller
                 ->with('error', 'Please select at least one student.');
         }
 
+        $alreadyIds = CharacterCertificate::query()
+            ->whereIn('admission_id', $students->pluck('id')->all())
+            ->pluck('admission_id')
+            ->unique()
+            ->all();
+
+        if (!empty($alreadyIds)) {
+            $names = $students
+                ->whereIn('id', $alreadyIds)
+                ->map(fn ($s) => $this->boardStudentName($s))
+                ->filter()
+                ->values()
+                ->all();
+
+            $label = $names ? implode(', ', $names) : 'selected student(s)';
+
+            return redirect()->back()->withInput()
+                ->with('error', 'Character certificate already exists for ' . $label . '.');
+        }
+
         $standard = MasterStandard::find($standardId);
         $printDate = trim((string) ($validated['print_date'] ?? ''));
         if ($printDate === '') {
@@ -365,6 +385,24 @@ class CharacterCertificateController extends Controller
             $entry->update($payload);
             $message = 'Character certificate updated.';
         } else {
+            $admissionId = (int) ($payload['admission_id'] ?? 0);
+            $grNo = (string) ($payload['gr_no'] ?? '');
+
+            $dupQuery = CharacterCertificate::query();
+            if ($admissionId > 0) {
+                $dupQuery->where('admission_id', $admissionId);
+            } elseif ($grNo !== '') {
+                $dupQuery->where('gr_no', $grNo);
+            } else {
+                $dupQuery = null;
+            }
+
+            if ($dupQuery && $dupQuery->exists()) {
+                return redirect()->back()->withInput()
+                    ->with('error', 'Character certificate already exists for '
+                        . ($payload['student_name'] ?: 'this student') . '.');
+            }
+
             $payload['created_by'] = Auth::id();
             $entry = CharacterCertificate::create($payload);
             $message = 'Character certificate generated.';

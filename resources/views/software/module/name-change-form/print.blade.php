@@ -21,11 +21,29 @@
             margin: 0 auto;
         }
         .sheet {
+            position: relative;
             border: 2.4px double #000;
             padding: 7px 10px 8px;
             min-height: 277mm;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+        }
+        .cert-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 280px;
+            height: 280px;
+            object-fit: contain;
+            opacity: 0.07;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sheet > *:not(.cert-watermark) {
+            position: relative;
+            z-index: 1;
         }
         .sheet-body {
             flex: 1 1 auto;
@@ -155,10 +173,10 @@
             flex: 1 1 auto;
             min-width: 0;
             min-height: 14px;
-            padding: 0 4px 0;
+            padding: 0 4px 1px;
             font-weight: 700;
             text-transform: uppercase;
-            border-bottom: none;
+            border-bottom: 1px solid #000;
         }
         .fline-col .pen-line {
             flex: 1 1 auto;
@@ -332,6 +350,7 @@
 
 <div class="page">
 <div class="sheet">
+<img src="{{ asset('admin/assets/images/logo-light.png') }}" alt="" class="cert-watermark">
 <div class="sheet-body">
 
     <div class="meta">

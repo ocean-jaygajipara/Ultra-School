@@ -6,6 +6,7 @@ use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Models\Admission;
 use App\Models\Master\MasterAcademicYear;
+use App\Models\Master\MasterStandard;
 use App\Models\NameChangeForm;
 use App\Services\SchoolDatabaseManager;
 use Carbon\Carbon;
@@ -107,7 +108,9 @@ class NameChangeFormController extends Controller
         $gr = trim((string) $request->input('gr_no', ''));
         $admissionId = (int) $request->input('admission_id', 0);
 
-        $query = Admission::query()->with(['currentStandard', 'academicYear']);
+        $query = Admission::query()
+            ->with(['currentStandard', 'academicYear'])
+            ->whereIn('current_std_id', $this->tenthStandardIds());
         if ($admissionId > 0) {
             $query->where('id', $admissionId);
         } elseif ($gr !== '') {
@@ -118,7 +121,7 @@ class NameChangeFormController extends Controller
 
         $student = $query->first();
         if (!$student) {
-            return response()->json(['success' => false, 'message' => 'Student not found.']);
+            return response()->json(['success' => false, 'message' => 'Student not found in Std 10.']);
         }
 
         $excludeId = (int) $request->input('exclude_id', 0);
@@ -177,6 +180,7 @@ class NameChangeFormController extends Controller
 
         $students = Admission::query()
             ->with(['currentStandard'])
+            ->whereIn('current_std_id', $this->tenthStandardIds())
             ->where(function ($q) {
                 $q->whereNull('status')
                     ->orWhereRaw('LOWER(status) NOT IN (?, ?, ?)', ['cancel', 'cancelled', 'rejected']);
@@ -525,6 +529,18 @@ class NameChangeFormController extends Controller
         }
 
         return (string) ((int) date('Y') + (date('n') >= 6 ? 1 : 0));
+    }
+
+    protected function tenthStandardIds()
+    {
+        return MasterStandard::query()
+            ->where(function ($q) {
+                $q->where('name', 'like', '%10th%')
+                    ->orWhere('name', 'like', '10 %')
+                    ->orWhere('name', '=', '10')
+                    ->orWhere('name', '=', '10th');
+            })
+            ->pluck('id');
     }
 
     protected function authorizeUsOnly(): void

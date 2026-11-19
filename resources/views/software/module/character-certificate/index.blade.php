@@ -157,7 +157,7 @@
                                 <td class="icx-muted text-center">{{ $row->print_date ?: '-' }}</td>
                                 <td class="text-center">
                                     <div class="d-inline-flex align-items-center gap-1">
-                                        <a href="{{ route($route . '.edit', $row->id) }}" class="icx-edit" title="Edit"><i class="ti ti-edit"></i> Edit</a>
+                                        {{-- <a href="{{ route($route . '.edit', $row->id) }}" class="icx-edit" title="Edit"><i class="ti ti-edit"></i> Edit</a> --}}
                                         <a href="{{ route($route . '.print', $row->id) }}" target="_blank" class="icx-view" title="View"><i class="ti ti-eye"></i> View</a>
                                         <button type="button" class="icx-delete btn-delete" data-id="{{ $row->id }}" title="Delete"><i class="ti ti-trash"></i> Delete</button>
                                     </div>
