@@ -112,6 +112,12 @@ class PermissionTableSeeder extends Seeder
             'Other-list-selection' => [
                 'other-list-selection-list',
             ],
+            'combined-report' => [
+                'combined-report-list',
+                'combined-report-create',
+                'combined-report-edit',
+                'combined-report-delete',
+            ],
             'test' => [
                 'test-list',
                 'test-create',
