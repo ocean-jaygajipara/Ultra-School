@@ -27,7 +27,7 @@ return new class extends Migration
         }
 
         $roles = Role::query()->get()->filter(function ($role) {
-            return in_array(strtolower((string) $role->name), ['developer', 'super-admin'], true);
+            return strtolower((string) $role->name) === 'developer';
         });
 
         foreach ($roles as $role) {
@@ -35,6 +35,14 @@ return new class extends Migration
             foreach ($role->users as $user) {
                 $user->givePermissionTo($permissions);
             }
+        }
+
+        // Ensure only developer keeps these (revoke from other roles if previously assigned).
+        $otherRoles = Role::query()->get()->filter(function ($role) {
+            return strtolower((string) $role->name) !== 'developer';
+        });
+        foreach ($otherRoles as $role) {
+            $role->revokePermissionTo($permissions);
         }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
