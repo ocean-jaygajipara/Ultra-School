@@ -192,13 +192,32 @@ class NotificationSettingController extends Controller
             $cleanBody = preg_replace("/\r\n|\r/", "\n", $cleanBody);
             $cleanBody = trim($cleanBody);
 
+            $hasAttachment = !empty($imageUrl) || !empty($pdfUrl);
+
             foreach ($studentIds as $sid) {
-                // Get all the student's device tokens
                 $tokens = StudentDeviceToken::where('student_id', $sid)
                     ->pluck('device_token')
                     ->toArray();
 
-                if (count($tokens) > 0) {
+                if (count($tokens) === 0) {
+                    continue;
+                }
+
+                $dataPayload = [
+                    'student_id' => (string) $sid,
+                    'title'      => (string) $validated['title'],
+                    'body'       => (string) $cleanBody,
+                    'image'      => (string) ($imageUrl ?? ''),
+                    'pdf'        => (string) ($pdfUrl ?? ''),
+                ];
+
+                // Attachment (image/pdf): data-only FCM — no top-level notification object.
+                // Text-only: keep notification + data for system tray display.
+                if ($hasAttachment) {
+                    $androidConfig = AndroidConfig::fromArray([
+                        'priority' => 'high',
+                    ]);
+                } else {
                     $androidConfig = AndroidConfig::fromArray([
                         'ttl' => '3600s',
                         'priority' => 'high',
@@ -211,39 +230,36 @@ class NotificationSettingController extends Controller
                             'analytics_label' => 'student_notification',
                         ],
                     ]);
+                }
 
-                    foreach ($tokens as $token) {
-                        if (!empty($token)) {
-                            $fcmNotification = FCMNotification::create($validated['title'], $cleanBody);
-                            if ($imageUrl) {
-                                $fcmNotification = $fcmNotification->withImageUrl($imageUrl);
-                            }
+                foreach ($tokens as $token) {
+                    if (empty($token)) {
+                        continue;
+                    }
 
-                            $message = CloudMessage::withTarget('token', $token)
-                                ->withNotification($fcmNotification)
-                                ->withAndroidConfig($androidConfig)
-                                ->withData([
-                                    'student_id' => (string) $sid,
-                                    'title'      => $validated['title'],
-                                    'body'       => $cleanBody,
-                                    'image'      => $imageUrl ?? '',
-                                    'pdf'        => $pdfUrl ?? '',
-                                ]);
+                    $message = CloudMessage::withTarget('token', $token)
+                        ->withAndroidConfig($androidConfig)
+                        ->withData($dataPayload);
 
-                            try {
-                                app('firebase.messaging')->send($message);
-                                \Log::info('FCM sent', [
-                                    'student_id' => $sid,
-                                    'token' => substr((string) $token, 0, 20) . '...',
-                                ]);
-                            } catch (\Exception $e) {
-                                \Log::error('FCM failed', [
-                                    'student_id' => $sid,
-                                    'token' => substr((string) $token, 0, 20) . '...',
-                                    'error' => $e->getMessage(),
-                                ]);
-                            }
-                        }
+                    if (!$hasAttachment) {
+                        $message = $message->withNotification(
+                            FCMNotification::create($validated['title'], $cleanBody)
+                        );
+                    }
+
+                    try {
+                        app('firebase.messaging')->send($message);
+                        \Log::info('FCM sent', [
+                            'student_id' => $sid,
+                            'mode' => $hasAttachment ? 'data-only' : 'notification+data',
+                            'token' => substr((string) $token, 0, 20) . '...',
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::error('FCM failed', [
+                            'student_id' => $sid,
+                            'token' => substr((string) $token, 0, 20) . '...',
+                            'error' => $e->getMessage(),
+                        ]);
                     }
                 }
             }
