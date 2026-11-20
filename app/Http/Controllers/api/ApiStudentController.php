@@ -1206,7 +1206,7 @@ class ApiStudentController extends Controller
 
 
     /**
-     * Get unread counts for faculty complaint reports and marksheet details
+     * Get unread counts for faculty complaint reports and notifications
      *
      * @authenticated
      */
@@ -1227,8 +1227,25 @@ class ApiStudentController extends Controller
                     ->count();
             }
 
+            $readNotificationIds = \App\Models\NotificationRead::where('student_id', $student->id)
+                ->pluck('notification_id')
+                ->toArray();
+
+            $unreadNotifications = NotificationSetting::query()
+                ->where(function ($q) use ($student) {
+                    $q->whereRaw("FIND_IN_SET(?, student_id)", [$student->id])
+                        ->orWhereNull('student_id')
+                        ->orWhere('student_id', '')
+                        ->orWhere('course_id', $student->course_id ?? 0);
+                })
+                ->when(!empty($readNotificationIds), function ($q) use ($readNotificationIds) {
+                    $q->whereNotIn('id', $readNotificationIds);
+                })
+                ->count();
+
             return $this->sendResponse([
-                'unread_complaints' => $unreadComplaints,
+                'unread_complaints'    => $unreadComplaints,
+                'unread_notifications' => $unreadNotifications,
             ], 'Unread counts fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
