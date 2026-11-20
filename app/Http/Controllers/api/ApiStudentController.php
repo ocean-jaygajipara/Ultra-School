@@ -9,6 +9,7 @@ use App\Models\CourceRegistration;
 use App\Models\FeeReceiptEntry;
 use App\Models\Master\FeeMaster;
 use App\Models\Master\MasterAcademicYear;
+use App\Models\Master\MasterBusRouteVillage;
 use App\Models\Master\MasterCourse;
 use App\Models\Master\MasterHoliday;
 use App\Models\NotificationSetting;
@@ -166,13 +167,9 @@ class ApiStudentController extends Controller
      *   "status": "true",
      *   "message": "Fee details fetched successfully.",
      *   "data": {
-     *     "total": 15900,
-     *     "paid": 7950,
-     *     "pending": 7950,
-     *     "terms": [
-     *       { "term": "FIRST", "total": 7950, "paid": 7950, "pending": 0, "status": "Paid" },
-     *       { "term": "SECOND", "total": 7950, "paid": 0, "pending": 7950, "status": "Pending" }
-     *     ],
+     *     "total": 21900,
+     *     "paid": 10950,
+     *     "pending": 10950,
      *     "details": []
      *   }
      * }
@@ -200,31 +197,27 @@ class ApiStudentController extends Controller
                 ? [(string) $request->input('term', $request->input('semester'))]
                 : array_keys(FeeMaster::TERMS);
 
-            // No Fee Master for this year + standard → zeros + empty list
-            if (!$yearId || !$standardId) {
-                return $this->sendResponse([
-                    'total'   => 0,
-                    'paid'    => 0,
-                    'pending' => 0,
-                    'terms'   => [],
-                    'details' => [],
-                ], 'Fee details fetched successfully.');
+            $vehicleSummary = $this->studentVehicleFeeSummary($student, $yearId, $grNo);
+
+            $emptySchool = !$yearId || !$standardId;
+            $masters = collect();
+
+            if (!$emptySchool) {
+                $masters = FeeMaster::query()
+                    ->where('status', 'active')
+                    ->where('academic_year_id', $yearId)
+                    ->where('standard_id', $standardId)
+                    ->whereIn('term', $termFilter)
+                    ->get()
+                    ->keyBy('term');
             }
 
-            $masters = FeeMaster::query()
-                ->where('status', 'active')
-                ->where('academic_year_id', $yearId)
-                ->where('standard_id', $standardId)
-                ->whereIn('term', $termFilter)
-                ->get()
-                ->keyBy('term');
-
-            if ($masters->isEmpty()) {
+            // No Fee Master → school list empty; still merge vehicle into totals if bus route exists
+            if ($emptySchool || $masters->isEmpty()) {
                 return $this->sendResponse([
-                    'total'   => 0,
-                    'paid'    => 0,
-                    'pending' => 0,
-                    'terms'   => [],
+                    'total'   => (float) $vehicleSummary['total'],
+                    'paid'    => (float) $vehicleSummary['paid'],
+                    'pending' => (float) $vehicleSummary['pending'],
                     'details' => [],
                 ], 'Fee details fetched successfully.');
             }
@@ -246,7 +239,6 @@ class ApiStudentController extends Controller
 
             $feeRecords = $feeRecordsQuery->orderByDesc('id')->get();
 
-            $terms = [];
             $totalFee = 0.0;
             $paidFee = 0.0;
             $pendingFee = 0.0;
@@ -265,19 +257,15 @@ class ApiStudentController extends Controller
                 $totalFee += $termTotal;
                 $paidFee += $termPaid;
                 $pendingFee += $termPending;
-
-                $terms[] = [
-                    'term'    => (string) $term,
-                    'total'   => round($termTotal, 2),
-                    'paid'    => round($termPaid, 2),
-                    'pending' => round($termPending, 2),
-                    'status'  => $isPaid ? 'Paid' : 'Pending',
-                ];
             }
+
+            // Merge vehicle Fee I / Fee II into totals
+            $totalFee += (float) $vehicleSummary['total'];
+            $paidFee += (float) $vehicleSummary['paid'];
+            $pendingFee += (float) $vehicleSummary['pending'];
 
             $feesDetails = $feeRecords->map(function ($fee) {
                 $hasBusPrint = $this->feeReceiptHasBusPrint($fee);
-                $busRoute = $this->feeReceiptBusRoute($fee);
 
                 return [
                     'id'                => (int) $fee->id,
@@ -290,7 +278,6 @@ class ApiStudentController extends Controller
                     'vehicle_fee'       => (float) ($fee->vehicle_fee ?? 0),
                     'date'              => $fee->date ? $fee->date->format('Y-m-d') : null,
                     'status'            => 'Paid',
-                    'bus_route'         => $busRoute,
                     'has_bus_print'     => $hasBusPrint,
                     'education_fee_url' => url('/api/student/fee-receipt-print/' . $fee->id),
                     'vehicle_fee_url'   => $hasBusPrint ? url('/api/student/fee-receipt-bus-print/' . $fee->id) : null,
@@ -301,7 +288,6 @@ class ApiStudentController extends Controller
                 'total'   => round($totalFee, 2),
                 'paid'    => round($paidFee, 2),
                 'pending' => round($pendingFee, 2),
-                'terms'   => $terms,
                 'details' => $feesDetails,
             ];
 
@@ -1520,6 +1506,106 @@ class ApiStudentController extends Controller
         }
 
         return trim((string) ($entry->admission->bus_route_village ?? ''));
+    }
+
+    /**
+     * Bus route vehicle fee (Fee I / Fee II) total / paid / pending for student.
+     */
+    private function studentVehicleFeeSummary($student, int $yearId, string $grNo): array
+    {
+        $empty = [
+            'bus_route' => '',
+            'total'     => 0,
+            'paid'      => 0,
+            'pending'   => 0,
+            'parts'     => [],
+        ];
+
+        $routeName = trim((string) ($student->bus_route_village ?? ''));
+        if ($routeName === '') {
+            return $empty;
+        }
+
+        $village = MasterBusRouteVillage::query()
+            ->where('status', 'active')
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($routeName)])
+            ->first();
+
+        if (!$village) {
+            return array_merge($empty, ['bus_route' => $routeName]);
+        }
+
+        $feeI = round((float) $village->fee_i, 2);
+        $feeII = round((float) $village->fee_ii, 2);
+
+        $feeIPaid = false;
+        $feeIIPaid = false;
+
+        if ($yearId > 0) {
+            $rows = FeeReceiptEntry::query()
+                ->where('academic_year_id', $yearId)
+                ->where(function ($q) use ($student, $grNo) {
+                    $q->where('admission_id', $student->id);
+                    if ($grNo !== '') {
+                        $q->orWhere('gr_no', $grNo);
+                    }
+                })
+                ->orderBy('id')
+                ->get(['vehicle_fee', 'vehicle_fee_part']);
+
+            foreach ($rows as $row) {
+                $part = (string) ($row->vehicle_fee_part ?? '');
+                if ($part === 'both') {
+                    $feeIPaid = true;
+                    $feeIIPaid = true;
+                } elseif ($part === 'fee_i') {
+                    $feeIPaid = true;
+                } elseif ($part === 'fee_ii') {
+                    $feeIIPaid = true;
+                } elseif ((float) $row->vehicle_fee > 0) {
+                    if (!$feeIPaid) {
+                        $feeIPaid = true;
+                    } else {
+                        $feeIIPaid = true;
+                    }
+                }
+            }
+        }
+
+        $parts = [];
+        foreach ([
+            ['key' => 'fee_i', 'label' => 'Fee I', 'amount' => $feeI, 'paid' => $feeIPaid],
+            ['key' => 'fee_ii', 'label' => 'Fee II', 'amount' => $feeII, 'paid' => $feeIIPaid],
+        ] as $item) {
+            if ($item['amount'] <= 0) {
+                continue;
+            }
+            $paidAmt = $item['paid'] ? $item['amount'] : 0.0;
+            $pendingAmt = $item['paid'] ? 0.0 : $item['amount'];
+            $parts[] = [
+                'part'    => $item['key'],
+                'label'   => $item['label'],
+                'total'   => $item['amount'],
+                'paid'    => $paidAmt,
+                'pending' => $pendingAmt,
+                'status'  => $item['paid'] ? 'Paid' : 'Pending',
+            ];
+        }
+
+        $total = round($feeI + $feeII, 2);
+        $paid = round(
+            ($feeIPaid ? $feeI : 0) + ($feeIIPaid ? $feeII : 0),
+            2
+        );
+        $pending = round(max(0, $total - $paid), 2);
+
+        return [
+            'bus_route' => (string) $village->name,
+            'total'     => $total,
+            'paid'      => $paid,
+            'pending'   => $pending,
+            'parts'     => $parts,
+        ];
     }
 
     private function numberToWords($num)
