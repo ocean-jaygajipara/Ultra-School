@@ -1018,7 +1018,11 @@ class ApiStudentController extends Controller
                 return $this->sendError("Unauthorized.", [], [], 401);
             }
 
-            $notificationIds = $request->input('notification_ids', []);
+            $notificationIds = $request->input('notification_ids', $request->input('data.notification_ids', []));
+            if (!is_array($notificationIds)) {
+                $notificationIds = [];
+            }
+            $notificationIds = array_values(array_unique(array_filter(array_map('intval', $notificationIds))));
 
             $query = NotificationSetting::query()
                 ->where(function ($q) use ($student) {
@@ -1032,9 +1036,9 @@ class ApiStudentController extends Controller
                 $query->whereIn('id', $notificationIds);
             }
 
-            $notificationsToMark = $query->pluck('id')->toArray();
+            $notificationsToMark = $query->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
 
-             foreach ($notificationsToMark as $notifId) {
+            foreach ($notificationsToMark as $notifId) {
                 \App\Models\NotificationRead::updateOrCreate(
                     [
                         'notification_id' => $notifId,
@@ -1044,42 +1048,10 @@ class ApiStudentController extends Controller
                 );
             }
 
-            $readNotificationIds = \App\Models\NotificationRead::where('student_id', $student->id)
-                ->pluck('notification_id')
-                ->toArray();
-
-            $readNotifications = NotificationSetting::query()
-                ->whereIn('id', $readNotificationIds)
-                ->where(function ($q) use ($student) {
-                    $q->whereRaw("FIND_IN_SET(?, student_id)", [$student->id])
-                        ->orWhereNull('student_id')
-                        ->orWhere('student_id', '')
-                        ->orWhere('course_id', (string) ($student->course_id ?? '0'));
-                })
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->makeHidden(['created_by', 'updated_by', 'deleted_by', 'created_at', 'updated_at']);
-
-            $data = $readNotifications->map(function ($row) {
-                $cleanBody = $row->body;
-                $cleanBody = str_ireplace(['<br>', '<br/>', '<br />', '</p>'], "\n", $cleanBody);
-                $cleanBody = str_ireplace('<p>', '', $cleanBody);
-                $cleanBody = strip_tags($cleanBody);
-                $cleanBody = html_entity_decode($cleanBody, ENT_QUOTES, 'UTF-8');
-                $cleanBody = preg_replace("/[ \t]+/", " ", $cleanBody);
-                $cleanBody = preg_replace("/\r\n|\r/", "\n", $cleanBody);
-                $cleanBody = trim($cleanBody);
-
-                return [
-                    'id'      => $row->id,
-                    'title'   => $row->title,
-                    'body'    => $cleanBody,
-                    'is_read' => true,
-                ];
-            });
-
             return $this->sendResponse(
-                $data,
+                [
+                    'notification_ids' => $notificationsToMark,
+                ],
                 "Notifications marked as read successfully."
             );
         } catch (\Exception $e) {
