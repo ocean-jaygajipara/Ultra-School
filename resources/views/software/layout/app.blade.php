@@ -7,6 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@hasSection('title')@yield('title') | @endif{{ config('app.name') ?? 'Ultra School' }}</title>
 
@@ -118,7 +119,7 @@
         // Ensure /api AJAX from panel uses the logged-in school DB.
         $.ajaxSetup({
             headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || @json(csrf_token()),
                 'X-School-Code': @json(\App\Services\SchoolDatabaseManager::getActiveSchoolCode()),
                 'school_code': @json(\App\Services\SchoolDatabaseManager::getActiveSchoolCode())
             }

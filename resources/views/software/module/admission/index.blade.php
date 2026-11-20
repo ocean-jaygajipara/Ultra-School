@@ -1003,6 +1003,7 @@
             $(context || document).find('.admission-status-select').each(function () {
                 const $el = $(this);
                 $el.data('silent', true);
+                $el.data('prev-status', $el.val());
                 if ($el.hasClass('select2-hidden-accessible')) {
                     $el.select2('destroy');
                 }
@@ -1011,7 +1012,10 @@
                     minimumResultsForSearch: Infinity,
                     dropdownParent: $('body')
                 });
-                setTimeout(function () { $el.data('silent', false); }, 0);
+                setTimeout(function () {
+                    $el.data('prev-status', $el.val());
+                    $el.data('silent', false);
+                }, 50);
             });
         }
 
@@ -1022,29 +1026,41 @@
             }
             const studentId = $el.data('student-id') || $el.attr('data-student-id');
             const newStatus = $el.val();
-            if (!studentId || !newStatus) {
+            const prevStatus = $el.data('prev-status');
+            if (!studentId || !newStatus || newStatus === prevStatus) {
                 return;
             }
 
             $.ajax({
                 url: "{{ route('admission.status-update') }}",
                 type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}'
+                },
                 data: {
+                    _token: '{{ csrf_token() }}',
                     id: studentId,
                     update_status: newStatus
                 },
                 success: function (response) {
+                    $el.data('prev-status', newStatus);
                     if (response.status === 'true' || response.status === true || response.success) {
                         if (typeof toastr !== 'undefined') {
                             toastr.success(response.message || 'Status updated successfully.');
                         }
                     } else {
+                        $el.data('silent', true);
+                        $el.val(prevStatus).trigger('change.select2');
+                        $el.data('silent', false);
                         if (typeof toastr !== 'undefined') {
                             toastr.error(response.message || 'Status update failed.');
                         }
                     }
                 },
                 error: function (xhr) {
+                    $el.data('silent', true);
+                    $el.val(prevStatus).trigger('change.select2');
+                    $el.data('silent', false);
                     const msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.messages))
                         ? (xhr.responseJSON.message || Object.values(xhr.responseJSON.messages || {}).flat()[0])
                         : 'Status update failed.';
