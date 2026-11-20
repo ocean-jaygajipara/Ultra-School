@@ -903,6 +903,24 @@ class AuthenticationController extends Controller
                 return $this->sendError('Your account is inactive. Please contact the school administration.', [], [], 422);
             }
 
+            $this->normalizeAppAuthRequest($request);
+
+            $fcmToken = trim((string) (
+                $request->input('fcm_token')
+                ?: $request->input('device_token')
+                ?: ''
+            ));
+            if ($fcmToken !== '') {
+                StudentDeviceToken::where('device_token', $fcmToken)
+                    ->where('student_id', '!=', $admission->id)
+                    ->delete();
+
+                StudentDeviceToken::updateOrCreate(
+                    ['student_id' => $admission->id, 'device_token' => $fcmToken],
+                    ['created_by' => $admission->id]
+                );
+            }
+
             $schoolKey = SchoolDatabaseManager::getActiveSchoolCode()
                 ?: strtolower(trim((string) (
                     $request->header('school_code')
