@@ -110,9 +110,7 @@ class ApiStudentController extends Controller
     }
 
     /**
-     * Get timetable details of logged-in student
-     *
-     * Returns timetable attachment for authenticated student.
+     * Get timetable details of logged-in student (standard-wise)
      *
      * @authenticated
      *
@@ -120,7 +118,7 @@ class ApiStudentController extends Controller
      *   "status": "true",
      *   "message": "Timetable details fetched successfully.",
      *   "data": {
-     *     "attachment": "https://example.com/storage/timetable.pdf"
+     *     "attachment": "https://example.com/uploads/timetable/file.pdf"
      *   }
      * }
      */
@@ -133,28 +131,23 @@ class ApiStudentController extends Controller
                 return $this->sendError("Unauthorization.", [], [], 401);
             }
 
-            $courseRegistered = CourceRegistration::where('register_id', $student->id)
-                ->with(['batch', 'course', 'class'])
-                ->first();
-
-            if (!$courseRegistered) {
-                return $this->sendError('Your Academic Detail not found.', [], [], 422);
+            $standardId = (int) ($student->current_std_id ?? 0);
+            if ($standardId <= 0) {
+                return $this->sendError('Student standard not found.', [], [], 422);
             }
 
-            $timetable = Timetable::where('course_id', $courseRegistered->course_id)
-                ->where('batch_id', $courseRegistered->batch_id)
-                ->where('class_id', $courseRegistered->class_id)
+            $timetable = Timetable::with('standard')
+                ->where('standard_id', $standardId)
+                ->latest('id')
                 ->first();
 
             if (!$timetable || !$timetable->attachment) {
-                return $this->sendError('No record found.', [], [], 404);
+                return $this->sendError('No timetable found for your standard.', [], [], 404);
             }
 
-            return response()->json([
-                'status' => 'true',
-                'message' => 'Timetable details fetched successfully.',
+            return $this->sendResponse([
                 'attachment' => asset($timetable->attachment),
-            ], 200);
+            ], 'Timetable details fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }
