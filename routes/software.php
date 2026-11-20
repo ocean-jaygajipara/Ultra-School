@@ -161,7 +161,7 @@ Route::resource('result', ResultController::class)->except(['show']);
 // Additional routes
 
 Route::post('admission/restore/{id}', [AdmissionController::class, 'restore'])->name('admission.restore');
-// Route::post('admission-update-status', [AdmissionController::class, 'status_update'])->name('admission.status-update');
+Route::post('admission-update-status', [AdmissionController::class, 'status_update'])->name('admission.status-update');
 Route::post('admission/check-aadhar-duplicate', [AdmissionController::class, 'checkAadharDuplicate'])->name('admission.check-aadhar-duplicate');
 Route::post('admission/check-mobile-duplicate', [AdmissionController::class, 'checkMobileDuplicate'])->name('admission.check-mobile-duplicate');
 

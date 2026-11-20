@@ -226,6 +226,20 @@
         .si-btn-light:hover { background: #fff; color: #1f2580; }
         .si-btn-primary { grid-column: 1 / -1; background: #e1141c; color: #fff; }
         .si-btn-primary:hover { color: #fff; background: #c40f16; }
+        .admission-status-select + .select2-container {
+            width: 95px !important;
+            min-width: 95px !important;
+            max-width: 95px !important;
+        }
+        .admission-status-select + .select2-container .select2-selection--single {
+            height: 32px;
+        }
+        .admission-status-select + .select2-container .select2-selection__rendered {
+            font-size: .78rem;
+            line-height: 30px;
+            padding-left: 8px;
+            padding-right: 18px;
+        }
 
         .si-main { padding: 28px 28px 24px; background: #fff; }
         .si-main-head { margin-bottom: 16px; padding-right: 40px; }
@@ -984,6 +998,63 @@
             });
         }
 
+        function initAdmissionStatusSelect2(context) {
+            if (!$.fn.select2) return;
+            $(context || document).find('.admission-status-select').each(function () {
+                const $el = $(this);
+                $el.data('silent', true);
+                if ($el.hasClass('select2-hidden-accessible')) {
+                    $el.select2('destroy');
+                }
+                $el.select2({
+                    width: '95px',
+                    minimumResultsForSearch: Infinity,
+                    dropdownParent: $('body')
+                });
+                setTimeout(function () { $el.data('silent', false); }, 0);
+            });
+        }
+
+        $(document).on('change', '.admission-status-select', function () {
+            const $el = $(this);
+            if ($el.data('silent')) {
+                return;
+            }
+            const studentId = $el.data('student-id') || $el.attr('data-student-id');
+            const newStatus = $el.val();
+            if (!studentId || !newStatus) {
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('admission.status-update') }}",
+                type: "POST",
+                data: {
+                    id: studentId,
+                    update_status: newStatus
+                },
+                success: function (response) {
+                    if (response.status === 'true' || response.status === true || response.success) {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(response.message || 'Status updated successfully.');
+                        }
+                    } else {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(response.message || 'Status update failed.');
+                        }
+                    }
+                },
+                error: function (xhr) {
+                    const msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.messages))
+                        ? (xhr.responseJSON.message || Object.values(xhr.responseJSON.messages || {}).flat()[0])
+                        : 'Status update failed.';
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(msg);
+                    }
+                }
+            });
+        });
+
         // Show student details modal
         $(document).on('click', '.view-btn', function() {
             let id = $(this).data('id');
@@ -1263,8 +1334,9 @@
                 language: {
                     searchPlaceholder: 'Search...'
                 },
-                // dom:'lBfrtip',
-                // buttons: ["csv"],
+                drawCallback: function () {
+                    initAdmissionStatusSelect2('#yajra-datatables');
+                },
             });
 
             $('#yajra-datatables').on('xhr.dt', function(e, settings, json) {

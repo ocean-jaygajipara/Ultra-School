@@ -962,6 +962,7 @@ class AuthenticationController extends Controller
             'house'             => $admission->house,
             'birth_place'       => $admission->birth_place,
             'profile_url'       => $profileLink,
+            'status'            => (string) ($admission->status ?? ''),
         ]);
 
         $studentDetails['school'] = [

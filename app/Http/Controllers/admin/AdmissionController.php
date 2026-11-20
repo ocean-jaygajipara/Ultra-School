@@ -188,11 +188,20 @@ class AdmissionController extends Controller
 
                 (object) ['data' => "view_button", 'name' => 'view_button', 'td_label' => 'Stu <i class="bx bx-info-circle"></i>'],
                 (object) ['data' => "attendance_button", 'name' => 'attendance_button', 'td_label' => 'Att.', 'className' => 'w-5 text-center'],
-                (object) ['data' => "test_button", 'name' => 'test_button', 'td_label' => 'Test', 'className' => 'w-5 text-center'],
+                // (object) ['data' => "test_button", 'name' => 'test_button', 'td_label' => 'Test', 'className' => 'w-5 text-center'],
                 (object) ['data' => "gdrivefolderurl", 'name' => 'gdrivefolderurl', 'td_label' => '<i class="fab fa-google-drive" style="font-size:18px;color:#4285F4;"></i>', 'className' => 'w-5 text-center'],
-                (object) ['data' => "book_button", 'name' => 'book_button', 'td_label' => 'Book'],
+                // (object) ['data' => "book_button", 'name' => 'book_button', 'td_label' => 'Book'],
                 // (object) ['data' => "bonafide_button", 'name' => 'bonafide_button', 'td_label' => '<i class="ti ti-certificate" title="Bonafide Certificate"></i>', 'className' => 'w-5 text-center'],
                 // (object) ['data' => "transfer_button", 'name' => 'transfer_button', 'td_label' => '<i class="ti ti-transfer-out" title="Transfer Certificate"></i>', 'className' => 'w-5 text-center'],
+                (object) [
+                    'data' => 'status',
+                    'name' => 'status',
+                    'td_label' => 'Status',
+                    'orderable' => true,
+                    'searchable' => true,
+                    'className' => 'text-center',
+                    'width' => '100px',
+                ],
                 (object) ['data' => "action", 'name' => 'action', 'td_label' => 'Update', 'orderable' => false, 'searchable' => false, 'className' => 'w-10 text-center'],
             ];
             if (!$modules['permission_edit'] && !$modules['permission_delete']) {
@@ -287,21 +296,30 @@ class AdmissionController extends Controller
                         }
                     })
 
-                    // ->editColumn('status', function ($row) use ($modules) {
-                    //     $dropdown = '<ul class="dropdown-menu">';
-                    //     $button = '';
+                    ->editColumn('status', function ($row) {
+                        $current = strtolower(trim((string) ($row->status ?? 'created')));
+                        if ($current === 'cancelled') {
+                            $current = 'cancel';
+                        }
+                        if (!in_array($current, ['created', 'running', 'cancel'], true)) {
+                            $current = 'created';
+                        }
 
-                    //     if ($row->status == "created") {
-                    //         $button = '<button type="button" class="btn btn-success btn-sm w-100 dropdown-toggle" data-bs-toggle="dropdown">' . ucfirst($row->status) . '</button>';
-                    //         $dropdown .= '<li><a href="javascript:void(0)" class="dropdown-item update-status" data-url="' . route($modules["route"] . '.status-update') . '" data-id="' . $row->id . '" data-update_status="rejected">Reject</a></li>';
-                    //     } elseif ($row->status == "rejected") {
-                    //         $button = '<button type="button" class="btn btn-danger btn-sm w-100 dropdown-toggle" data-bs-toggle="dropdown">' . ucfirst($row->status) . '</button>';
-                    //         $dropdown .= '<li><a href="javascript:void(0)" class="dropdown-item update-status" data-url="' . route($modules["route"] . '.status-update') . '" data-id="' . $row->id . '" data-update_status="created">Re-Create</a></li>';
-                    //     }
+                        $options = [
+                            'created' => 'Created',
+                            'running' => 'Running',
+                            'cancel' => 'Cancel',
+                        ];
 
-                    //     $dropdown .= '</ul>';
-                    //     return $button . $dropdown;
-                    // })
+                        $html = '<select class="form-select form-select-sm admission-status-select select2" data-student-id="' . (int) $row->id . '">';
+                        foreach ($options as $value => $label) {
+                            $selected = $current === $value ? ' selected' : '';
+                            $html .= '<option value="' . $value . '"' . $selected . '>' . $label . '</option>';
+                        }
+                        $html .= '</select>';
+
+                        return $html;
+                    })
 
                     ->addColumn('course_button', function ($row) use ($modules) {
                         // if ($modules['course-register_add']) {
@@ -1060,7 +1078,7 @@ class AdmissionController extends Controller
         $modules = $this->modules;
         $validator = Validator::make($request->all(), [
             'id' => ['required', Rule::exists($modules['table_name'], 'id')],
-            'update_status' => ['required', 'in:running,completed,cancel']
+            'update_status' => ['required', 'in:created,running,cancel'],
         ]);
 
         if ($validator->fails() && $isAjax) {
