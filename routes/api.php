@@ -72,6 +72,7 @@ Route::group(['middleware' => ['auth:student-api']], function () {
         Route::post('document-details', [ApiStudentController::class, 'document_details']);
         Route::match(['get', 'post'], 'slider-list', [SliderController::class, 'slider_list']);
         Route::match(['get', 'post'], 'unread-counts', [ApiStudentController::class, 'unread_counts']);
+        Route::match(['get', 'post'], 'achievement-details', [ApiStudentController::class, 'achievement_details']);
 
         // Fees
         Route::match(['get', 'post'], 'fee-receipt-list', [ApiStudentController::class, 'fee_details']);
@@ -106,7 +107,6 @@ Route::group(['middleware' => ['auth:student-api']], function () {
         // Route::post('assignment-details', [ApiStudentController::class, 'assignment_details'])->name('student.assignment-details');
         // Route::match(['get', 'post'], 'marksheet-details', [ApiStudentController::class, 'marksheet_details']);
         // Route::match(['get', 'post'], 'assessment-details', [ApiStudentController::class, 'assessment_details']);
-        // Route::match(['get', 'post'], 'achievement-details', [ApiStudentController::class, 'achievement_details']);
         // Route::match(['get', 'post'], 'holiday-list', [ApiStudentController::class, 'holiday_list']);
         // Route::match(['get', 'post'], 'student-request-edit', [StudentRequestController::class, 'request_update']);
     });
