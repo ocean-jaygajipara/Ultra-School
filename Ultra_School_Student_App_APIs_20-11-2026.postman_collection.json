@@ -1,0 +1,447 @@
+{
+  "info": {
+    "name": "Ultra School Student App APIs 20-11-2026",
+    "description": "Flutter student app APIs only (20-11-2026).\n\nSplash, Login, Dashboard, Academic, Complaint, Contact, Fees, Personal Details, Request, Notifications.\n\nHeaders: school_code, Authorization Bearer {{token}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
+    { "key": "token", "value": "" },
+    { "key": "school_id", "value": "ues" },
+    { "key": "admission_id", "value": "2502" },
+    { "key": "mobile", "value": "8528549049" },
+    { "key": "otp", "value": "" },
+    { "key": "fcm_token", "value": "" },
+    { "key": "request_subject_id", "value": "1" },
+    { "key": "notification_id", "value": "1" },
+    { "key": "fee_receipt_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "1. Splash / Auth",
+      "item": [
+        {
+          "name": "1.1 Schools",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/schools"
+          }
+        },
+        {
+          "name": "1.2 Send OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && j.data) {",
+                  "    if (j.data.admission_id) pm.collectionVariables.set('admission_id', String(j.data.admission_id));",
+                  "    if (j.data.otp) pm.collectionVariables.set('otp', String(j.data.otp));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_key\": \"{{school_id}}\",\n  \"gr_no\": {{admission_id}},\n  \"mobile_no\": \"{{mobile}}\",\n  \"fcm_token\": \"{{fcm_token}}\",\n  \"device_details\": \"Flutter App\"\n}"
+            },
+            "url": "{{base_url}}/send-otp"
+          }
+        },
+        {
+          "name": "1.3 Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && j.token) pm.collectionVariables.set('token', j.token);",
+                  "  else if (j && j.data && j.data.token) pm.collectionVariables.set('token', j.data.token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_key\": \"{{school_id}}\",\n  \"gr_no\": {{admission_id}},\n  \"mobile_no\": \"{{mobile}}\",\n  \"otp\": \"{{otp}}\",\n  \"fcm_token\": \"{{fcm_token}}\",\n  \"device_details\": \"Flutter App\"\n}"
+            },
+            "url": "{{base_url}}/verify-otp",
+            "description": "Saves Bearer token automatically."
+          }
+        },
+        {
+          "name": "1.4 Auth Detail",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcm_token\": \"{{fcm_token}}\"\n}"
+            },
+            "url": "{{base_url}}/student/auth-detail",
+            "description": "Optional body fcm_token — saves Firebase device token for push."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Dashboard",
+      "item": [
+        {
+          "name": "2.1 Document Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/document-details"
+          }
+        },
+        {
+          "name": "2.2 Slider List",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/slider-list"
+          }
+        },
+        {
+          "name": "2.3 Timetable Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/timetable-details",
+            "description": "Standard-wise timetable for logged-in student.\ndata = { attachment }"
+          }
+        },
+        {
+          "name": "2.4 Unread Counts",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/unread-counts",
+            "description": "data = { unread_complaints, unread_notifications }"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Academic",
+      "item": [
+        {
+          "name": "3.1 Academic Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/academic-details"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Complaint",
+      "item": [
+        {
+          "name": "4.1 Teacher Complaint Reports",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/teacher-complaint-reports"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Contact Us",
+      "item": [
+        {
+          "name": "5.1 Contact Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/contact-details"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Fees",
+      "item": [
+        {
+          "name": "6.1 Fee Receipt List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && j.data && Array.isArray(j.data.details) && j.data.details.length && j.data.details[0].id) {",
+                  "    pm.collectionVariables.set('fee_receipt_id', String(j.data.details[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/fee-receipt-list",
+            "description": "Summary: total / paid / pending from Fee Master (FIRST+SECOND).\nterms[] = term, total, paid, pending, status (Paid|Pending).\ndetails[] = paid receipts with education_fee_url / vehicle_fee_url.\nNo Fee Master for year+standard → total/paid/pending = 0 and terms/details empty.\nExample: FIRST paid → SECOND shows in pending."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Personal Details",
+      "item": [
+        {
+          "name": "7.1 Person Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/person-details"
+          }
+        },
+        {
+          "name": "7.2 Update Person Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"\",\n  \"last_name\": \"\",\n  \"father_name\": \"\",\n  \"mother_name\": \"\",\n  \"mobile_no\": \"\",\n  \"permanent_address\": \"\"\n}"
+            },
+            "url": "{{base_url}}/student/update-person-details"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Request",
+      "item": [
+        {
+          "name": "8.1 Request Subject List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+                  "    pm.collectionVariables.set('request_subject_id', String(j.data[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/request-subject-list"
+          }
+        },
+        {
+          "name": "8.2 Student Request List",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/student-request-list"
+          }
+        },
+        {
+          "name": "8.3 Student Request Add",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_subject_id\": {{request_subject_id}},\n  \"remarks\": \"Test request\"\n}"
+            },
+            "url": "{{base_url}}/student/student-request-add"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Notifications",
+      "item": [
+        {
+          "name": "9.1 Notifications List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && Array.isArray(j.data) && j.data.length && j.data[0].id) {",
+                  "    pm.collectionVariables.set('notification_id', String(j.data[0].id));",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/notifications-list",
+            "description": "data[] = id, title, body, file_path, is_read, date_time"
+          }
+        },
+        {
+          "name": "9.2 Notifications Mark Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notification_ids\": [{{notification_id}}]\n}"
+            },
+            "url": "{{base_url}}/student/notifications-mark-read",
+            "description": "Request: { notification_ids: [1,2,3] }\nResponse data: { notification_ids: [1,2,3] }"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Achievement",
+      "item": [
+        {
+          "name": "10.1 Achievement Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "school_code", "value": "{{school_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{base_url}}/student/achievement-details",
+            "description": "Logged-in student achievements.\ndata[] = id, event_name, rank, remark, date (d-m-Y)"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,8 @@ use App\Models\Admission;
 use App\Models\Attedance;
 use App\Models\CourceRegistration;
 use App\Models\FeeReceiptEntry;
+use App\Models\Master\FeeMaster;
+use App\Models\Master\MasterAcademicYear;
 use App\Models\Master\MasterCourse;
 use App\Models\Master\MasterHoliday;
 use App\Models\NotificationSetting;
@@ -164,19 +166,14 @@ class ApiStudentController extends Controller
      *   "status": "true",
      *   "message": "Fee details fetched successfully.",
      *   "data": {
-     *     "total": 45000,
-     *     "paid": 30000,
-     *     "pending": 15000,
-     *     "details": [
-     *       {
-     *         "course": "BCA",
-     *         "semester": "Semester 1",
-     *         "receipt_no": 10,
-     *         "amount": 15000,
-     *         "date": "2025-06-01",
-     *         "status": "Paid"
-     *       }
-     *     ]
+     *     "total": 15900,
+     *     "paid": 7950,
+     *     "pending": 7950,
+     *     "terms": [
+     *       { "term": "FIRST", "total": 7950, "paid": 7950, "pending": 0, "status": "Paid" },
+     *       { "term": "SECOND", "total": 7950, "paid": 0, "pending": 7950, "status": "Pending" }
+     *     ],
+     *     "details": []
      *   }
      * }
      *
@@ -195,9 +192,53 @@ class ApiStudentController extends Controller
                 return $this->sendError("Unauthorization.", [], [], 401);
             }
 
+            $standardId = (int) ($student->current_std_id ?? 0);
+            $yearId = (int) ($student->academic_year_id ?: (MasterAcademicYear::current()?->id ?? 0));
+            $grNo = trim((string) ($student->gr_no ?? ''));
+
+            $termFilter = $request->filled('semester') || $request->filled('term')
+                ? [(string) $request->input('term', $request->input('semester'))]
+                : array_keys(FeeMaster::TERMS);
+
+            // No Fee Master for this year + standard → zeros + empty list
+            if (!$yearId || !$standardId) {
+                return $this->sendResponse([
+                    'total'   => 0,
+                    'paid'    => 0,
+                    'pending' => 0,
+                    'terms'   => [],
+                    'details' => [],
+                ], 'Fee details fetched successfully.');
+            }
+
+            $masters = FeeMaster::query()
+                ->where('status', 'active')
+                ->where('academic_year_id', $yearId)
+                ->where('standard_id', $standardId)
+                ->whereIn('term', $termFilter)
+                ->get()
+                ->keyBy('term');
+
+            if ($masters->isEmpty()) {
+                return $this->sendResponse([
+                    'total'   => 0,
+                    'paid'    => 0,
+                    'pending' => 0,
+                    'terms'   => [],
+                    'details' => [],
+                ], 'Fee details fetched successfully.');
+            }
+
             $feeRecordsQuery = FeeReceiptEntry::query()
                 ->with(['admission:id,bus_route_village', 'standard:id,name'])
-                ->where('admission_id', $student->id);
+                ->where('academic_year_id', $yearId)
+                ->where('standard_id', $standardId)
+                ->where(function ($q) use ($student, $grNo) {
+                    $q->where('admission_id', $student->id);
+                    if ($grNo !== '') {
+                        $q->orWhere('gr_no', $grNo);
+                    }
+                });
 
             if ($request->filled('semester') || $request->filled('term')) {
                 $feeRecordsQuery->where('term', $request->input('term', $request->input('semester')));
@@ -205,11 +246,34 @@ class ApiStudentController extends Controller
 
             $feeRecords = $feeRecordsQuery->orderByDesc('id')->get();
 
-            if ($feeRecords->isEmpty()) {
-                return $this->sendError('No fee records found.', [], [], 404);
-            }
+            $terms = [];
+            $totalFee = 0.0;
+            $paidFee = 0.0;
+            $pendingFee = 0.0;
 
-            $paidFees = (float) $feeRecords->sum('net_amount');
+            foreach ($termFilter as $term) {
+                $master = $masters->get($term);
+                if (!$master) {
+                    continue;
+                }
+
+                $termTotal = (float) $master->total;
+                $isPaid = $feeRecords->contains(fn ($fee) => (string) $fee->term === (string) $term);
+                $termPaid = $isPaid ? $termTotal : 0.0;
+                $termPending = $isPaid ? 0.0 : $termTotal;
+
+                $totalFee += $termTotal;
+                $paidFee += $termPaid;
+                $pendingFee += $termPending;
+
+                $terms[] = [
+                    'term'    => (string) $term,
+                    'total'   => round($termTotal, 2),
+                    'paid'    => round($termPaid, 2),
+                    'pending' => round($termPending, 2),
+                    'status'  => $isPaid ? 'Paid' : 'Pending',
+                ];
+            }
 
             $feesDetails = $feeRecords->map(function ($fee) {
                 $hasBusPrint = $this->feeReceiptHasBusPrint($fee);
@@ -234,9 +298,10 @@ class ApiStudentController extends Controller
             })->values();
 
             $data = [
-                'total'   => $paidFees,
-                'paid'    => $paidFees,
-                'pending' => 0,
+                'total'   => round($totalFee, 2),
+                'paid'    => round($paidFee, 2),
+                'pending' => round($pendingFee, 2),
+                'terms'   => $terms,
                 'details' => $feesDetails,
             ];
 

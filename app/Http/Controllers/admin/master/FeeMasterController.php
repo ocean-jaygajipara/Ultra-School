@@ -8,6 +8,7 @@ use App\Models\Master\FeeMaster;
 use App\Models\Master\MasterAcademicYear;
 use App\Models\Master\MasterFeeDetail;
 use App\Models\Master\MasterStandard;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\Facades\DataTables;
 
 class FeeMasterController extends Controller
@@ -220,6 +222,30 @@ class FeeMasterController extends Controller
 
         try {
             DB::transaction(function () use ($data) {
+                $existing = FeeMaster::withTrashed()
+                    ->where('academic_year_id', $data['academic_year_id'])
+                    ->where('standard_id', $data['standard_id'])
+                    ->where('term', $data['term'])
+                    ->first();
+
+                if ($existing) {
+                    if (!$existing->trashed()) {
+                        throw ValidationException::withMessages([
+                            'term' => 'Fee Master for this Academic Year, Standard and Term already exists.',
+                        ]);
+                    }
+
+                    $existing->restore();
+                    $existing->update(array_merge($data, [
+                        'status'     => 'active',
+                        'updated_by' => Auth::id(),
+                        'deleted_by' => null,
+                    ]));
+                    $this->syncFeeDetails((int) $existing->standard_id, $existing->term, $data);
+
+                    return;
+                }
+
                 $row = FeeMaster::create(array_merge($data, [
                     'created_by' => Auth::id(),
                     'status'     => 'active',
@@ -233,6 +259,16 @@ class FeeMasterController extends Controller
             }
 
             return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' created successfully');
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (QueryException $e) {
+            if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
+                return Redirect::back()
+                    ->withErrors(['term' => 'Fee Master for this Academic Year, Standard and Term already exists.'])
+                    ->withInput();
+            }
+
+            return Redirect::back()->withErrors($e->getMessage())->withInput();
         } catch (\Exception $e) {
             return Redirect::back()->withErrors($e->getMessage())->withInput();
         }
@@ -282,6 +318,16 @@ class FeeMasterController extends Controller
             });
 
             return Redirect::route($modules['route'] . '.index')->withSuccess($modules['title'] . ' updated successfully');
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (QueryException $e) {
+            if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
+                return Redirect::back()
+                    ->withErrors(['term' => 'Fee Master for this Academic Year, Standard and Term already exists.'])
+                    ->withInput();
+            }
+
+            return Redirect::back()->withErrors($e->getMessage())->withInput();
         } catch (\Exception $e) {
             return Redirect::back()->withErrors($e->getMessage())->withInput();
         }
