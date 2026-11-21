@@ -10,6 +10,7 @@ use App\Models\Master\MasterBatch;
 use App\Models\Master\MasterClass;
 use App\Models\Master\MasterCourse;
 use App\Models\Master\MasterEvent;
+use App\Models\Master\MasterStandard;
 use App\Models\StudentAchievement;
 use App\Http\Requests\StudentAchievementRequest;
 use Carbon\Carbon;
@@ -57,16 +58,13 @@ class StudentAchievementController extends Controller
 
                 if ($request->filled('gr_no')) {
                     $term = trim($request->gr_no);
-                    $query->where(function ($q) use ($term) {
-                        $q->where('gr_no', 'like', '%' . $term . '%')
-                            ->orWhereHas('admission', function ($qa) use ($term) {
-                                $qa->where('gr_no', 'like', '%' . $term . '%')
-                                    ->orWhereRaw("CONCAT_WS(' ', first_name, last_name, father_name) LIKE ?", ['%' . $term . '%'])
-                                    ->orWhereRaw("CONCAT_WS(' ', first_name, father_name, last_name) LIKE ?", ['%' . $term . '%'])
-                                    ->orWhere('first_name', 'like', '%' . $term . '%')
-                                    ->orWhere('last_name', 'like', '%' . $term . '%')
-                                    ->orWhere('father_name', 'like', '%' . $term . '%');
-                            });
+                    $query->whereHas('admission', function ($qa) use ($term) {
+                        $qa->where('gr_no', 'like', '%' . $term . '%')
+                            ->orWhereRaw("CONCAT_WS(' ', first_name, last_name, father_name) LIKE ?", ['%' . $term . '%'])
+                            ->orWhereRaw("CONCAT_WS(' ', first_name, father_name, last_name) LIKE ?", ['%' . $term . '%'])
+                            ->orWhere('first_name', 'like', '%' . $term . '%')
+                            ->orWhere('last_name', 'like', '%' . $term . '%')
+                            ->orWhere('father_name', 'like', '%' . $term . '%');
                     });
                 }
 
@@ -88,7 +86,7 @@ class StudentAchievementController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('gr_no', function ($row) {
-                    return $row->gr_no ?? ($row->admission->gr_no ?? '-');
+                    return $row->admission->gr_no ?? '-';
                 })
                 ->addColumn('student_name', function ($row) {
                     if ($row->admission) {
@@ -165,7 +163,7 @@ class StudentAchievementController extends Controller
 
         View::share('modules', $modules);
 
-        $courses = MasterCourse::where('status', 'active')->orderBy('course_name', 'asc')->get();
+        $standards = MasterStandard::where('status', 'active')->orderBy('id', 'asc')->get();
         $events = MasterEvent::where('status', 'active')->orderBy('id', 'asc')->get();
 
         $months = [
@@ -186,7 +184,7 @@ class StudentAchievementController extends Controller
         $currentYear = (int)date('Y');
         $years = range($currentYear - 6, $currentYear);
 
-        return view($modules['folder_path'] . '.form', compact('courses', 'events', 'months', 'years', 'currentMonth', 'currentYear'));
+        return view($modules['folder_path'] . '.form', compact('standards', 'events', 'months', 'years', 'currentMonth', 'currentYear'));
     }
 
     public function store(Request $request)
@@ -227,7 +225,6 @@ class StudentAchievementController extends Controller
 
                         StudentAchievement::create([
                             'admission_id' => $student->id,
-                            'gr_no' => $student->gr_no ?? '',
                             'event_id' => $eventId,
                             'rank' => $rank,
                             'date' => $date,
@@ -261,10 +258,8 @@ class StudentAchievementController extends Controller
                     if (empty($ach['admission_id']) || empty($ach['event_id'])) {
                         continue;
                     }
-                    $student = Admission::findOrFail($ach['admission_id']);
                     StudentAchievement::create([
                         'admission_id' => $ach['admission_id'],
-                        'gr_no' => $student->gr_no ?? '',
                         'event_id' => $ach['event_id'],
                         'rank' => $ach['rank'] ?? '1st',
                         'date' => $ach['date'] ?? date('Y-m-d'),
@@ -296,7 +291,7 @@ class StudentAchievementController extends Controller
         View::share('modules', $modules);
 
         $edit = StudentAchievement::with(['admission', 'event'])->findOrFail($id);
-        $courses = MasterCourse::where('status', 'active')->orderBy('course_name', 'asc')->get();
+        $standards = MasterStandard::where('status', 'active')->orderBy('id', 'asc')->get();
         $events = MasterEvent::where('status', 'active')->orderBy('id', 'asc')->get();
 
         $months = [
@@ -359,7 +354,7 @@ class StudentAchievementController extends Controller
 
         return view($modules['folder_path'] . '.form', compact(
             'edit',
-            'courses',
+            'standards',
             'events',
             'months',
             'years',
@@ -422,7 +417,6 @@ class StudentAchievementController extends Controller
                         $existingRecord = $existingAchievements->get($eventId);
                         $existingRecord->update([
                             'admission_id' => $primaryStudent->id,
-                            'gr_no' => $primaryStudent->gr_no ?? '',
                             'rank' => $evt['rank'],
                             'date' => $evt['date'],
                             'remark' => $evt['remark'],
@@ -433,7 +427,6 @@ class StudentAchievementController extends Controller
                         // Create new record for this event
                         StudentAchievement::create([
                             'admission_id' => $primaryStudent->id,
-                            'gr_no' => $primaryStudent->gr_no ?? '',
                             'event_id' => $evt['event_id'],
                             'rank' => $evt['rank'],
                             'date' => $evt['date'],
@@ -461,7 +454,6 @@ class StudentAchievementController extends Controller
                         foreach ($selectedEvents as $evt) {
                             StudentAchievement::create([
                                 'admission_id' => $extraStudent->id,
-                                'gr_no' => $extraStudent->gr_no ?? '',
                                 'event_id' => $evt['event_id'],
                                 'rank' => $evt['rank'],
                                 'date' => $evt['date'],
@@ -482,7 +474,6 @@ class StudentAchievementController extends Controller
                 $student = Admission::findOrFail($request->admission_id);
                 $ach->update([
                     'admission_id' => $student->id,
-                    'gr_no' => $student->gr_no ?? '',
                     'event_id' => $request->event_id,
                     'rank' => $request->rank ?? '1st',
                     'date' => $request->date ?? date('Y-m-d'),
@@ -521,66 +512,62 @@ class StudentAchievementController extends Controller
 
     public function getStudents(Request $request)
     {
-        $courseIds = $request->input('course_id');
+        $standardIds = $request->input('standard_id', $request->input('course_id'));
         $search = $request->input('search');
 
-        if (is_string($courseIds)) {
-            $courseIds = explode(',', $courseIds);
+        if (is_string($standardIds)) {
+            $standardIds = explode(',', $standardIds);
         }
-        $courseIds = array_filter((array)$courseIds);
+        $standardIds = array_values(array_filter(array_map('intval', (array) $standardIds)));
 
-        // Subquery to get latest course registration per student
-        $sub = CourceRegistration::select(DB::raw('MAX(id) as id'))
-            ->whereNull('deleted_at')
-            ->whereNotIn('status', ['Cancel', 'cancel'])
-            ->groupBy('register_id');
+        $query = Admission::query()
+            ->with(['currentStandard'])
+            ->whereIn('status', ['active', 'created', 'running']);
 
-        $regQuery = CourceRegistration::whereIn('id', $sub)
-            ->with(['admission', 'course', 'batch', 'class']);
-
-        if (!empty($courseIds)) {
-            $regQuery->whereIn('course_id', $courseIds);
+        if (!empty($standardIds)) {
+            $query->whereIn('current_std_id', $standardIds);
         }
 
-        $registrations = $regQuery->get();
+        $students = $query
+            ->orderBy('gr_no')
+            ->orderBy('first_name')
+            ->get()
+            ->map(function ($adm) {
+                $fullName = trim(preg_replace(
+                    '/\s+/',
+                    ' ',
+                    ($adm->first_name ?? '') . ' ' . ($adm->last_name ?? '') . ' ' . ($adm->father_name ?? '')
+                ));
 
-        $students = $registrations->map(function ($reg) {
-            $adm = $reg->admission;
-            if (!$adm || !in_array($adm->status, ['active', 'created'])) {
-                return null;
-            }
-            $fullName = trim(($adm->first_name ?? '') . ' ' . ($adm->last_name ?? '') . ' ' . ($adm->father_name ?? ''));
-            return [
-                'id' => $adm->id,
-                'gr_no' => $adm->gr_no ?? '-',
-                'first_name' => $adm->first_name ?? '',
-                'last_name' => $adm->last_name ?? '',
-                'father_name' => $adm->father_name ?? '',
-                'full_name' => $fullName,
-                'course_id' => $reg->course_id,
-                'course_name' => $reg->course->course_name ?? '-',
-                'batch_name' => $reg->batch->batch_name ?? '-',
-                'class_name' => $reg->class->class ?? '-',
-            ];
-        })->filter()->values();
+                return [
+                    'id' => $adm->id,
+                    'gr_no' => $adm->gr_no ?? '-',
+                    'first_name' => $adm->first_name ?? '',
+                    'last_name' => $adm->last_name ?? '',
+                    'father_name' => $adm->father_name ?? '',
+                    'full_name' => $fullName !== '' ? $fullName : ('Student #' . $adm->id),
+                    'standard_id' => $adm->current_std_id,
+                    'standard_name' => $adm->currentStandard->name ?? '-',
+                    'division' => $adm->division ?? '-',
+                    'course_name' => $adm->currentStandard->name ?? '-',
+                ];
+            })
+            ->values();
 
-        // Apply search if provided
         if (!empty($search)) {
             $searchLower = strtolower($search);
             $students = $students->filter(function ($item) use ($searchLower) {
                 return str_contains(strtolower($item['full_name']), $searchLower) ||
-                    str_contains(strtolower((string)$item['gr_no']), $searchLower) ||
-                    str_contains(strtolower($item['course_name']), $searchLower);
+                    str_contains(strtolower((string) $item['gr_no']), $searchLower) ||
+                    str_contains(strtolower((string) $item['standard_name']), $searchLower) ||
+                    str_contains(strtolower((string) $item['division']), $searchLower);
             })->values();
         }
-
-        // Sort by GR No
-        $students = $students->sortBy('gr_no')->values();
 
         return response()->json([
             'success' => true,
             'data' => $students,
-            'total' => $students->count()
+            'total' => $students->count(),
         ]);
     }
 
@@ -627,7 +614,7 @@ class StudentAchievementController extends Controller
             }
             return [
                 'student_name' => $student_name ?: 'N/A',
-                'gr_no' => $row->admission->gr_no ?? $row->gr_no ?? '-',
+                'gr_no' => $row->admission->gr_no ?? '-',
                 'rank' => $row->rank ?? '-',
                 'remark' => $row->remark ?? '-',
                 'date' => $row->date ? Carbon::parse($row->date)->format('d-m-Y') : '-',

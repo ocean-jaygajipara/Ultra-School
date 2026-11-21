@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class Attedance extends Model
 {
@@ -26,11 +27,21 @@ class Attedance extends Model
         return $this->belongsTo(Admission::class, 'admission_id', 'id');
     }
 
+    public static function hasBiometricColumn(): bool
+    {
+        static $has = null;
+        if ($has === null) {
+            $has = Schema::hasColumn((new static)->getTable(), 'biometric_id');
+        }
+
+        return $has;
+    }
+
     public static function sortedPunchesForDate($admissionId, string $date, ?string $biometricId = null): Collection
     {
         return static::where(function ($query) use ($admissionId, $biometricId) {
                 $query->where('admission_id', $admissionId);
-                if (!empty($biometricId)) {
+                if (static::hasBiometricColumn() && !empty($biometricId)) {
                     $query->orWhere('biometric_id', $biometricId);
                 }
             })
@@ -55,7 +66,7 @@ class Attedance extends Model
             'punches' => $sorted->map(function ($punch, $index) {
                 return [
                     'id' => $punch->id,
-                    'biometric_id' => $punch->biometric_id,
+                    'biometric_id' => static::hasBiometricColumn() ? ($punch->biometric_id ?? null) : null,
                     'time' => $punch->in_time,
                     'type' => ($index % 2 === 0) ? 'In' : 'Out',
                     'device_key' => $punch->DeviceKey,

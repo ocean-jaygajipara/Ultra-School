@@ -38,6 +38,8 @@ class AttedanceController extends Controller
     protected array $exportableColumns = [
         'biometric_id' => 'Biometric ID',
         'student_name' => 'Student Name',
+        'standard' => 'Standard',
+        'academic_year' => 'Academic Year',
         'date' => 'Date',
         'in_time' => 'Punch In Time',
         'out_time' => 'Punch Out Time',
@@ -48,6 +50,8 @@ class AttedanceController extends Controller
     protected array $defaultExportColumns = [
         'biometric_id',
         'student_name',
+        'standard',
+        'academic_year',
         'date',
         'in_time',
         'out_time',
@@ -91,6 +95,8 @@ class AttedanceController extends Controller
             $columns = [
                 (object)['data' => 'biometric_id', 'name' => 'biometric_id', 'td_label' => 'Biometric ID'],
                 (object)['data' => 'student_name', 'name' => 'student_name', 'td_label' => 'Student Name', 'orderable' => false, 'searchable' => false],
+                (object)['data' => 'standard', 'name' => 'standard', 'td_label' => 'Standard', 'orderable' => false, 'searchable' => false],
+                (object)['data' => 'academic_year', 'name' => 'academic_year', 'td_label' => 'Academic Year', 'orderable' => false, 'searchable' => false],
                 (object)['data' => 'date', 'name' => 'date', 'td_label' => 'Date'],
                 (object)['data' => 'in_time', 'name' => 'in_time', 'td_label' => 'Punch In Time', 'orderable' => false, 'searchable' => false],
                 (object)['data' => 'out_time', 'name' => 'out_time', 'td_label' => 'Punch Out Time', 'orderable' => false, 'searchable' => false],
@@ -120,6 +126,8 @@ class AttedanceController extends Controller
                         DB::raw('MAX(attedance.in_time) as last_punch'),
                         DB::raw('MIN(attedance.DeviceKey) as DeviceKey'),
                         DB::raw('MIN(attedance.DeviceName) as DeviceName'),
+                        DB::raw('MIN(master_class.class) as standard'),
+                        DB::raw('MIN(master_academic_years.name) as academic_year'),
                     ])
                     ->join('admission', function ($join) {
                         $join->on('attedance.admission_id', '=', 'admission.id')
@@ -132,6 +140,8 @@ class AttedanceController extends Controller
                     ->joinSub($latestRegIds, 'latest_reg', function ($join) {
                         $join->on('cource_registration.id', '=', 'latest_reg.max_id');
                     })
+                    ->leftJoin('master_class', 'master_class.id', '=', 'cource_registration.class_id')
+                    ->leftJoin('master_academic_years', 'master_academic_years.id', '=', 'admission.academic_year_id')
                     ->whereIn('cource_registration.status', ['active', 'Running'])
                     ->whereNull('admission.deleted_at')
                     ->whereNull('cource_registration.deleted_at')
@@ -224,6 +234,12 @@ class AttedanceController extends Controller
                         $fullName = trim("$last $first $father");
 
                         return $fullName ?: '-';
+                    })
+                    ->addColumn('standard', function ($row) {
+                        return !empty($row->standard) ? $row->standard : '-';
+                    })
+                    ->addColumn('academic_year', function ($row) {
+                        return !empty($row->academic_year) ? $row->academic_year : '-';
                     })
                     ->editColumn('date', function ($row) {
                         return Carbon::parse($row->date)->format('d-m-Y');
@@ -932,6 +948,8 @@ class AttedanceController extends Controller
                 DB::raw('MAX(attedance.in_time) as last_punch'),
                 DB::raw('MIN(attedance.DeviceKey) as DeviceKey'),
                 DB::raw('MIN(attedance.DeviceName) as DeviceName'),
+                DB::raw('MIN(master_class.class) as standard'),
+                DB::raw('MIN(master_academic_years.name) as academic_year'),
             ])
             ->join('admission', function ($join) {
                 $join->on('attedance.admission_id', '=', 'admission.id')
@@ -944,6 +962,8 @@ class AttedanceController extends Controller
             ->joinSub($latestRegIds, 'latest_reg', function ($join) {
                 $join->on('cource_registration.id', '=', 'latest_reg.max_id');
             })
+            ->leftJoin('master_class', 'master_class.id', '=', 'cource_registration.class_id')
+            ->leftJoin('master_academic_years', 'master_academic_years.id', '=', 'admission.academic_year_id')
             ->whereIn('cource_registration.status', ['active', 'Running'])
             ->whereNull('admission.deleted_at')
             ->whereNull('cource_registration.deleted_at')
@@ -1015,6 +1035,10 @@ class AttedanceController extends Controller
                 $father = $admission?->father_name ?? '';
                 $fullName = trim("{$last} {$first} {$father}");
                 return $fullName !== '' ? $fullName : '-';
+            case 'standard':
+                return !empty($attendance->standard) ? $attendance->standard : '-';
+            case 'academic_year':
+                return !empty($attendance->academic_year) ? $attendance->academic_year : '-';
             case 'device_key':
                 return $attendance->DeviceKey ?? '-';
             case 'device_name':

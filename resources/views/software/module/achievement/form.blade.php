@@ -164,29 +164,31 @@
                 <div id="select_month_year_notice" class="alert alert-primary text-center py-4 my-3 border-dashed" style="{{ (isset($selectedMonth) && isset($selectedYear)) ? 'display: none;' : '' }}">
                     <i class="bx bx-calendar-check fs-2 text-primary d-block mb-2"></i>
                     <h6 class="fw-bold mb-1">Please Select Month and Year First</h6>
-                    <p class="text-muted small mb-0">Select Month and Year in Step 1 to proceed with Course selection, Student search, and Awards.</p>
+                    <p class="text-muted small mb-0">Select Month and Year in Step 1 to proceed with Standard selection, Student search, and Awards.</p>
                 </div>
 
                 <!-- Main Content (Shows when Month & Year are selected) -->
                 <div id="main_content_section" style="{{ (isset($selectedMonth) && isset($selectedYear)) ? '' : 'display: none;' }}">
-                    <!-- 2. Course Checkboxes Section -->
+                    <!-- 2. Standard Checkboxes Section -->
                     <div class="section-box">
                         <div class="section-title">
-                            <span><i class="bx bx-book-open me-1 text-primary"></i> 2. Select Courses</span>
+                            <span><i class="bx bx-book-open me-1 text-primary"></i> 2. Select Standards</span>
                             <div>
                                 <div class="form-check form-check-inline mb-0">
-                                    <input class="form-check-input" type="checkbox" id="select_all_courses">
-                                    <label class="form-check-label fw-bold small text-primary" for="select_all_courses">Select All Courses</label>
+                                    <input class="form-check-input" type="checkbox" id="select_all_standards">
+                                    <label class="form-check-label fw-bold small text-primary" for="select_all_standards">Select All Standards</label>
                                 </div>
                             </div>
                         </div>
                         <div class="d-flex flex-wrap gap-2 p-2 border rounded bg-light">
-                            @foreach ($courses as $course)
-                                <label class="course-badge-checkbox border rounded px-3 py-2 bg-white d-flex align-items-center mb-0" for="course_chk_{{ $course->id }}">
-                                    <input class="form-check-input course-checkbox me-2" type="checkbox" name="course_ids[]" value="{{ $course->id }}" id="course_chk_{{ $course->id }}">
-                                    <span class="fw-semibold">{{ $course->course_name }}</span>
+                            @forelse ($standards ?? [] as $standard)
+                                <label class="course-badge-checkbox border rounded px-3 py-2 bg-white d-flex align-items-center mb-0" for="standard_chk_{{ $standard->id }}">
+                                    <input class="form-check-input standard-checkbox me-2" type="checkbox" name="standard_ids[]" value="{{ $standard->id }}" id="standard_chk_{{ $standard->id }}">
+                                    <span class="fw-semibold">{{ $standard->name }}</span>
                                 </label>
-                            @endforeach
+                            @empty
+                                <span class="text-muted small">No standards found.</span>
+                            @endforelse
                         </div>
                     </div>
 
@@ -375,23 +377,23 @@
                 checkMonthYearSelection();
             });
 
-            // Course Checkboxes change -> Load Students
-            function getSelectedCourses() {
+            // Standard Checkboxes change -> Load Students
+            function getSelectedStandards() {
                 let selected = [];
-                $('.course-checkbox:checked').each(function() {
+                $('.standard-checkbox:checked').each(function() {
                     selected.push($(this).val());
                 });
                 return selected;
             }
 
             function loadStudents() {
-                let courseIds = getSelectedCourses();
+                let standardIds = getSelectedStandards();
 
                 $.ajax({
                     url: "{{ route('achievement.get-students') }}",
                     type: "GET",
                     data: {
-                        course_id: courseIds
+                        standard_id: standardIds
                     },
                     success: function(response) {
                         if (response.success) {
@@ -409,17 +411,17 @@
             // Initial load of students
             loadStudents();
 
-            // Select All Courses
-            $('#select_all_courses').on('change', function() {
+            // Select All Standards
+            $('#select_all_standards').on('change', function() {
                 let isChecked = $(this).is(':checked');
-                $('.course-checkbox').prop('checked', isChecked);
+                $('.standard-checkbox').prop('checked', isChecked);
                 loadStudents();
             });
 
-            $('.course-checkbox').on('change', function() {
-                let total = $('.course-checkbox').length;
-                let checked = $('.course-checkbox:checked').length;
-                $('#select_all_courses').prop('checked', total > 0 && total === checked);
+            $('.standard-checkbox').on('change', function() {
+                let total = $('.standard-checkbox').length;
+                let checked = $('.standard-checkbox:checked').length;
+                $('#select_all_standards').prop('checked', total > 0 && total === checked);
                 loadStudents();
             });
 
@@ -440,6 +442,8 @@
                 let filtered = allLoadedStudents.filter(function(stu) {
                     return (stu.full_name && stu.full_name.toLowerCase().includes(search)) ||
                            (stu.gr_no && stu.gr_no.toString().toLowerCase().includes(search)) ||
+                           (stu.standard_name && stu.standard_name.toLowerCase().includes(search)) ||
+                           (stu.division && stu.division.toString().toLowerCase().includes(search)) ||
                            (stu.course_name && stu.course_name.toLowerCase().includes(search));
                 });
 
@@ -453,12 +457,17 @@
                 slice.forEach(function(stu) {
                     let isAlreadySelected = selectedStudentsMap[stu.id] ? 'style="opacity: 0.5;"' : '';
                     let checkBadge = selectedStudentsMap[stu.id] ? '<span class="badge bg-success ms-2"><i class="bx bx-check"></i> Added</span>' : '';
+                    let meta = [];
+                    if (stu.gr_no) meta.push('GR: ' + stu.gr_no);
+                    if (stu.standard_name && stu.standard_name !== '-') meta.push(stu.standard_name);
+                    if (stu.division && stu.division !== '-') meta.push(stu.division);
                     html += `
                         <div class="search-result-item" data-id="${stu.id}" ${isAlreadySelected}>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <strong class="text-dark">${stu.full_name}</strong>
                                     ${checkBadge}
+                                    <div class="small text-muted">${meta.join(' · ')}</div>
                                 </div>
                             </div>
                         </div>
@@ -518,12 +527,17 @@
                     let html = '';
                     keys.forEach(function(id) {
                         let stu = selectedStudentsMap[id];
+                        let meta = [];
+                        if (stu.gr_no) meta.push('GR: ' + stu.gr_no);
+                        if (stu.standard_name && stu.standard_name !== '-') meta.push(stu.standard_name);
+                        if (stu.division && stu.division !== '-') meta.push(stu.division);
                         html += `
                             <div class="selected-student-item">
                                 <div class="d-flex align-items-center">
                                     <i class="bx bxs-user-check text-success fs-4 me-2"></i>
                                     <div>
                                         <div class="fw-bold fs-6 text-dark">${stu.full_name}</div>
+                                        <div class="small text-muted">${meta.join(' · ')}</div>
                                     </div>
                                     <input type="hidden" name="student_ids[]" value="${stu.id}">
                                 </div>

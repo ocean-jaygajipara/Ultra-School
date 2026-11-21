@@ -116,6 +116,14 @@
                                     {{ $displayName }}
                                 @break
 
+                                @case('standard')
+                                    {{ $attendance->standard ?? '-' }}
+                                @break
+
+                                @case('academic_year')
+                                    {{ $attendance->academic_year ?? '-' }}
+                                @break
+
                                 @case('course_name')
                                     {{ $attendance->course->course_name ?? '-' }}
                                 @break
