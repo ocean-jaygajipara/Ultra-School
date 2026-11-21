@@ -810,7 +810,7 @@ class AuthenticationController extends Controller
 
     /**
      * App: POST /api/verify-otp
-     * Body: school_id, mobile, admission_id (app uses this instead of gr_no), otp, fcm_token
+     * Body: school_id, mobile, admission_id (app uses this instead of gr_no), otp, fcm_token, device_details
      */
     public function appVerifyOtp(Request $request)
     {
@@ -818,11 +818,12 @@ class AuthenticationController extends Controller
             $this->normalizeAppAuthRequest($request);
 
             $validator = Validator::make($request->all(), [
-                'school_id'    => 'required|string',
-                'mobile'       => 'required|digits_between:10,15',
-                'admission_id' => 'required',
-                'otp'          => 'required|digits_between:4,6',
-                'fcm_token'    => 'nullable|string',
+                'school_id'       => 'required|string',
+                'mobile'          => 'required|digits_between:10,15',
+                'admission_id'    => 'required',
+                'otp'             => 'required|digits_between:4,6',
+                'fcm_token'       => 'nullable|string',
+                'device_details' => 'nullable|string|max:500',
             ]);
 
             if ($validator->fails()) {
@@ -886,14 +887,20 @@ class AuthenticationController extends Controller
             $checkOTP->save();
 
             $deviceToken = trim((string) $request->input('fcm_token', ''));
+            $deviceDetails = trim((string) $request->input('device_details', ''));
             if ($deviceToken !== '') {
                 StudentDeviceToken::where('device_token', $deviceToken)
                     ->where('student_id', '!=', $admission->id)
                     ->delete();
 
+                $tokenPayload = ['created_by' => $admission->id];
+                if ($deviceDetails !== '') {
+                    $tokenPayload['device_details'] = $deviceDetails;
+                }
+
                 StudentDeviceToken::updateOrCreate(
                     ['student_id' => $admission->id, 'device_token' => $deviceToken],
-                    ['created_by' => $admission->id]
+                    $tokenPayload
                 );
             }
 
