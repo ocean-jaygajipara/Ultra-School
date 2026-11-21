@@ -599,27 +599,52 @@ class AuthenticationController extends Controller
      */
     public function studentLogout(Request $request)
     {
+        return $this->appStudentLogout($request);
+    }
+
+    /**
+     * App: POST /api/student/logout
+     * Revokes Bearer token and clears Firebase FCM token(s) from student_device_tokens.
+     *
+     * Optional body: fcm_token / device_token — clears that device only.
+     * If omitted — clears all FCM tokens for this student.
+     */
+    public function appStudentLogout(Request $request)
+    {
         try {
-            // Get logged-in student (from token)
-            $student = auth()->user();
+            $this->normalizeAppAuthRequest($request);
+
+            /** @var Admission|null $student */
+            $student = Auth::guard('student-api')->user() ?: $request->user();
 
             if (!$student) {
                 return $this->sendError('User not authenticated.', [], [], 401);
             }
 
-            // Revoke current token only
-            $request->user()->token()->revoke();
+            $fcmToken = trim((string) (
+                $request->input('fcm_token')
+                ?: $request->input('device_token')
+                ?: ''
+            ));
 
-            // Delete current device token if provided, otherwise delete all for safety
-            if ($request->filled('device_token')) {
+            // Clear Firebase token store (empty / remove so push stops after logout)
+            if ($fcmToken !== '') {
                 StudentDeviceToken::where('student_id', $student->id)
-                    ->where('device_token', $request->device_token)
+                    ->where('device_token', $fcmToken)
                     ->delete();
             } else {
                 StudentDeviceToken::where('student_id', $student->id)->delete();
             }
 
-            return $this->sendResponse([], 'Logged out successfully.');
+            // Revoke current Passport access token
+            $token = $student->token();
+            if ($token) {
+                $token->revoke();
+            }
+
+            return $this->sendResponse([
+                'fcm_token_cleared' => true,
+            ], 'Logged out successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Something went wrong.', $e->getMessage(), [], 500);
         }

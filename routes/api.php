@@ -59,6 +59,7 @@ Route::group(['middleware' => ['auth:student-api']], function () {
     Route::prefix('student')->group(function () {
         // Splash / Auth
         Route::match(['get', 'post'], 'auth-detail', [AuthenticationController::class, 'appStudentAuthDetail']);
+        Route::post('logout', [AuthenticationController::class, 'appStudentLogout']);
 
         // Personal Details
         Route::match(['get', 'post'], 'person-details', [AuthenticatedController::class, 'person_details']);
